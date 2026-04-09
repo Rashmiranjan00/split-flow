@@ -1,5 +1,7 @@
 import React from 'react';
+import { ViewStyle } from 'react-native';
 import styled from 'styled-components/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { BodyMd } from './Typography';
 
@@ -17,6 +19,7 @@ const ButtonContainer = styled.TouchableOpacity<ButtonContainerProps>`
   }};
   padding: ${Spacing.md}px ${Spacing.xl}px;
   border-radius: ${Radius.full}px;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   border-width: ${({ variant }: ButtonContainerProps) => (variant === 'outline' ? 1 : 0)}px;
@@ -37,16 +40,34 @@ interface ActionButtonProps {
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline';
   disabled?: boolean;
+  icon?: string;
+  style?: ViewStyle;
 }
 
 export const ActionButton: React.FC<ActionButtonProps> = ({ 
   title, 
   onPress, 
   variant = 'primary',
-  disabled = false
+  disabled = false,
+  icon,
+  style
 }) => {
   return (
-    <ButtonContainer variant={variant} onPress={onPress} disabled={disabled} activeOpacity={0.8}>
+    <ButtonContainer 
+      variant={variant} 
+      onPress={onPress} 
+      disabled={disabled} 
+      activeOpacity={0.8}
+      style={style}
+    >
+      {icon && (
+        <MaterialIcons 
+          name={icon as any} 
+          size={18} 
+          color={disabled ? '#999' : (variant === 'primary' ? 'white' : '#8083FF')} 
+          style={{ marginRight: Spacing.xs }}
+        />
+      )}
       <ButtonText variant={variant} disabled={disabled}>{title}</ButtonText>
     </ButtonContainer>
   );

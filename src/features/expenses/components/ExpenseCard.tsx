@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components/native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography } from '@/shared/constants/typography';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 const CardContainer = styled.TouchableOpacity`
   background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
@@ -77,6 +78,8 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   highlighted = false,
   onPress,
 }) => {
+  const { formatCurrency } = useCurrencyFormatter();
+
   return (
     <CardContainer activeOpacity={0.8} onPress={onPress}>
       <LeftSide>
@@ -90,7 +93,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
       </LeftSide>
       <AmountColumn>
         <Amount highlight={highlighted}>
-          ${Math.abs(amount).toFixed(2)}
+          {formatCurrency(amount, { sign: amount > 0 })}
         </Amount>
         <DateText>{date}</DateText>
       </AmountColumn>

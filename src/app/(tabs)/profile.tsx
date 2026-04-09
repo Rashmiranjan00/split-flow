@@ -22,6 +22,8 @@ import { ActionButton } from '@/shared/components/ActionButton';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
+import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 import { MOCK_EXPENSES } from '@/shared/data/mockData';
 
 const HeaderBanner = styled.View`
@@ -133,6 +135,9 @@ const ProfileScreen = () => {
   const theme = useTheme();
   const themeMode = useThemeStore((state) => state.mode);
   const setThemeMode = useThemeStore((state) => state.setMode);
+  const selectedCurrency = useCurrencyStore((state) => state.currency);
+  const setCurrency = useCurrencyStore((state) => state.setCurrency);
+  const { formatCurrency } = useCurrencyFormatter();
 
   const expenseCount = React.useMemo(() => 
     MOCK_EXPENSES.filter(e => e.splits.some(s => s.userId === userId)).length,
@@ -160,7 +165,6 @@ const ProfileScreen = () => {
 
   const menuItems = [
     { icon: 'notifications-none' as const, label: 'Notifications', value: 'On' },
-    { icon: 'language' as const, label: 'Currency', value: 'USD ($)' },
     { icon: 'privacy-tip' as const, label: 'Privacy', value: '' },
   ];
 
@@ -182,13 +186,13 @@ const ProfileScreen = () => {
             <StatDivider />
             <StatItem>
               <Title style={{ color: totalBalance >= 0 ? theme.colors.tertiary : theme.colors.error }}>
-                {totalBalance >= 0 ? '+' : ''}${Math.abs(totalBalance).toFixed(0)}
+                {formatCurrency(totalBalance, { sign: totalBalance > 0, decimals: 0 })}
               </Title>
               <Label>Balance</Label>
             </StatItem>
             <StatDivider />
             <StatItem>
-              <Title>${totalSpent.toFixed(0)}</Title>
+              <Title>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
               <Label>Total spent</Label>
             </StatItem>
           </StatsRow>
@@ -213,6 +217,27 @@ const ProfileScreen = () => {
                   color={themeMode === opt.key ? theme.colors.primary : theme.colors.onSurfaceVariant}
                 />
                 <ThemeOptionText active={themeMode === opt.key}>{opt.label}</ThemeOptionText>
+              </ThemeOption>
+            ))}
+          </ThemePickerRow>
+        </Section>
+
+        {/* Currency Picker */}
+        <Section>
+          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
+            Default Currency
+          </Label>
+          <ThemePickerRow>
+            {(Object.keys(CURRENCIES) as CurrencyCode[]).map(code => (
+              <ThemeOption
+                key={code}
+                active={selectedCurrency === code}
+                onPress={() => setCurrency(code)}
+                activeOpacity={0.7}
+              >
+                <ThemeOptionText active={selectedCurrency === code}>
+                  {CURRENCIES[code].symbol} {CURRENCIES[code].code}
+                </ThemeOptionText>
               </ThemeOption>
             ))}
           </ThemePickerRow>

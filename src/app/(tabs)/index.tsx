@@ -24,6 +24,7 @@ import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 import { 
   MOCK_EXPENSES, 
   MOCK_GROUPS, 
@@ -122,6 +123,7 @@ const HomeScreen = () => {
   const { user, userId } = useUser();
   const { totalBalance } = useBalances();
   const { formatDate } = useDateFormatter();
+  const { formatCurrency } = useCurrencyFormatter();
   const router = useRouter();
   const theme = useTheme();
   const [activeGroup, setActiveGroup] = React.useState<string | null>(null);

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography } from '@/shared/constants/typography';
 import { Label, Display } from '@/shared/components/Typography';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 interface BalanceCardProps {
   totalBalance: number;
@@ -46,6 +47,7 @@ const DecorationCircle = styled(LinearGradient)`
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({ totalBalance }) => {
   const theme = useTheme();
+  const { formatCurrency } = useCurrencyFormatter();
   const isPositive = totalBalance >= 0;
 
   return (
@@ -58,7 +60,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ totalBalance }) => {
       <ContentBox>
         <BalanceLabel>Total Balance</BalanceLabel>
         <BalanceAmount>
-          {isPositive ? '' : '-'}${Math.abs(totalBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {formatCurrency(totalBalance, { sign: totalBalance > 0, decimals: 0 })}
         </BalanceAmount>
       </ContentBox>
     </CardContainer>

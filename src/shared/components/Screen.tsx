@@ -1,12 +1,11 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Colors } from '@/shared/constants/colors';
 
 const StyledSafeAreaView = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${Colors.background};
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 interface ScreenProps {
@@ -15,9 +14,11 @@ interface ScreenProps {
 }
 
 export const Screen: React.FC<ScreenProps> = ({ children, edges = ['top'] }) => {
+  const theme = useTheme();
+
   return (
     <StyledSafeAreaView edges={edges}>
-      <StatusBar style="light" />
+      <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       {children}
     </StyledSafeAreaView>
   );

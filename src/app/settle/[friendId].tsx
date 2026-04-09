@@ -1,11 +1,10 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing } from '@/shared/constants/spacing';
 import { 
-  Screen, 
+  SafeScreen, 
   Content, 
   Row, 
   Spacer 
@@ -30,13 +29,14 @@ const BackBtn = styled.TouchableOpacity`
 const SettleScreen = () => {
   const { friendId } = useLocalSearchParams<{ friendId: string }>();
   const router = useRouter();
+  const theme = useTheme();
   const friend = MOCK_MEMBERS.find(m => m.id === friendId);
 
   return (
-    <Screen>
+    <SafeScreen>
       <Header>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </BackBtn>
         <Title>Record Payment</Title>
       </Header>
@@ -60,7 +60,7 @@ const SettleScreen = () => {
           />
         </View>
       </Content>
-    </Screen>
+    </SafeScreen>
   );
 };
 

@@ -216,9 +216,9 @@ export const getSpendingByCategory = (
   currentUserId = 'usr_1'
 ): { category: string; amount: number; color: string }[] => {
   const categoryColors: Record<string, string> = {
-    Food: '#3cddc7',
-    Transport: '#95d3ba',
-    Accommodation: '#c0c6de',
+    Food: '#ffb783',       // Luxe tertiary (amber)
+    Transport: '#c0c1ff',  // Luxe primary (indigo)
+    Accommodation: '#c7c4d7', // Luxe onSurfaceVariant
     Utilities: '#f59e0b',
     Housing: '#ef4444',
     Other: '#6b7280',

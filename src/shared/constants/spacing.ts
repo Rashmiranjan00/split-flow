@@ -9,9 +9,9 @@ export const Spacing = {
 };
 
 export const Radius = {
-  sm: 8,
-  md: 16,
-  lg: 32,   // Card Rule: rounded-lg (2rem)
-  xl: 48,   // Card Rule: rounded-xl (3rem)
-  full: 9999,
+  sm: 8,    // ROUND_EIGHT base
+  md: 12,   // Nested elements (chips, internal buttons)
+  lg: 24,   // Top-level cards (1.5rem Z-axis spec)
+  xl: 32,   // Hero sections
+  full: 9999, // Pill-shaped CTAs (per Luxe CTA spec)
 };

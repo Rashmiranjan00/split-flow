@@ -1,17 +1,19 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 
 const BaseText = styled.Text`
-  color: ${Colors.onSurface};
+  color: ${({ theme }) => theme.colors.onSurface};
   font-family: ${TypographyTokens.fonts.body};
 `;
 
-export const Display = styled(BaseText)`
+export const Display = styled(BaseText)<{ positive?: boolean }>`
   font-family: ${TypographyTokens.fonts.display};
   font-size: ${TypographyTokens.sizes.displaySm}px;
   font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme, positive }) => 
+    positive === undefined ? theme.colors.onSurface : 
+    positive ? theme.colors.tertiary : theme.colors.error};
 `;
 
 export const Headline = styled(BaseText)`
@@ -42,5 +44,5 @@ export const Label = styled(BaseText)`
   font-weight: ${TypographyTokens.weights.medium};
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: ${Colors.onSurfaceVariant};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
 `;

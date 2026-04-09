@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/shared/constants/colors';
+import { useTheme } from 'styled-components/native';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { BodyMd, BodySm } from '@/shared/components/Typography';
 
@@ -20,11 +20,14 @@ const ItemContainer = styled.TouchableOpacity`
   align-items: center;
   padding-vertical: ${Spacing.md}px;
   border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
+  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 interface IconTypeProps {
   type: string;
+  bgExpense: string;
+  bgSettlement: string;
+  bgDefault: string;
 }
 
 const IconContainer = styled.View<IconTypeProps>`
@@ -33,9 +36,9 @@ const IconContainer = styled.View<IconTypeProps>`
   border-radius: 20px;
   background-color: ${(props: IconTypeProps) => {
     switch (props.type) {
-      case 'EXPENSE': return Colors.primaryContainer;
-      case 'SETTLEMENT': return Colors.tertiaryContainer;
-      default: return Colors.surfaceContainerHigh;
+      case 'EXPENSE': return props.bgExpense;
+      case 'SETTLEMENT': return props.bgSettlement;
+      default: return props.bgDefault;
     }
   }};
   align-items: center;
@@ -52,7 +55,7 @@ interface PositiveProps {
 }
 
 const AmountText = styled(BodyMd)<PositiveProps>`
-  color: ${(props: PositiveProps) => props.positive ? Colors.tertiary : Colors.onSurfaceVariant};
+  color: ${({ positive, theme }: PositiveProps & { theme: any }) => positive ? theme.colors.tertiary : theme.colors.onSurfaceVariant};
   font-weight: 600;
 `;
 
@@ -64,6 +67,8 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
   date,
   onPress
 }) => {
+  const theme = useTheme();
+
   const getIcon = () => {
     switch (type) {
       case 'EXPENSE': return 'receipt';
@@ -74,21 +79,26 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
 
   const getIconColor = () => {
     switch (type) {
-      case 'EXPENSE': return Colors.primary;
-      case 'SETTLEMENT': return Colors.tertiary;
-      default: return Colors.onSurfaceVariant;
+      case 'EXPENSE': return theme.colors.primary;
+      case 'SETTLEMENT': return theme.colors.tertiary;
+      default: return theme.colors.onSurfaceVariant;
     }
   };
 
   return (
     <ItemContainer activeOpacity={0.7} onPress={onPress}>
-      <IconContainer type={type}>
+      <IconContainer
+        type={type}
+        bgExpense={theme.colors.primaryContainer}
+        bgSettlement={theme.colors.tertiaryContainer}
+        bgDefault={theme.colors.surfaceContainerHigh}
+      >
         <MaterialIcons name={getIcon() as any} size={20} color={getIconColor()} />
       </IconContainer>
       
       <TextContainer>
         <BodyMd numberOfLines={1} style={{ fontWeight: '500' }}>{title}</BodyMd>
-        <BodySm style={{ color: Colors.onSurfaceVariant }}>{subtitle}</BodySm>
+        <BodySm style={{ color: theme.colors.onSurfaceVariant }}>{subtitle}</BodySm>
       </TextContainer>
       
       {amount !== undefined && (
@@ -96,7 +106,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
           <AmountText positive={type === 'SETTLEMENT'}>
             {type === 'SETTLEMENT' ? '+' : ''}${Math.abs(amount).toFixed(2)}
           </AmountText>
-          <BodySm style={{ color: Colors.onSurfaceVariant, fontSize: 10 }}>{date}</BodySm>
+          <BodySm style={{ color: theme.colors.onSurfaceVariant, fontSize: 10 }}>{date}</BodySm>
         </View>
       )}
     </ItemContainer>

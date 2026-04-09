@@ -1,13 +1,17 @@
 import { Stack } from 'expo-router';
-import { Colors } from '@/shared/constants/colors';
+import { useTheme } from 'styled-components/native';
 
-const AuthLayout = () => (
-  <Stack
-    screenOptions={{
-      headerShown: false,
-      contentStyle: { backgroundColor: Colors.background },
-    }}
-  />
-);
+const AuthLayout = () => {
+  const theme = useTheme();
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+  );
+};
 
 export default AuthLayout;

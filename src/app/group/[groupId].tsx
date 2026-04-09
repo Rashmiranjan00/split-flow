@@ -1,12 +1,11 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
-  Screen, 
+  SafeScreen, 
   Content, 
   Row, 
   SpaceBetweenRow, 
@@ -46,7 +45,7 @@ const BackBtn = styled.TouchableOpacity`
 `;
 
 const HeroBanner = styled.View`
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   padding: ${Spacing.xxl}px ${Spacing.lg}px ${Spacing.xl}px;
   align-items: center;
   margin-bottom: ${Spacing.xl}px;
@@ -64,14 +63,16 @@ const BalanceBanner = styled.View`
 
 interface PositiveProps {
   positive: boolean;
+  tertiaryColor: string;
+  errorColor: string;
 }
 
 const BalanceCardStyled = styled.View<PositiveProps>`
   background-color: ${(props: PositiveProps) =>
-    props.positive ? 'rgba(60,221,199,0.1)' : 'rgba(255,180,171,0.1)'};
+    props.positive ? props.tertiaryColor + '1A' : props.errorColor + '1A'};
   border-width: 1px;
   border-color: ${(props: PositiveProps) =>
-    props.positive ? Colors.tertiary : Colors.error};
+    props.positive ? props.tertiaryColor : props.errorColor};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   align-items: center;
@@ -84,12 +85,12 @@ const SectionPad = styled.View`
 const MemberRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.sm}px 0;
   border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
+  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
   margin-bottom: 0;
 `;
 
-const MemberBalance = styled(BodySm)<PositiveProps>`
-  color: ${(props: PositiveProps) => props.positive ? Colors.tertiary : Colors.error};
+const MemberBalance = styled(BodySm)<{ positive: boolean }>`
+  color: ${({ positive, theme }: { positive: boolean; theme: any }) => positive ? theme.colors.tertiary : theme.colors.error};
   font-weight: 600;
 `;
 
@@ -99,7 +100,7 @@ const AddExpenseBtn = styled.TouchableOpacity`
   justify-content: center;
   padding: ${Spacing.md}px;
   margin: ${Spacing.lg}px;
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   border-radius: ${Radius.lg}px;
   gap: ${Spacing.sm}px;
 `;
@@ -109,6 +110,7 @@ const GroupDetailScreen = () => {
   const { userId } = useUser();
   const { formatDate } = useDateFormatter();
   const router = useRouter();
+  const theme = useTheme();
 
   const group = React.useMemo(() => MOCK_GROUPS.find(g => g.id === groupId), [groupId]);
   
@@ -132,10 +134,10 @@ const GroupDetailScreen = () => {
   };
 
   return (
-    <Screen>
+    <SafeScreen>
       <Header>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </BackBtn>
         <Title numberOfLines={1} style={{ flex: 1 }}>
           {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
@@ -145,20 +147,24 @@ const GroupDetailScreen = () => {
       <Content showsVerticalScrollIndicator={false}>
         <HeroBanner>
           <GroupEmojiLarge>{getGroupEmoji(group.name)}</GroupEmojiLarge>
-          <Headline style={{ color: Colors.primary }}>
+          <Headline style={{ color: theme.colors.primary }}>
             {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
           </Headline>
-          <BodySm style={{ color: Colors.primary, opacity: 0.7 }}>
+          <BodySm style={{ color: theme.colors.primary, opacity: 0.7 }}>
             {group.description}
           </BodySm>
         </HeroBanner>
 
         <BalanceBanner>
-          <BalanceCardStyled positive={isPositive}>
+          <BalanceCardStyled
+            positive={isPositive}
+            tertiaryColor={theme.colors.tertiary}
+            errorColor={theme.colors.error}
+          >
             <Label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {isPositive ? 'You are owed' : 'You owe in total'}
             </Label>
-            <Display positive={isPositive} style={{ color: isPositive ? Colors.tertiary : Colors.error }}>
+            <Display style={{ color: isPositive ? theme.colors.tertiary : theme.colors.error }}>
               {isPositive ? '+' : '-'}${Math.abs(balance).toFixed(2)}
             </Display>
           </BalanceCardStyled>
@@ -169,7 +175,7 @@ const GroupDetailScreen = () => {
             Balances
           </Label>
           {memberBalances.length === 0 ? (
-            <BodySm style={{ color: Colors.tertiary, paddingVertical: Spacing.sm, fontWeight: '600' }}>
+            <BodySm style={{ color: theme.colors.tertiary, paddingVertical: Spacing.sm, fontWeight: '600' }}>
               ✓ All settled up!
             </BodySm>
           ) : (
@@ -203,7 +209,7 @@ const GroupDetailScreen = () => {
                   {mid === userId && (
                     <>
                       <Spacer size="xs" horizontal />
-                      <MaterialIcons name="star" size={16} color={Colors.primary} />
+                      <MaterialIcons name="star" size={16} color={theme.colors.primary} />
                     </>
                   )}
                 </Row>
@@ -232,13 +238,13 @@ const GroupDetailScreen = () => {
         </SectionPad>
 
         <AddExpenseBtn onPress={() => router.push('/expense/add')} activeOpacity={0.8}>
-          <MaterialIcons name="add" size={20} color={Colors.primary} />
-          <BodyMd style={{ color: Colors.primary, fontWeight: '600' }}>Add Expense</BodyMd>
+          <MaterialIcons name="add" size={20} color={theme.colors.primary} />
+          <BodyMd style={{ color: theme.colors.primary, fontWeight: '600' }}>Add Expense</BodyMd>
         </AddExpenseBtn>
 
         <Spacer size="xxl" />
       </Content>
-    </Screen>
+    </SafeScreen>
   );
 };
 

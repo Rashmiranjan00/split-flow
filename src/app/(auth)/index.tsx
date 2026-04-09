@@ -1,20 +1,19 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
 import { useAuthStore } from '@/features/auth/store';
 import { ActionButton } from '@/shared/components/ActionButton';
-import { Colors } from '@/shared/constants/colors';
 import { Typography } from '@/shared/constants/typography';
 import { Spacing } from '@/shared/constants/spacing';
-import { Screen, Spacer } from '@/shared/components/Layout';
+import { SafeScreen, Spacer } from '@/shared/components/Layout';
 import { Display, Title, BodyMd } from '@/shared/components/Typography';
 
 const HeroSection = styled.View`
   flex: 2;
   align-items: center;
-  justify(content: center;
+  justify-content: center;
   padding: ${Spacing.lg}px;
 `;
 
@@ -22,7 +21,7 @@ const IconContainer = styled.View`
   width: 100px;
   height: 100px;
   border-radius: 50px;
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   align-items: center;
   justify-content: center;
   margin-bottom: ${Spacing.xl}px;
@@ -30,12 +29,12 @@ const IconContainer = styled.View`
 
 const WelcomeText = styled(Display)`
   text-align: center;
-  color: ${Colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
 const SubtitleText = styled(BodyMd)`
   text-align: center;
-  color: ${Colors.onSurfaceVariant};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
   margin-top: ${Spacing.md}px;
 `;
 
@@ -49,6 +48,7 @@ const AuthActions = styled.View`
 const AuthScreen = () => {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const theme = useTheme();
 
   const handleLogin = () => {
     login({ id: 'usr_1', name: 'Rashmi Ranjan', email: 'rashmi@example.com' });
@@ -56,10 +56,10 @@ const AuthScreen = () => {
   };
 
   return (
-    <Screen>
+    <SafeScreen>
       <HeroSection>
         <IconContainer>
-          <MaterialIcons name="account-balance-wallet" size={48} color={Colors.primary} />
+          <MaterialIcons name="account-balance-wallet" size={48} color={theme.colors.primary} />
         </IconContainer>
         <WelcomeText>SplitFlow</WelcomeText>
         <SubtitleText>
@@ -79,7 +79,7 @@ const AuthScreen = () => {
           variant="outline"
         />
       </AuthActions>
-    </Screen>
+    </SafeScreen>
   );
 };
 

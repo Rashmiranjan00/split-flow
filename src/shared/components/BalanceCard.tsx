@@ -1,7 +1,6 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/shared/constants/colors';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography } from '@/shared/constants/typography';
 
@@ -14,7 +13,7 @@ const GradientContainer = styled(LinearGradient)`
 `;
 
 const Label = styled.Text`
-  color: ${Colors.onPrimaryContainer};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
   font-family: ${Typography.fonts.body};
   font-size: ${Typography.sizes.bodyMd}px;
   letter-spacing: 1px;
@@ -23,7 +22,7 @@ const Label = styled.Text`
 `;
 
 const BalanceAmount = styled.Text`
-  color: ${Colors.onSurface};
+  color: ${({ theme }) => theme.colors.onSurface};
   font-family: ${Typography.fonts.display};
   font-size: ${Typography.sizes.displayLg}px;
   font-weight: ${Typography.weights.bold};
@@ -35,11 +34,12 @@ interface BalanceCardProps {
 }
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({ totalBalance }) => {
+  const theme = useTheme();
   const isPositive = totalBalance >= 0;
 
   return (
     <GradientContainer
-      colors={[Colors.primaryContainer, Colors.surfaceContainerLowest]}
+      colors={[theme.colors.primaryContainer, theme.colors.surfaceContainerLowest]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
     >

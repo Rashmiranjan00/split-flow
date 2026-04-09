@@ -1,6 +1,5 @@
 import React from 'react';
-import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
+import styled, { useTheme } from 'styled-components/native';
 import { Typography } from '@/shared/constants/typography';
 
 interface AvatarProps {
@@ -21,10 +20,10 @@ const AvatarContainer = styled.View<ContainerProps>`
   width: ${(props: ContainerProps) => props.size}px;
   height: ${(props: ContainerProps) => props.size}px;
   border-radius: ${(props: ContainerProps) => props.size / 2}px;
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   align-items: center;
   justify-content: center;
-  ${(props: ContainerProps) => props.borderWidth ? `border-width: ${props.borderWidth}px; border-color: ${props.borderColor || Colors.outlineVariant};` : ''}
+  ${(props: ContainerProps & { theme: any }) => props.borderWidth ? `border-width: ${props.borderWidth}px; border-color: ${props.borderColor || props.theme.colors.outlineVariant};` : ''}
 `;
 
 const AvatarImage = styled.Image<{ size: number }>`
@@ -34,7 +33,7 @@ const AvatarImage = styled.Image<{ size: number }>`
 `;
 
 const AvatarInitial = styled.Text<{ size: number }>`
-  color: ${Colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
   font-family: ${Typography.fonts.display};
   font-size: ${(props: { size: number }) => Math.max(props.size / 2.5, 12)}px;
   font-weight: ${Typography.weights.bold};

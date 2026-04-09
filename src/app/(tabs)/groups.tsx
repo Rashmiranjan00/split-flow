@@ -1,9 +1,8 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { Alert, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing } from '@/shared/constants/spacing';
 import { 
   Screen, 
@@ -29,7 +28,7 @@ const AddButton = styled.TouchableOpacity`
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   align-items: center;
   justify-content: center;
 `;
@@ -47,6 +46,7 @@ const EmptyEmoji = styled.Text`
 const GroupsScreen = () => {
   const { userId } = useUser();
   const router = useRouter();
+  const theme = useTheme();
 
   return (
     <Screen>
@@ -58,7 +58,7 @@ const GroupsScreen = () => {
               onPress={() => Alert.alert('New Group', 'Create group coming soon!')}
               activeOpacity={0.8}
             >
-              <MaterialIcons name="add" size={22} color={Colors.primary} />
+              <MaterialIcons name="add" size={22} color={theme.colors.primary} />
             </AddButton>
           </HeaderRow>
 

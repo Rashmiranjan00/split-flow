@@ -1,6 +1,5 @@
 import React from 'react';
-import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
+import styled, { useTheme } from 'styled-components/native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Title, BodySm, BodyMd, Label } from '@/shared/components/Typography';
 import { AvatarStack } from './AvatarStack';
@@ -27,19 +26,19 @@ interface GroupCardProps {
 }
 
 const CardContainer = styled.TouchableOpacity`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.xl}px;
   padding: ${Spacing.lg}px;
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const GroupIcon = styled.View`
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   align-items: center;
   justify-content: center;
 `;
@@ -54,24 +53,28 @@ const TextContainer = styled.View`
 
 interface BalanceBadgeProps {
   positive: boolean;
+  tertiaryColor: string;
+  errorColor: string;
 }
 
 const BalanceBadge = styled.View<BalanceBadgeProps>`
   background-color: ${(props: BalanceBadgeProps) =>
-    props.positive ? 'rgba(60, 221, 199, 0.12)' : 'rgba(255, 180, 171, 0.12)'};
+    props.positive
+      ? props.tertiaryColor + '1F'
+      : props.errorColor + '1F'};
   border-radius: ${Radius.full}px;
   padding-horizontal: ${Spacing.sm}px;
   padding-vertical: 4px;
 `;
 
-const BalanceText = styled(BodySm)<BalanceBadgeProps>`
-  color: ${(props: BalanceBadgeProps) => props.positive ? Colors.tertiary : Colors.error};
+const BalanceText = styled(BodySm)<{ positive: boolean }>`
+  color: ${({ positive, theme }: { positive: boolean; theme: any }) => positive ? theme.colors.tertiary : theme.colors.error};
   font-weight: 700;
 `;
 
 const Divider = styled.View`
   height: 1px;
-  background-color: ${Colors.outlineVariant};
+  background-color: ${({ theme }) => theme.colors.outlineVariant};
   margin-vertical: ${Spacing.md}px;
 `;
 
@@ -81,6 +84,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   members, 
   onPress 
 }) => {
+  const theme = useTheme();
   const isPositive = balance >= 0;
   
   const getGroupEmoji = (name: string) => {
@@ -106,7 +110,11 @@ export const GroupCard: React.FC<GroupCardProps> = ({
           </BodySm>
         </TextContainer>
         
-        <BalanceBadge positive={isPositive}>
+        <BalanceBadge
+          positive={isPositive}
+          tertiaryColor={theme.colors.tertiary}
+          errorColor={theme.colors.error}
+        >
           <BalanceText positive={isPositive}>
             {isPositive ? '+' : '-'}${Math.abs(balance).toFixed(0)}
           </BalanceText>

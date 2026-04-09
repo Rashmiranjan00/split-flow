@@ -1,8 +1,7 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
   Screen, 
@@ -44,7 +43,7 @@ const SectionHeader = styled(SpaceBetweenRow)`
 const SeeAllText = styled.TouchableOpacity``;
 
 const SeeAllLabel = styled(BodySm)`
-  color: ${Colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
 const GroupChipsRow = styled.ScrollView`
@@ -56,21 +55,21 @@ interface ActiveProps {
 }
 
 const GroupChip = styled.TouchableOpacity<ActiveProps>`
-  background-color: ${(props: ActiveProps) =>
-    props.active ? Colors.primaryContainer : Colors.surfaceContainerLow};
+  background-color: ${({ active, theme }: ActiveProps & { theme: any }) =>
+    active ? theme.colors.primaryContainer : theme.colors.surfaceContainerLow};
   border-radius: ${Radius.full}px;
   padding-horizontal: ${Spacing.md}px;
   padding-vertical: ${Spacing.xs}px;
   margin-right: ${Spacing.sm}px;
   border-width: 1px;
-  border-color: ${(props: ActiveProps) =>
-    props.active ? Colors.primary : Colors.outlineVariant};
+  border-color: ${({ active, theme }: ActiveProps & { theme: any }) =>
+    active ? theme.colors.primary : theme.colors.outlineVariant};
 `;
 
 const GroupChipText = styled(BodySm)<ActiveProps>`
-  color: ${(props: ActiveProps) =>
-    props.active ? Colors.primary : Colors.onSurfaceVariant};
-  font-weight: ${(props: ActiveProps) => props.active ? '600' : '400'};
+  color: ${({ active, theme }: ActiveProps & { theme: any }) =>
+    active ? theme.colors.primary : theme.colors.onSurfaceVariant};
+  font-weight: ${({ active }: ActiveProps) => active ? '600' : '400'};
 `;
 
 const FABWrapper = styled.View`
@@ -83,18 +82,18 @@ const FABButton = styled.TouchableOpacity`
   width: 60px;
   height: 60px;
   border-radius: 30px;
-  background-color: ${Colors.primary};
+  background-color: ${({ theme }) => theme.colors.primary};
   align-items: center;
   justify-content: center;
   elevation: 8;
-  shadow-color: ${Colors.primary};
+  shadow-color: ${({ theme }) => theme.colors.primary};
   shadow-offset: 0px 4px;
   shadow-opacity: 0.4;
   shadow-radius: 12px;
 `;
 
 const FABIcon = styled.Text`
-  color: ${Colors.onPrimaryFixed};
+  color: ${({ theme }) => theme.colors.onPrimaryFixed};
   font-size: 28px;
   font-weight: 300;
   margin-top: -2px;
@@ -110,6 +109,7 @@ const HomeScreen = () => {
   const { totalBalance } = useBalances();
   const { formatDate } = useDateFormatter();
   const router = useRouter();
+  const theme = useTheme();
   const [activeGroup, setActiveGroup] = React.useState<string | null>(null);
 
   const recentExpenses = React.useMemo(() => {
@@ -139,7 +139,7 @@ const HomeScreen = () => {
                 {user?.name?.split(' ')[0] ?? 'User'} 👋
               </Display>
             </View>
-            <Avatar name={user?.name ?? 'User'} size={48} borderWidth={2} borderColor={Colors.primary} />
+            <Avatar name={user?.name ?? 'User'} size={48} borderWidth={2} borderColor={theme.colors.primary} />
           </HeaderRow>
 
           <BalanceCard totalBalance={totalBalance} />

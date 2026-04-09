@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
 import { Avatar } from '@/shared/components/Avatar';
 
 interface AvatarStackProps {
@@ -22,7 +21,7 @@ const StackItem = styled.View<StackItemProps>`
   width: ${(props: StackItemProps) => props.size}px;
   height: ${(props: StackItemProps) => props.size}px;
   border-radius: ${(props: StackItemProps) => props.size / 2}px;
-  background-color: ${Colors.surface};
+  background-color: ${({ theme }) => theme.colors.surface};
   padding: 2px;
   margin-left: ${(props: StackItemProps) => -props.size / 4}px;
 `;
@@ -31,13 +30,13 @@ const MoreBadge = styled.View<StackItemProps>`
   width: ${(props: StackItemProps) => props.size - 4}px;
   height: ${(props: StackItemProps) => props.size - 4}px;
   border-radius: ${(props: StackItemProps) => (props.size - 4) / 2}px;
-  background-color: ${Colors.surfaceContainerHigh};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
   align-items: center;
   justify-content: center;
 `;
 
 const MoreText = styled.Text<StackItemProps>`
-  color: ${Colors.onSurfaceVariant};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
   font-size: ${(props: StackItemProps) => props.size / 3}px;
   font-weight: 600;
 `;

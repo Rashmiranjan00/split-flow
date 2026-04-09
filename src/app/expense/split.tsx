@@ -1,11 +1,10 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
-  Screen, 
+  SafeScreen, 
   Content, 
   Row, 
   SpaceBetweenRow, 
@@ -24,7 +23,7 @@ import { Avatar } from '@/shared/components/Avatar';
 const NavBar = styled(Row)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
   border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
+  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
   margin-bottom: 0;
 `;
 
@@ -33,24 +32,24 @@ const BackBtn = styled.TouchableOpacity`
 `;
 
 const InfoCard = styled.View`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   margin-top: ${Spacing.xl}px;
   margin-bottom: ${Spacing.lg}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const SplitRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px 0;
   border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
+  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
   margin-bottom: 0;
 `;
 
 const TypeBadge = styled.View`
-  background-color: ${Colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryContainer};
   border-radius: ${Radius.full}px;
   padding-horizontal: ${Spacing.sm}px;
   padding-vertical: 4px;
@@ -74,6 +73,7 @@ const DEMO_EXPENSE = {
 
 const SplitExpenseScreen = () => {
   const router = useRouter();
+  const theme = useTheme();
 
   const totalMembersShare = React.useMemo(() => 
     DEMO_EXPENSE.members.reduce((s, m) => s + m.share, 0),
@@ -81,10 +81,10 @@ const SplitExpenseScreen = () => {
   );
 
   return (
-    <Screen>
+    <SafeScreen>
       <NavBar>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </BackBtn>
         <Title>Split Breakdown</Title>
       </NavBar>
@@ -107,7 +107,7 @@ const SplitExpenseScreen = () => {
             </Row>
 
             <TypeBadge>
-              <BodySm style={{ color: Colors.primary, fontWeight: '600' }}>= Split equally</BodySm>
+              <BodySm style={{ color: theme.colors.primary, fontWeight: '600' }}>= Split equally</BodySm>
             </TypeBadge>
           </InfoCard>
 
@@ -121,7 +121,7 @@ const SplitExpenseScreen = () => {
                 <Spacer size="md" horizontal />
                 <BodyMd style={{ fontWeight: '500' }}>{member.name}</BodyMd>
               </Row>
-              <BodyMd style={{ color: Colors.tertiary, fontWeight: '600' }}>
+              <BodyMd style={{ color: theme.colors.tertiary, fontWeight: '600' }}>
                 ${member.share.toFixed(2)}
               </BodyMd>
             </SplitRow>
@@ -129,7 +129,7 @@ const SplitExpenseScreen = () => {
 
           <SpaceBetweenRow style={{ paddingVertical: Spacing.md, marginTop: Spacing.sm }}>
             <Label style={{ textTransform: 'uppercase' }}>Total check</Label>
-            <BodySm style={{ color: Colors.tertiary, fontWeight: '600' }}>
+            <BodySm style={{ color: theme.colors.tertiary, fontWeight: '600' }}>
               ${totalMembersShare.toFixed(2)} ✓
             </BodySm>
           </SpaceBetweenRow>
@@ -145,7 +145,7 @@ const SplitExpenseScreen = () => {
           <Spacer size="xxxl" />
         </PaddedContainer>
       </Content>
-    </Screen>
+    </SafeScreen>
   );
 };
 

@@ -1,7 +1,6 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { Dimensions, View } from 'react-native';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
   Screen, 
@@ -30,31 +29,31 @@ import { useUser } from '@/shared/hooks/useUser';
 const BAR_CHART_HEIGHT = 140;
 
 const StatCard = styled.View`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.xl}px;
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const HalfCard = styled.View`
   flex: 1;
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const BarChartContainer = styled.View`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   padding-bottom: ${Spacing.md}px;
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const BarsRow = styled.View`
@@ -79,7 +78,7 @@ const Bar = styled.View<BarProps>`
   width: 24px;
   height: ${(props: BarProps) => props.height}px;
   border-radius: 6px;
-  background-color: ${(props: BarProps) => props.active ? Colors.primary : Colors.surfaceContainerHigh};
+  background-color: ${({ active, theme }: BarProps & { theme: any }) => active ? theme.colors.primary : theme.colors.surfaceContainerHigh};
   margin-bottom: ${Spacing.xs}px;
 `;
 
@@ -88,18 +87,18 @@ interface ActiveProps {
 }
 
 const BarLabel = styled(BodySm)<ActiveProps>`
-  color: ${(props: ActiveProps) => props.active ? Colors.primary : Colors.onSurfaceVariant};
+  color: ${({ active, theme }: ActiveProps & { theme: any }) => active ? theme.colors.primary : theme.colors.onSurfaceVariant};
   font-size: 10px;
-  font-weight: ${(props: ActiveProps) => props.active ? '700' : '400'};
+  font-weight: ${({ active }: ActiveProps) => active ? '700' : '400'};
 `;
 
 const DonutContainer = styled.View`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 const DonutVisual = styled.View`
@@ -107,11 +106,11 @@ const DonutVisual = styled.View`
   height: 100px;
   border-radius: 50px;
   border-width: 16px;
-  border-color: ${Colors.primary};
+  border-color: ${({ theme }) => theme.colors.primary};
   align-items: center;
   justify-content: center;
   margin-right: ${Spacing.lg}px;
-  background-color: ${Colors.surfaceContainerHigh};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
 `;
 
 interface BgColorProps {
@@ -128,6 +127,7 @@ const LegendDot = styled.View<BgColorProps>`
 
 const AnalyticsScreen = () => {
   const { userId } = useUser();
+  const theme = useTheme();
   const categoryData = getSpendingByCategory(userId);
   const totalBalance = getTotalBalance(userId);
 
@@ -173,7 +173,7 @@ const AnalyticsScreen = () => {
               <Display positive={totalBalance >= 0}>
                 ${Math.abs(totalBalance).toFixed(2)}
               </Display>
-              <BodyMd style={{ color: totalBalance >= 0 ? Colors.tertiary : Colors.error, fontWeight: '600' }}>
+              <BodyMd style={{ color: totalBalance >= 0 ? theme.colors.tertiary : theme.colors.error, fontWeight: '600' }}>
                 {totalBalance >= 0 ? '▲ Owed to you' : '▼ You owe'}
               </BodyMd>
             </SpaceBetweenRow>
@@ -186,7 +186,7 @@ const AnalyticsScreen = () => {
             </HalfCard>
             <HalfCard>
               <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>You owe</Label>
-              <Title style={{ fontSize: 24, color: Colors.error }}>${totalIOwe.toFixed(0)}</Title>
+              <Title style={{ fontSize: 24, color: theme.colors.error }}>${totalIOwe.toFixed(0)}</Title>
             </HalfCard>
           </Row>
 

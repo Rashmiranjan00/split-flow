@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { BodyMd } from './Typography';
 
@@ -10,25 +9,25 @@ interface ButtonContainerProps {
 }
 
 const ButtonContainer = styled.TouchableOpacity<ButtonContainerProps>`
-  background-color: ${(props: ButtonContainerProps) => {
-    if (props.disabled) return Colors.surfaceContainerHigh;
-    if (props.variant === 'primary') return Colors.primary;
-    if (props.variant === 'secondary') return Colors.primaryContainer;
+  background-color: ${({ theme, variant, disabled }: ButtonContainerProps & { theme: any }) => {
+    if (disabled) return theme.colors.surfaceContainerHigh;
+    if (variant === 'primary') return theme.colors.primary;
+    if (variant === 'secondary') return theme.colors.primaryContainer;
     return 'transparent';
   }};
   padding: ${Spacing.md}px ${Spacing.xl}px;
   border-radius: ${Radius.full}px;
   align-items: center;
   justify-content: center;
-  border-width: ${(props: ButtonContainerProps) => (props.variant === 'outline' ? 1 : 0)}px;
-  border-color: ${Colors.primary};
+  border-width: ${({ variant }: ButtonContainerProps) => (variant === 'outline' ? 1 : 0)}px;
+  border-color: ${({ theme }) => theme.colors.primary};
 `;
 
 const ButtonText = styled(BodyMd)<ButtonContainerProps>`
-  color: ${(props: ButtonContainerProps) => {
-    if (props.disabled) return Colors.onSurfaceVariant;
-    if (props.variant === 'primary') return Colors.onPrimaryFixed;
-    return Colors.primary;
+  color: ${({ theme, variant, disabled }: ButtonContainerProps & { theme: any }) => {
+    if (disabled) return theme.colors.onSurfaceVariant;
+    if (variant === 'primary') return theme.colors.onPrimaryFixed;
+    return theme.colors.primary;
   }};
   font-weight: 700;
 `;

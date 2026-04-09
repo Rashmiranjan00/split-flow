@@ -1,11 +1,10 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography } from '@/shared/constants/typography';
 
 const CardContainer = styled.TouchableOpacity`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.md}px;
   padding: ${Spacing.md}px;
   margin-bottom: ${Spacing.sm}px;
@@ -23,7 +22,7 @@ const IconWrapper = styled.View`
   width: 48px;
   height: 48px;
   border-radius: 24px;
-  background-color: ${Colors.surfaceContainerHigh};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
   align-items: center;
   justify-content: center;
   margin-right: ${Spacing.md}px;
@@ -32,14 +31,14 @@ const IconWrapper = styled.View`
 const TitleColumn = styled.View``;
 
 const Title = styled.Text`
-  color: ${Colors.onSurface};
+  color: ${({ theme }) => theme.colors.onSurface};
   font-family: ${Typography.fonts.body};
   font-size: ${Typography.sizes.bodyMd}px;
   font-weight: ${Typography.weights.bold};
 `;
 
 const Subtitle = styled.Text`
-  color: ${Colors.onSurfaceVariant};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
   font-family: ${Typography.fonts.body};
   font-size: ${Typography.sizes.bodyMd}px;
 `;
@@ -49,14 +48,14 @@ const AmountColumn = styled.View`
 `;
 
 const Amount = styled.Text<{ highlight: boolean }>`
-    color: ${({ highlight }: { highlight: boolean }) => (highlight ? Colors.tertiary : Colors.onSurface)};
+    color: ${({ highlight, theme }: { highlight: boolean; theme: any }) => (highlight ? theme.colors.tertiary : theme.colors.onSurface)};
   font-family: ${Typography.fonts.body};
   font-size: ${Typography.sizes.bodyMd}px;
   font-weight: ${Typography.weights.bold};
 `;
 
 const DateText = styled.Text`
-  color: ${Colors.onSurfaceVariant};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
   font-family: ${Typography.fonts.body};
   font-size: 12px;
 `;

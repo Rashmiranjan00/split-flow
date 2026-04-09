@@ -1,7 +1,6 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { View } from 'react-native';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing } from '@/shared/constants/spacing';
 import { 
   Screen, 
@@ -34,7 +33,7 @@ const DateGroup = styled(Label)`
   margin-bottom: ${Spacing.md}px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: ${Colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
 const ActivityScreen = () => {

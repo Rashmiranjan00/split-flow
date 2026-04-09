@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/shared/constants/colors';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
-  Screen, 
+  SafeScreen, 
   Content, 
   Row, 
   SpaceBetweenRow, 
@@ -42,7 +41,7 @@ type FormValues = z.infer<typeof schema>;
 const NavBar = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
   border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
+  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
   margin-bottom: 0;
 `;
 
@@ -56,7 +55,7 @@ const BigAmountContainer = styled.View`
 `;
 
 const BigInput = styled.TextInput`
-  color: ${Colors.onSurface};
+  color: ${({ theme }) => theme.colors.onSurface};
   font-size: 56px;
   font-weight: 700;
   text-align: center;
@@ -74,13 +73,13 @@ interface ErrorProps {
 }
 
 const TextInputStyled = styled.TextInput<ErrorProps>`
-  background-color: ${Colors.surfaceContainerLow};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
   border-radius: ${Radius.md}px;
   padding: ${Spacing.md}px;
-  color: ${Colors.onSurface};
+  color: ${({ theme }) => theme.colors.onSurface};
   font-size: 16px;
   border-width: 1px;
-  border-color: ${(props: ErrorProps) => props.error ? Colors.error : Colors.outlineVariant};
+  border-color: ${({ error, theme }: ErrorProps & { theme: any }) => error ? theme.colors.error : theme.colors.outlineVariant};
 `;
 
 const ChipsRow = styled.ScrollView``;
@@ -94,16 +93,16 @@ const Chip = styled.TouchableOpacity<SelectedProps>`
   padding-vertical: ${Spacing.xs}px;
   border-radius: ${Radius.full}px;
   margin-right: ${Spacing.sm}px;
-  background-color: ${(props: SelectedProps) =>
-    props.selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
+  background-color: ${({ selected, theme }: SelectedProps & { theme: any }) =>
+    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerLow};
   border-width: 1px;
-  border-color: ${(props: SelectedProps) =>
-    props.selected ? Colors.primary : Colors.outlineVariant};
+  border-color: ${({ selected, theme }: SelectedProps & { theme: any }) =>
+    selected ? theme.colors.primary : theme.colors.outlineVariant};
 `;
 
 const ChipText = styled(BodySm)<SelectedProps>`
-  color: ${(props: SelectedProps) => props.selected ? Colors.primary : Colors.onSurfaceVariant};
-  font-weight: ${(props: SelectedProps) => props.selected ? '700' : '400'};
+  color: ${({ selected, theme }: SelectedProps & { theme: any }) => selected ? theme.colors.primary : theme.colors.onSurfaceVariant};
+  font-weight: ${({ selected }: SelectedProps) => selected ? '700' : '400'};
 `;
 
 const SplitTypeRow = styled.View`
@@ -116,24 +115,24 @@ const SplitTypeBtn = styled.TouchableOpacity<SelectedProps>`
   padding-vertical: ${Spacing.sm}px;
   border-radius: ${Radius.md}px;
   align-items: center;
-  background-color: ${(props: SelectedProps) =>
-    props.selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
+  background-color: ${({ selected, theme }: SelectedProps & { theme: any }) =>
+    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerLow};
   border-width: 1px;
-  border-color: ${(props: SelectedProps) =>
-    props.selected ? Colors.primary : Colors.outlineVariant};
+  border-color: ${({ selected, theme }: SelectedProps & { theme: any }) =>
+    selected ? theme.colors.primary : theme.colors.outlineVariant};
 `;
 
 const SplitTypeBtnText = styled(Label)<SelectedProps>`
-  color: ${(props: SelectedProps) => props.selected ? Colors.primary : Colors.onSurfaceVariant};
+  color: ${({ selected, theme }: SelectedProps & { theme: any }) => selected ? theme.colors.primary : theme.colors.onSurfaceVariant};
   font-size: 11px;
-  font-weight: ${(props: SelectedProps) => props.selected ? '700' : '400'};
+  font-weight: ${({ selected }: SelectedProps) => selected ? '700' : '400'};
 `;
 
 const BottomActions = styled.View`
   padding: ${Spacing.lg}px;
   padding-bottom: ${Spacing.xl}px;
   border-top-width: 1px;
-  border-top-color: ${Colors.outlineVariant};
+  border-top-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
 type SplitType = 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
@@ -143,6 +142,7 @@ const AddExpenseScreen = () => {
   const { userId } = useUser();
   const addExpense = useExpenseStore(state => state.addExpense);
   const [splitType, setSplitType] = useState<SplitType>('EQUAL');
+  const theme = useTheme();
 
   const {
     control,
@@ -191,14 +191,14 @@ const AddExpenseScreen = () => {
   ];
 
   return (
-    <Screen>
+    <SafeScreen>
       <NavBar>
         <NavBtn onPress={() => router.back()}>
           <BodyMd>Cancel</BodyMd>
         </NavBtn>
         <Title>New Expense</Title>
         <NavBtn onPress={handleSubmit(onSubmit)}>
-          <BodyMd style={{ color: Colors.primary, fontWeight: '700' }}>Save</BodyMd>
+          <BodyMd style={{ color: theme.colors.primary, fontWeight: '700' }}>Save</BodyMd>
         </NavBtn>
       </NavBar>
 
@@ -217,10 +217,10 @@ const AddExpenseScreen = () => {
               name="amount"
               render={({ field: { onChange, value, onBlur } }) => (
                 <Row>
-                  <Headline style={{ color: Colors.onSurfaceVariant, marginRight: 8 }}>$</Headline>
+                  <Headline style={{ color: theme.colors.onSurfaceVariant, marginRight: 8 }}>$</Headline>
                   <BigInput
                     placeholder="0.00"
-                    placeholderTextColor={Colors.outlineVariant}
+                    placeholderTextColor={theme.colors.outlineVariant}
                     keyboardType="decimal-pad"
                     autoFocus
                     value={value}
@@ -230,7 +230,7 @@ const AddExpenseScreen = () => {
                 </Row>
               )}
             />
-            {errors.amount && <BodySm style={{ color: Colors.error }}>{errors.amount.message}</BodySm>}
+            {errors.amount && <BodySm style={{ color: theme.colors.error }}>{errors.amount.message}</BodySm>}
           </BigAmountContainer>
 
           {/* Description */}
@@ -242,7 +242,7 @@ const AddExpenseScreen = () => {
               render={({ field: { onChange, value, onBlur } }) => (
                 <TextInputStyled
                   placeholder="e.g. Dinner, Uber, Airbnb..."
-                  placeholderTextColor={Colors.onSurfaceVariant}
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -250,7 +250,7 @@ const AddExpenseScreen = () => {
                 />
               )}
             />
-            {errors.description && <BodySm style={{ color: Colors.error, marginTop: 4 }}>{errors.description.message}</BodySm>}
+            {errors.description && <BodySm style={{ color: theme.colors.error, marginTop: 4 }}>{errors.description.message}</BodySm>}
           </FieldSection>
 
           {/* Group Picker */}
@@ -325,7 +325,7 @@ const AddExpenseScreen = () => {
       <BottomActions>
         <ActionButton title="Add Expense" onPress={handleSubmit(onSubmit)} />
       </BottomActions>
-    </Screen>
+    </SafeScreen>
   );
 };
 

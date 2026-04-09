@@ -1,7 +1,7 @@
 export const Typography = {
   fonts: {
-    display: 'System',   // Replace with 'Manrope' once expo-font is configured
-    body: 'System',      // Replace with 'Inter'
+    display: 'Manrope',
+    body: 'Manrope',
   },
   sizes: {
     displayLg: 48,

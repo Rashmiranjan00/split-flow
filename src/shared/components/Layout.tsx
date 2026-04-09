@@ -1,14 +1,21 @@
 import styled from 'styled-components/native';
-import { Colors } from '@/shared/constants/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spacing } from '@/shared/constants/spacing';
 
-export const Screen = styled.SafeAreaView`
+/** SafeScreen: Use for top-level screens outside of Tabs */
+export const SafeScreen = styled(SafeAreaView)`
   flex: 1;
-  background-color: ${Colors.background};
+  background-color: ${({ theme }) => theme.colors.background};
+`;
+
+/** Screen: Regular view container. Combined with TabsLayout Safe Area handling. */
+export const Screen = styled.View`
+  flex: 1;
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 export const Content = styled.ScrollView.attrs(() => ({
-  contentContainerStyle: { paddingBottom: 40 },
+  contentContainerStyle: { paddingBottom: 20 },
 }))`
   flex: 1;
 `;

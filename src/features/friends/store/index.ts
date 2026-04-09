@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { zustandStorage } from '@/services/storage';
-import { Friend } from '@/types';
+import { zustandStorage } from '@/shared/services/storage';
+import { User } from '@/shared/types';
+import { MOCK_MEMBERS } from '@/shared/data/mockData';
 
 interface FriendState {
-  friends: Friend[];
-  addFriend: (friend: Friend) => void;
+  friends: User[];
+  addFriend: (friend: User) => void;
   removeFriend: (id: string) => void;
 }
 

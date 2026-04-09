@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'styled-components/native';
 import { useAuthStore } from '@/features/auth/store';
-import { Colors } from '@/constants/colors';
+import { Colors } from '@/shared/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 
 const queryClient = new QueryClient();

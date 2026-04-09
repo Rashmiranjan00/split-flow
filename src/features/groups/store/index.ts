@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { zustandStorage } from '@/services/storage';
-import { Group } from '@/types';
+import { zustandStorage } from '@/shared/services/storage';
+import { Group } from '@/shared/types';
+import { MOCK_GROUPS } from '@/shared/data/mockData';
 
 interface GroupState {
   groups: Group[];

@@ -1,29 +1,40 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
-import { Spacing, Radius } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
+import { View } from 'react-native';
+import { Colors } from '@/shared/constants/colors';
+import { Spacing, Radius } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  SpaceBetweenRow, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Display, 
+  Headline, 
+  Title, 
+  BodyMd, 
+  BodySm, 
+  Label 
+} from '@/shared/components/Typography';
+import { Avatar } from '@/shared/components/Avatar';
+import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
+import { useUser } from '@/shared/hooks/useUser';
+import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 import {
   MOCK_GROUPS,
   MOCK_EXPENSES,
   MOCK_MEMBERS,
   getGroupBalance,
   getGroupMemberBalances,
-} from '@/data/mockData';
+} from '@/shared/data/mockData';
 
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.background};
-`;
-
-const Header = styled.View`
-  flex-direction: row;
-  align-items: center;
+const Header = styled(Row)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
+  margin-bottom: 0;
 `;
 
 const BackBtn = styled.TouchableOpacity`
@@ -32,14 +43,6 @@ const BackBtn = styled.TouchableOpacity`
   align-items: center;
   justify-content: center;
   margin-right: ${Spacing.sm}px;
-`;
-
-const GroupTitleText = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleMd}px;
-  font-weight: ${Typography.weights.semibold};
-  flex: 1;
 `;
 
 const HeroBanner = styled.View`
@@ -54,151 +57,40 @@ const GroupEmojiLarge = styled.Text`
   margin-bottom: ${Spacing.sm}px;
 `;
 
-const GroupNameLarge = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.headlineMd}px;
-  font-weight: ${Typography.weights.bold};
-  text-align: center;
-`;
-
-const GroupDescText = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  opacity: 0.7;
-  margin-top: 4px;
-`;
-
 const BalanceBanner = styled.View`
   padding-horizontal: ${Spacing.lg}px;
   margin-bottom: ${Spacing.xl}px;
 `;
 
-const BalanceCard = styled.View<{ positive: boolean }>`
-  background-color: ${({ positive }: { positive: boolean }) =>
-    positive ? 'rgba(60,221,199,0.1)' : 'rgba(255,180,171,0.1)'};
+interface PositiveProps {
+  positive: boolean;
+}
+
+const BalanceCardStyled = styled.View<PositiveProps>`
+  background-color: ${(props: PositiveProps) =>
+    props.positive ? 'rgba(60,221,199,0.1)' : 'rgba(255,180,171,0.1)'};
   border-width: 1px;
-  border-color: ${({ positive }: { positive: boolean }) =>
-    positive ? Colors.tertiary : Colors.error};
+  border-color: ${(props: PositiveProps) =>
+    props.positive ? Colors.tertiary : Colors.error};
   border-radius: ${Radius.lg}px;
   padding: ${Spacing.lg}px;
   align-items: center;
-`;
-
-const BalanceLabel = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: ${Spacing.xs}px;
-`;
-
-const BalanceValue = styled.Text<{ positive: boolean }>`
-  color: ${({ positive }: { positive: boolean }) => positive ? Colors.tertiary : Colors.error};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displaySm}px;
-  font-weight: ${Typography.weights.bold};
 `;
 
 const SectionPad = styled.View`
   padding-horizontal: ${Spacing.lg}px;
 `;
 
-const SectionTitle = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: ${Spacing.sm}px;
-  margin-top: ${Spacing.lg}px;
-`;
-
-const MemberRow = styled.View`
-  flex-direction: row;
-  align-items: center;
+const MemberRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.sm}px 0;
   border-bottom-width: 1px;
   border-bottom-color: ${Colors.outlineVariant};
+  margin-bottom: 0;
 `;
 
-const MemberAvatar = styled.View`
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  background-color: ${Colors.surfaceContainerHigh};
-  align-items: center;
-  justify-content: center;
-  margin-right: ${Spacing.md}px;
-`;
-
-const MemberInitial = styled.Text`
-  color: ${Colors.onSurface};
-  font-size: 16px;
-  font-weight: 700;
-`;
-
-const MemberName = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  flex: 1;
-`;
-
-const MemberBalance = styled.Text<{ positive: boolean }>`
-  color: ${({ positive }: { positive: boolean }) => positive ? Colors.tertiary : Colors.error};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  font-weight: ${Typography.weights.semibold};
-`;
-
-const ExpenseRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  padding: ${Spacing.md}px 0;
-  border-bottom-width: 1px;
-  border-bottom-color: ${Colors.outlineVariant};
-`;
-
-const ExpenseIcon = styled.View`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background-color: ${Colors.surfaceContainerHigh};
-  align-items: center;
-  justify-content: center;
-  margin-right: ${Spacing.md}px;
-`;
-
-const ExpenseEmoji = styled.Text`
-  font-size: 18px;
-`;
-
-const ExpenseInfo = styled.View`
-  flex: 1;
-`;
-
-const ExpenseName = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.semibold};
-`;
-
-const ExpenseMeta = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  margin-top: 2px;
-`;
-
-const ExpenseAmount = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.bold};
+const MemberBalance = styled(BodySm)<PositiveProps>`
+  color: ${(props: PositiveProps) => props.positive ? Colors.tertiary : Colors.error};
+  font-weight: 600;
 `;
 
 const AddExpenseBtn = styled.TouchableOpacity`
@@ -212,39 +104,25 @@ const AddExpenseBtn = styled.TouchableOpacity`
   gap: ${Spacing.sm}px;
 `;
 
-const AddExpenseBtnText = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.semibold};
-`;
-
-const getCategoryEmoji = (cat?: string) => {
-  const map: Record<string, string> = {
-    Food: '🍽', Transport: '🚗', Accommodation: '🏠',
-    Utilities: '⚡', Housing: '🏠', Other: '💳',
-  };
-  return map[cat ?? 'Other'] ?? '💳';
-};
-
 const GroupDetailScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { userId } = useUser();
+  const { formatDate } = useDateFormatter();
   const router = useRouter();
 
-  const group = MOCK_GROUPS.find(g => g.id === groupId);
+  const group = React.useMemo(() => MOCK_GROUPS.find(g => g.id === groupId), [groupId]);
+  
   if (!group) return null;
 
-  const balance = getGroupBalance(groupId, 'usr_1');
+  const balance = getGroupBalance(groupId!, userId);
   const isPositive = balance >= 0;
-  const memberBalances = getGroupMemberBalances(groupId, 'usr_1');
-  const groupExpenses = MOCK_EXPENSES
-    .filter(e => e.groupId === groupId)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  const memberBalances = getGroupMemberBalances(groupId!, userId);
+  const groupExpenses = React.useMemo(() => 
+    MOCK_EXPENSES
+      .filter(e => e.groupId === groupId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [groupId]
+  );
 
   const getGroupEmoji = (name: string) => {
     if (name.includes('🏖')) return '🏖';
@@ -254,45 +132,54 @@ const GroupDetailScreen = () => {
   };
 
   return (
-    <Container edges={['top']}>
+    <Screen>
       <Header>
         <BackBtn onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
         </BackBtn>
-        <GroupTitleText numberOfLines={1}>{group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}</GroupTitleText>
+        <Title numberOfLines={1} style={{ flex: 1 }}>
+          {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
+        </Title>
       </Header>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <Content showsVerticalScrollIndicator={false}>
         <HeroBanner>
           <GroupEmojiLarge>{getGroupEmoji(group.name)}</GroupEmojiLarge>
-          <GroupNameLarge>{group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}</GroupNameLarge>
-          <GroupDescText>{group.description}</GroupDescText>
+          <Headline style={{ color: Colors.primary }}>
+            {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
+          </Headline>
+          <BodySm style={{ color: Colors.primary, opacity: 0.7 }}>
+            {group.description}
+          </BodySm>
         </HeroBanner>
 
-        {/* Your balance */}
         <BalanceBanner>
-          <BalanceCard positive={isPositive}>
-            <BalanceLabel>{isPositive ? 'You are owed' : 'You owe in total'}</BalanceLabel>
-            <BalanceValue positive={isPositive}>
+          <BalanceCardStyled positive={isPositive}>
+            <Label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {isPositive ? 'You are owed' : 'You owe in total'}
+            </Label>
+            <Display positive={isPositive} style={{ color: isPositive ? Colors.tertiary : Colors.error }}>
               {isPositive ? '+' : '-'}${Math.abs(balance).toFixed(2)}
-            </BalanceValue>
-          </BalanceCard>
+            </Display>
+          </BalanceCardStyled>
         </BalanceBanner>
 
-        {/* Member balances */}
         <SectionPad>
-          <SectionTitle>Balances</SectionTitle>
+          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
+            Balances
+          </Label>
           {memberBalances.length === 0 ? (
-            <MemberBalance positive style={{ color: Colors.tertiary, paddingVertical: Spacing.sm }}>
+            <BodySm style={{ color: Colors.tertiary, paddingVertical: Spacing.sm, fontWeight: '600' }}>
               ✓ All settled up!
-            </MemberBalance>
+            </BodySm>
           ) : (
             memberBalances.map(mb => (
               <MemberRow key={mb.userId}>
-                <MemberAvatar>
-                  <MemberInitial>{mb.name[0].toUpperCase()}</MemberInitial>
-                </MemberAvatar>
-                <MemberName>{mb.name}</MemberName>
+                <Row style={{ marginBottom: 0 }}>
+                  <Avatar name={mb.name} size={40} />
+                  <Spacer size="md" horizontal />
+                  <BodyMd style={{ fontWeight: '500' }}>{mb.name}</BodyMd>
+                </Row>
                 <MemberBalance positive={mb.amount > 0}>
                   {mb.amount > 0 ? `owes you $${mb.amount.toFixed(2)}` : `you owe $${Math.abs(mb.amount).toFixed(2)}`}
                 </MemberBalance>
@@ -300,50 +187,58 @@ const GroupDetailScreen = () => {
             ))
           )}
 
-          {/* Members list */}
-          <SectionTitle>Members ({group.members.length})</SectionTitle>
-          {group.members.map(userId => {
-            const member = MOCK_MEMBERS.find(m => m.id === userId);
+          <Spacer size="lg" />
+
+          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
+            Members ({group.members.length})
+          </Label>
+          {group.members.map(mid => {
+            const member = MOCK_MEMBERS.find(m => m.id === mid);
             return (
-              <MemberRow key={userId}>
-                <MemberAvatar>
-                  <MemberInitial>{(member?.name?.[0] ?? '?').toUpperCase()}</MemberInitial>
-                </MemberAvatar>
-                <MemberName>{member?.name ?? userId}</MemberName>
-                {userId === 'usr_1' && (
-                  <MaterialIcons name="star" size={16} color={Colors.primary} />
-                )}
+              <MemberRow key={mid}>
+                <Row style={{ marginBottom: 0 }}>
+                  <Avatar name={member?.name ?? 'User'} size={40} />
+                  <Spacer size="md" horizontal />
+                  <BodyMd style={{ fontWeight: '500' }}>{member?.name ?? mid}</BodyMd>
+                  {mid === userId && (
+                    <>
+                      <Spacer size="xs" horizontal />
+                      <MaterialIcons name="star" size={16} color={Colors.primary} />
+                    </>
+                  )}
+                </Row>
               </MemberRow>
             );
           })}
 
-          {/* Expenses */}
-          <SectionTitle>Expenses ({groupExpenses.length})</SectionTitle>
+          <Spacer size="lg" />
+
+          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
+            Expenses ({groupExpenses.length})
+          </Label>
           {groupExpenses.map(expense => {
             const payer = MOCK_MEMBERS.find(m => m.id === expense.payerId);
             return (
-              <ExpenseRow key={expense.id}>
-                <ExpenseIcon>
-                  <ExpenseEmoji>{getCategoryEmoji(expense.category)}</ExpenseEmoji>
-                </ExpenseIcon>
-                <ExpenseInfo>
-                  <ExpenseName>{expense.title}</ExpenseName>
-                  <ExpenseMeta>
-                    {expense.payerId === 'usr_1' ? 'You' : payer?.name} paid · {formatDate(expense.date)}
-                  </ExpenseMeta>
-                </ExpenseInfo>
-                <ExpenseAmount>${expense.amount.toFixed(2)}</ExpenseAmount>
-              </ExpenseRow>
+              <ExpenseCard
+                key={expense.id}
+                title={expense.title}
+                subtitle={`${expense.payerId === userId ? 'You' : payer?.name} paid · ${formatDate(expense.date)}`}
+                amount={expense.amount}
+                date={formatDate(expense.date)}
+                onPress={() => {}}
+              />
             );
           })}
         </SectionPad>
 
         <AddExpenseBtn onPress={() => router.push('/expense/add')} activeOpacity={0.8}>
           <MaterialIcons name="add" size={20} color={Colors.primary} />
-          <AddExpenseBtnText>Add Expense</AddExpenseBtnText>
+          <BodyMd style={{ color: Colors.primary, fontWeight: '600' }}>Add Expense</BodyMd>
         </AddExpenseBtn>
-      </ScrollView>
-    </Container>
+
+        <Spacer size="xxl" />
+      </Content>
+    </Screen>
   );
 };
 

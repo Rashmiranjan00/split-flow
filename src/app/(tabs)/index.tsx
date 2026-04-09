@@ -1,116 +1,76 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
-import { Spacing, Radius } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
-import { useAuthStore } from '@/features/auth/store';
-import { BalanceCard } from '@/components/BalanceCard';
-import { ExpenseCard } from '@/components/ExpenseCard';
-import { ActionButton } from '@/components/ActionButton';
-import { MOCK_EXPENSES, MOCK_GROUPS, getTotalBalance, GROUP_MAP } from '@/data/mockData';
+import { View } from 'react-native';
+import { Colors } from '@/shared/constants/colors';
+import { Spacing, Radius } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  SpaceBetweenRow, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Display, 
+  Headline, 
+  Title, 
+  BodySm, 
+  Label 
+} from '@/shared/components/Typography';
+import { Avatar } from '@/shared/components/Avatar';
+import { BalanceCard } from '@/shared/components/BalanceCard';
+import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
+import { useUser } from '@/shared/hooks/useUser';
+import { useBalances } from '@/features/balances/hooks/useBalances';
+import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
+import { 
+  MOCK_EXPENSES, 
+  MOCK_GROUPS, 
+  GROUP_MAP,
+} from '@/shared/data/mockData';
+import { ExpenseSplit } from '@/shared/types';
 
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.background};
-`;
-
-const Content = styled.ScrollView`
-  flex: 1;
-`;
-
-const Padded = styled.View`
-  padding-horizontal: ${Spacing.lg}px;
-`;
-
-const HeaderRow = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-horizontal: ${Spacing.lg}px;
-  padding-top: ${Spacing.md}px;
+const HeaderRow = styled(SpaceBetweenRow)`
+  margin-top: ${Spacing.md}px;
   margin-bottom: ${Spacing.xl}px;
 `;
 
-const Greeting = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-`;
-
-const UserName = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.headlineMd}px;
-  font-weight: ${Typography.weights.bold};
-  margin-top: 2px;
-`;
-
-const AvatarCircle = styled.View`
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  background-color: ${Colors.primaryContainer};
-  align-items: center;
-  justify-content: center;
-`;
-
-const AvatarInitial = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleLg}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
-const SectionHeader = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding-horizontal: ${Spacing.lg}px;
+const SectionHeader = styled(SpaceBetweenRow)`
   margin-top: ${Spacing.xl}px;
   margin-bottom: ${Spacing.md}px;
 `;
 
-const SectionTitle = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleMd}px;
-  font-weight: ${Typography.weights.semibold};
-`;
+const SeeAllText = styled.TouchableOpacity``;
 
-const SeeAllText = styled.Text`
+const SeeAllLabel = styled(BodySm)`
   color: ${Colors.primary};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
 `;
 
 const GroupChipsRow = styled.ScrollView`
-  padding-horizontal: ${Spacing.lg}px;
   margin-bottom: ${Spacing.md}px;
 `;
 
-const GroupChip = styled.TouchableOpacity<{ active?: boolean }>`
-  background-color: ${({ active }: { active?: boolean }) =>
-    active ? Colors.primaryContainer : Colors.surfaceContainerLow};
+interface ActiveProps {
+  active?: boolean;
+}
+
+const GroupChip = styled.TouchableOpacity<ActiveProps>`
+  background-color: ${(props: ActiveProps) =>
+    props.active ? Colors.primaryContainer : Colors.surfaceContainerLow};
   border-radius: ${Radius.full}px;
   padding-horizontal: ${Spacing.md}px;
   padding-vertical: ${Spacing.xs}px;
   margin-right: ${Spacing.sm}px;
   border-width: 1px;
-  border-color: ${({ active }: { active?: boolean }) =>
-    active ? Colors.primary : Colors.outlineVariant};
+  border-color: ${(props: ActiveProps) =>
+    props.active ? Colors.primary : Colors.outlineVariant};
 `;
 
-const GroupChipText = styled.Text<{ active?: boolean }>`
-  color: ${({ active }: { active?: boolean }) =>
-    active ? Colors.primary : Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  font-weight: ${Typography.weights.semibold};
+const GroupChipText = styled(BodySm)<ActiveProps>`
+  color: ${(props: ActiveProps) =>
+    props.active ? Colors.primary : Colors.onSurfaceVariant};
+  font-weight: ${(props: ActiveProps) => props.active ? '600' : '400'};
 `;
 
 const FABWrapper = styled.View`
@@ -145,66 +105,49 @@ const EmptyState = styled.View`
   padding: ${Spacing.xxl}px;
 `;
 
-const EmptyText = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  text-align: center;
-  margin-top: ${Spacing.md}px;
-`;
-
 const HomeScreen = () => {
-  const user = useAuthStore((state) => state.user);
+  const { user, userId } = useUser();
+  const { totalBalance } = useBalances();
+  const { formatDate } = useDateFormatter();
   const router = useRouter();
   const [activeGroup, setActiveGroup] = React.useState<string | null>(null);
 
-  const totalBalance = getTotalBalance('usr_1');
-
-  // Recent expenses — latest 6, optionally filtered by group; spread to avoid mutating source
-  const recentExpenses = [...MOCK_EXPENSES]
-    .filter(e => activeGroup ? e.groupId === activeGroup : true)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6);
-
-  const MS_PER_DAY = 1_000 * 60 * 60 * 24;
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const diffDays = Math.floor((new Date().getTime() - date.getTime()) / MS_PER_DAY);
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  const recentExpenses = React.useMemo(() => {
+    return [...MOCK_EXPENSES]
+      .filter(e => activeGroup ? e.groupId === activeGroup : true)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6);
+  }, [activeGroup]);
 
   const getExpenseAmount = (expenseId: string) => {
     const expense = MOCK_EXPENSES.find(e => e.id === expenseId);
     if (!expense) return 0;
-    const myShare = expense.splits.find(s => s.userId === 'usr_1')?.value ?? 0;
-    return expense.payerId === 'usr_1' ? expense.amount - myShare : -myShare;
+    const myShare = expense.splits.find((s: ExpenseSplit) => s.userId === userId)?.value ?? 0;
+    return expense.payerId === userId ? expense.amount - myShare : -myShare;
   };
 
   return (
-    <>
-      <Container edges={['top']}>
-        <Content showsVerticalScrollIndicator={false}>
+    <Screen>
+      <Content showsVerticalScrollIndicator={false}>
+        <View style={{ padding: Spacing.lg }}>
           <HeaderRow>
-            <ScrollView horizontal={false}>
-              <Greeting>Good morning</Greeting>
-              <UserName>{user?.name?.split(' ')[0] ?? 'User'} 👋</UserName>
-            </ScrollView>
-            <AvatarCircle>
-              <AvatarInitial>{(user?.name?.[0] ?? 'U').toUpperCase()}</AvatarInitial>
-            </AvatarCircle>
+            <View>
+              <BodySm style={{ letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                Good morning
+              </BodySm>
+              <Display style={{ fontSize: 32 }}>
+                {user?.name?.split(' ')[0] ?? 'User'} 👋
+              </Display>
+            </View>
+            <Avatar name={user?.name ?? 'User'} size={48} borderWidth={2} borderColor={Colors.primary} />
           </HeaderRow>
 
-          <Padded>
-            <BalanceCard totalBalance={totalBalance} />
-          </Padded>
+          <BalanceCard totalBalance={totalBalance} />
 
-          {/* Group Filter Chips */}
           <SectionHeader>
-            <SectionTitle>Recent Activity</SectionTitle>
+            <Title>Recent Activity</Title>
             <SeeAllText onPress={() => router.push('/(tabs)/activity')}>
-              See all
+              <SeeAllLabel>See all</SeeAllLabel>
             </SeeAllText>
           </SectionHeader>
 
@@ -229,41 +172,41 @@ const HomeScreen = () => {
 
           {recentExpenses.length === 0 ? (
             <EmptyState>
-              <EmptyText>No expenses found.{'\n'}Add your first expense!</EmptyText>
+              <BodySm style={{ textAlign: 'center' }}>
+                No expenses found.{"\n"}Add your first expense!
+              </BodySm>
             </EmptyState>
           ) : (
-            <Padded>
-              {recentExpenses.map(expense => {
-                const amount = getExpenseAmount(expense.id);
-                return (
-                  <ExpenseCard
-                    key={expense.id}
-                    title={expense.title}
-                    subtitle={
-                      expense.payerId === 'usr_1'
-                        ? `You paid · ${GROUP_MAP.get(expense.groupId)?.name}`
-                        : `${expense.splitType === 'EQUAL' ? 'Split equally' : 'Custom split'} · ${GROUP_MAP.get(expense.groupId)?.name}`
-                    }
-                    amount={amount}
-                    date={formatDate(expense.date)}
-                    highlighted={amount > 0}
-                    onPress={() => {}}
-                  />
-                );
-              })}
-            </Padded>
+            recentExpenses.map(expense => {
+              const amount = getExpenseAmount(expense.id);
+              return (
+                <ExpenseCard
+                  key={expense.id}
+                  title={expense.title}
+                  subtitle={
+                    expense.payerId === userId
+                      ? `You paid · ${GROUP_MAP.get(expense.groupId)?.name}`
+                      : `${expense.splitType === 'EQUAL' ? 'Split equally' : 'Custom split'} · ${GROUP_MAP.get(expense.groupId)?.name}`
+                  }
+                  amount={amount}
+                  date={formatDate(expense.date)}
+                  highlighted={amount > 0}
+                  onPress={() => {}}
+                />
+              );
+            })
           )}
 
-          {/* Bottom padding for FAB */}
-          <ScrollView style={{ height: 100 }} />
-        </Content>
-      </Container>
+          <Spacer size="xxxl" />
+        </View>
+      </Content>
+
       <FABWrapper>
         <FABButton onPress={() => router.push('/expense/add')} activeOpacity={0.85}>
           <FABIcon>+</FABIcon>
         </FABButton>
       </FABWrapper>
-    </>
+    </Screen>
   );
 };
 

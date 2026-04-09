@@ -1,30 +1,69 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { useLocalSearchParams } from 'expo-router';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Colors } from '@/shared/constants/colors';
+import { Spacing } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Title, 
+  Headline,
+  BodyMd,
+  Label
+} from '@/shared/components/Typography';
+import { ActionButton } from '@/shared/components/ActionButton';
+import { MOCK_MEMBERS } from '@/shared/data/mockData';
 
-const Container = styled.View`
-  flex: 1;
-  background-color: ${Colors.background};
-  align-items: center;
-  justify-content: center;
+const Header = styled(Row)`
+  padding: ${Spacing.md}px ${Spacing.lg}px;
 `;
 
-const Title = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleLg}px;
+const BackBtn = styled.TouchableOpacity`
+  margin-right: ${Spacing.md}px;
 `;
 
 const SettleScreen = () => {
-  const { friendId } = useLocalSearchParams();
+  const { friendId } = useLocalSearchParams<{ friendId: string }>();
+  const router = useRouter();
+  const friend = MOCK_MEMBERS.find(m => m.id === friendId);
 
   return (
-    <Container>
-      <Title>Settle with {friendId}</Title>
-    </Container>
+    <Screen>
+      <Header>
+        <BackBtn onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+        </BackBtn>
+        <Title>Record Payment</Title>
+      </Header>
+
+      <Content contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
+        <Label style={{ textTransform: 'uppercase', marginBottom: Spacing.md }}>Settling with</Label>
+        <Headline style={{ fontSize: 32 }}>{friend?.name ?? 'Friend'}</Headline>
+        
+        <Spacer size="xxxl" />
+        
+        <View style={{ width: '100%', paddingHorizontal: Spacing.xl }}>
+          <ActionButton 
+            title="Confirm Payment" 
+            onPress={() => router.back()} 
+          />
+          <Spacer size="md" />
+          <ActionButton 
+            title="Cancel" 
+            variant="outline"
+            onPress={() => router.back()} 
+          />
+        </View>
+      </Content>
+    </Screen>
   );
 };
+
+const View = styled.View``;
 
 export default SettleScreen;

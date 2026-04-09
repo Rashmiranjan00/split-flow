@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { zustandStorage } from '@/services/storage';
-import { User } from '@/types';
+import { zustandStorage } from '@/shared/services/storage';
+import { User } from '@/shared/types';
 
 interface AuthState {
   user: User | null;

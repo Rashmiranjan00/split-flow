@@ -1,44 +1,33 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { View, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { Spacing, Radius } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
-import { getSpendingByCategory, getTotalBalance, MONTHLY_SPENDING, MOCK_EXPENSES } from '@/data/mockData';
+import { Dimensions, View } from 'react-native';
+import { Colors } from '@/shared/constants/colors';
+import { Spacing, Radius } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  SpaceBetweenRow, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Title, 
+  BodyMd, 
+  BodySm, 
+  Label,
+  Headline,
+  Display
+} from '@/shared/components/Typography';
+import { 
+  getSpendingByCategory, 
+  getTotalBalance, 
+  MONTHLY_SPENDING, 
+  MOCK_EXPENSES
+} from '@/shared/data/mockData';
+import { ExpenseSplit } from '@/shared/types';
+import { useUser } from '@/shared/hooks/useUser';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
 const BAR_CHART_HEIGHT = 140;
-
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.background};
-`;
-
-const Content = styled.ScrollView`
-  flex: 1;
-  padding-horizontal: ${Spacing.lg}px;
-`;
-
-const HeaderTitle = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displaySm}px;
-  font-weight: ${Typography.weights.bold};
-  letter-spacing: -1.5px;
-  margin-top: ${Spacing.md}px;
-  margin-bottom: ${Spacing.xl}px;
-`;
-
-const SectionTitle = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleMd}px;
-  font-weight: ${Typography.weights.semibold};
-  margin-bottom: ${Spacing.md}px;
-  margin-top: ${Spacing.lg}px;
-`;
 
 const StatCard = styled.View`
   background-color: ${Colors.surfaceContainerLow};
@@ -47,43 +36,6 @@ const StatCard = styled.View`
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
   border-color: ${Colors.outlineVariant};
-`;
-
-const StatRow = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-end;
-`;
-
-const StatLabel = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: ${Spacing.xs}px;
-`;
-
-const StatValue = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displaySm}px;
-  font-weight: ${Typography.weights.bold};
-  letter-spacing: -1px;
-`;
-
-const StatValueSmall = styled.Text<{ positive: boolean }>`
-  color: ${({ positive }: { positive: boolean}) => positive ? Colors.tertiary : Colors.error};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.semibold};
-  margin-bottom: 4px;
-`;
-
-const TwoColRow = styled.View`
-  flex-direction: row;
-  gap: ${Spacing.md}px;
-  margin-bottom: ${Spacing.md}px;
 `;
 
 const HalfCard = styled.View`
@@ -95,7 +47,6 @@ const HalfCard = styled.View`
   border-color: ${Colors.outlineVariant};
 `;
 
-// ── Bar Chart ────────────────────────────────────────────────────
 const BarChartContainer = styled.View`
   background-color: ${Colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
@@ -119,22 +70,29 @@ const BarWrapper = styled.View`
   flex: 1;
 `;
 
-const Bar = styled.View<{ height: number; active: boolean }>`
+interface BarProps {
+  height: number;
+  active: boolean;
+}
+
+const Bar = styled.View<BarProps>`
   width: 24px;
-  height: ${({ height }: { height: number; active: boolean }) => height}px;
+  height: ${(props: BarProps) => props.height}px;
   border-radius: 6px;
-  background-color: ${({ active }: { height: number; active: boolean }) => active ? Colors.primary : Colors.surfaceContainerHigh};
+  background-color: ${(props: BarProps) => props.active ? Colors.primary : Colors.surfaceContainerHigh};
   margin-bottom: ${Spacing.xs}px;
 `;
 
-const BarLabel = styled.Text<{ active: boolean }>`
-  color: ${({ active }: { active: boolean }) => active ? Colors.primary : Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
+interface ActiveProps {
+  active: boolean;
+}
+
+const BarLabel = styled(BodySm)<ActiveProps>`
+  color: ${(props: ActiveProps) => props.active ? Colors.primary : Colors.onSurfaceVariant};
   font-size: 10px;
-  font-weight: ${({ active }: { active: boolean }) => active ? '700' : '400'};
+  font-weight: ${(props: ActiveProps) => props.active ? '700' : '400'};
 `;
 
-// ── Donut Chart (pure RN) ─────────────────────────────────────────
 const DonutContainer = styled.View`
   background-color: ${Colors.surfaceContainerLow};
   border-radius: ${Radius.lg}px;
@@ -142,11 +100,6 @@ const DonutContainer = styled.View`
   margin-bottom: ${Spacing.md}px;
   border-width: 1px;
   border-color: ${Colors.outlineVariant};
-`;
-
-const DonutContent = styled.View`
-  flex-direction: row;
-  align-items: center;
 `;
 
 const DonutVisual = styled.View`
@@ -161,146 +114,132 @@ const DonutVisual = styled.View`
   background-color: ${Colors.surfaceContainerHigh};
 `;
 
-const DonutCenter = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleMd}px;
-  font-weight: ${Typography.weights.bold};
-`;
+interface BgColorProps {
+  bgColor: string;
+}
 
-const LegendList = styled.View`
-  flex: 1;
-`;
-
-const LegendRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: ${Spacing.xs}px;
-`;
-
-const LegendDot = styled.View<{ bgColor: string }>`
+const LegendDot = styled.View<BgColorProps>`
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: ${({ bgColor }: { bgColor: string }) => bgColor};
+  background-color: ${(props: BgColorProps) => props.bgColor};
   margin-right: ${Spacing.sm}px;
 `;
 
-const LegendLabel = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  flex: 1;
-`;
-
-const LegendAmount = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  font-weight: ${Typography.weights.semibold};
-`;
-
 const AnalyticsScreen = () => {
-  const categoryData = getSpendingByCategory('usr_1');
-  const totalBalance = getTotalBalance('usr_1');
-  const totalSpent = MOCK_EXPENSES
-    .flatMap(e => e.splits)
-    .filter(s => s.userId === 'usr_1')
-    .reduce((sum, s) => sum + s.value, 0);
-  const totalOwed = MOCK_EXPENSES
-    .filter(e => e.payerId === 'usr_1')
-    .reduce((sum, e) => {
-      const myShare = e.splits.find(s => s.userId === 'usr_1')?.value ?? 0;
-      return sum + (e.amount - myShare);
-    }, 0);
-  const totalIOwe = MOCK_EXPENSES
-    .filter(e => e.payerId !== 'usr_1')
-    .flatMap(e => e.splits)
-    .filter(s => s.userId === 'usr_1')
-    .reduce((sum, s) => sum + s.value, 0);
+  const { userId } = useUser();
+  const categoryData = getSpendingByCategory(userId);
+  const totalBalance = getTotalBalance(userId);
 
-  // Bar chart: normalize
+  const totalSpent = React.useMemo(() => 
+    MOCK_EXPENSES
+      .flatMap(e => e.splits)
+      .filter((s: ExpenseSplit) => s.userId === userId)
+      .reduce((sum, s) => sum + s.value, 0),
+    [userId]
+  );
+
+  const totalOwed = React.useMemo(() => 
+    MOCK_EXPENSES
+      .filter(e => e.payerId === userId)
+      .reduce((sum, e) => {
+        const myShare = e.splits.find((s: ExpenseSplit) => s.userId === userId)?.value ?? 0;
+        return sum + (e.amount - myShare);
+      }, 0),
+    [userId]
+  );
+
+  const totalIOwe = React.useMemo(() => 
+    MOCK_EXPENSES
+      .filter(e => e.payerId !== userId)
+      .flatMap(e => e.splits)
+      .filter((s: ExpenseSplit) => s.userId === userId)
+      .reduce((sum, s) => sum + s.value, 0),
+    [userId]
+  );
+
   const maxMonthly = Math.max(...MONTHLY_SPENDING.map(m => m.amount));
   const activeIdx = MONTHLY_SPENDING.length - 1;
 
   return (
-    <Container edges={['top']}>
-      <Content showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        <HeaderTitle>Insights</HeaderTitle>
+    <Screen>
+      <Content showsVerticalScrollIndicator={false}>
+        <View style={{ padding: Spacing.lg }}>
+          <Headline style={{ marginBottom: Spacing.xl }}>Insights</Headline>
 
-        {/* Net Balance Card */}
-        <StatCard>
-          <StatLabel>Net Balance</StatLabel>
-          <StatRow>
-            <StatValue>${Math.abs(totalBalance).toFixed(2)}</StatValue>
-            <StatValueSmall positive={totalBalance >= 0}>
-              {totalBalance >= 0 ? '▲ You are owed' : '▼ You owe'}
-            </StatValueSmall>
-          </StatRow>
-        </StatCard>
+          <StatCard>
+            <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Net Balance</Label>
+            <SpaceBetweenRow>
+              <Display positive={totalBalance >= 0}>
+                ${Math.abs(totalBalance).toFixed(2)}
+              </Display>
+              <BodyMd style={{ color: totalBalance >= 0 ? Colors.tertiary : Colors.error, fontWeight: '600' }}>
+                {totalBalance >= 0 ? '▲ Owed to you' : '▼ You owe'}
+              </BodyMd>
+            </SpaceBetweenRow>
+          </StatCard>
 
-        {/* Two small stat cards */}
-        <TwoColRow>
-          <HalfCard>
-            <StatLabel>They owe you</StatLabel>
-            <StatValue style={{ fontSize: 24 }}>${totalOwed.toFixed(0)}</StatValue>
-          </HalfCard>
-          <HalfCard>
-            <StatLabel>You owe</StatLabel>
-            <StatValue style={{ fontSize: 24, color: Colors.error }}>${totalIOwe.toFixed(0)}</StatValue>
-          </HalfCard>
-        </TwoColRow>
+          <Row style={{ gap: Spacing.md, marginBottom: Spacing.md }}>
+            <HalfCard>
+              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>They owe you</Label>
+              <Title style={{ fontSize: 24 }}>${totalOwed.toFixed(0)}</Title>
+            </HalfCard>
+            <HalfCard>
+              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>You owe</Label>
+              <Title style={{ fontSize: 24, color: Colors.error }}>${totalIOwe.toFixed(0)}</Title>
+            </HalfCard>
+          </Row>
 
-        {/* Monthly Bar Chart */}
-        <SectionTitle>Monthly Spending</SectionTitle>
-        <BarChartContainer>
-          <BarsRow>
-            {MONTHLY_SPENDING.map((m, i) => {
-              const barH = Math.max(8, (m.amount / maxMonthly) * BAR_CHART_HEIGHT * 0.9);
-              const isActive = i === activeIdx;
-              return (
-                <BarWrapper key={m.month}>
-                  <Bar height={barH} active={isActive} />
-                  <BarLabel active={isActive}>{m.month}</BarLabel>
-                </BarWrapper>
-              );
-            })}
-          </BarsRow>
-        </BarChartContainer>
+          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Monthly Spending</Title>
+          <BarChartContainer>
+            <BarsRow>
+              {MONTHLY_SPENDING.map((m, i) => {
+                const barH = Math.max(8, (m.amount / maxMonthly) * BAR_CHART_HEIGHT * 0.9);
+                const isActive = i === activeIdx;
+                return (
+                  <BarWrapper key={m.month}>
+                    <Bar height={barH} active={isActive} />
+                    <BarLabel active={isActive}>{m.month}</BarLabel>
+                  </BarWrapper>
+                );
+              })}
+            </BarsRow>
+          </BarChartContainer>
 
-        {/* Category breakdown (Donut-style) */}
-        <SectionTitle>Spending Breakdown</SectionTitle>
-        <DonutContainer>
-          <DonutContent>
-            <DonutVisual>
-              <DonutCenter>${totalSpent.toFixed(0)}</DonutCenter>
-            </DonutVisual>
-            <LegendList>
-              {categoryData.map(item => (
-                <LegendRow key={item.category}>
-                  <LegendDot bgColor={item.color} />
-                  <LegendLabel>{item.category}</LegendLabel>
-                  <LegendAmount>${item.amount.toFixed(0)}</LegendAmount>
-                </LegendRow>
-              ))}
-            </LegendList>
-          </DonutContent>
-        </DonutContainer>
+          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Spending Breakdown</Title>
+          <DonutContainer>
+            <Row>
+              <DonutVisual>
+                <Title>${totalSpent.toFixed(0)}</Title>
+              </DonutVisual>
+              <View style={{ flex: 1 }}>
+                {categoryData.map(item => (
+                  <Row key={item.category} style={{ marginBottom: 4 }}>
+                    <LegendDot bgColor={item.color} />
+                    <BodySm style={{ flex: 1 }}>{item.category}</BodySm>
+                    <BodySm style={{ fontWeight: '600' }}>${item.amount.toFixed(0)}</BodySm>
+                  </Row>
+                ))}
+              </View>
+            </Row>
+          </DonutContainer>
 
-        {/* Total expenses stat */}
-        <SectionTitle>Overview</SectionTitle>
-        <TwoColRow>
-          <HalfCard>
-            <StatLabel>Total expenses</StatLabel>
-            <StatValue style={{ fontSize: 28 }}>{MOCK_EXPENSES.length}</StatValue>
-          </HalfCard>
-          <HalfCard>
-            <StatLabel>Total spent</StatLabel>
-            <StatValue style={{ fontSize: 24 }}>${totalSpent.toFixed(0)}</StatValue>
-          </HalfCard>
-        </TwoColRow>
+          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Overview</Title>
+          <Row style={{ gap: Spacing.md }}>
+            <HalfCard>
+              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Expenses</Label>
+              <Display style={{ fontSize: 28 }}>{MOCK_EXPENSES.length}</Display>
+            </HalfCard>
+            <HalfCard>
+              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Total spent</Label>
+              <Title style={{ fontSize: 24 }}>${totalSpent.toFixed(0)}</Title>
+            </HalfCard>
+          </Row>
+
+          <Spacer size="xxxl" />
+        </View>
       </Content>
-    </Container>
+    </Screen>
   );
 };
 

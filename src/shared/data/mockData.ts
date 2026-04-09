@@ -1,4 +1,4 @@
-import { Group, Expense, User } from '@/types';
+import { Group, Expense, User, ExpenseSplit } from '@/shared/types';
 
 export const MOCK_CURRENT_USER: User = {
   id: 'usr_1',
@@ -153,61 +153,63 @@ export const MOCK_EXPENSES: Expense[] = [
 export const MEMBER_MAP = new Map(MOCK_MEMBERS.map(m => [m.id, m]));
 export const GROUP_MAP = new Map(MOCK_GROUPS.map(g => [g.id, g]));
 
-/** Calculate net balance for current user (positive = owed to you, negative = you owe) */
-export const getGroupBalance = (groupId: string, currentUserId = 'usr_1'): number => {
+export const getTotalBalance = (userId: string): number => {
+  return MOCK_EXPENSES.reduce((acc, expense) => {
+    const mySplit = expense.splits.find((s: ExpenseSplit) => s.userId === userId);
+    if (!mySplit) return acc;
+    
+    if (expense.payerId === userId) {
+      return acc + (expense.amount - mySplit.value);
+    } else {
+      return acc - mySplit.value;
+    }
+  }, 0);
+};
+
+export const getGroupBalance = (groupId: string, userId: string): number => {
   return MOCK_EXPENSES
     .filter(e => e.groupId === groupId)
-    .reduce((balance, expense) => {
-      const myShare = expense.splits.find(s => s.userId === currentUserId)?.value ?? 0;
-      return expense.payerId === currentUserId
-        ? balance + (expense.amount - myShare)  // I paid — owed the rest
-        : balance - myShare;                     // Someone else paid — I owe my share
+    .reduce((acc, expense) => {
+      const mySplit = expense.splits.find((s: ExpenseSplit) => s.userId === userId);
+      if (!mySplit) return acc;
+      
+      if (expense.payerId === userId) {
+        return acc + (expense.amount - mySplit.value);
+      } else {
+        return acc - mySplit.value;
+      }
     }, 0);
-}
+};
 
-/** Total balance across all groups */
-export const getTotalBalance = (currentUserId = 'usr_1'): number =>
-  MOCK_GROUPS.reduce(
-    (total, group) => total + getGroupBalance(group.id, currentUserId),
-    0
-  );
-
-/** Per-user balances: who owes who how much within a group */
-export const getGroupMemberBalances = (
-  groupId: string,
-  currentUserId = 'usr_1'
-): { userId: string; name: string; amount: number }[] => {
-  const group = GROUP_MAP.get(groupId);
+export const getGroupMemberBalances = (groupId: string, currentUserId: string): { userId: string; name: string; amount: number }[] => {
+  const group = MOCK_GROUPS.find(g => g.id === groupId);
   if (!group) return [];
 
-  // Build a net balance map using reduce (no forEach mutation)
-  const balanceMap = MOCK_EXPENSES
+  const balances: Record<string, number> = {};
+  
+  MOCK_EXPENSES
     .filter(e => e.groupId === groupId)
-    .reduce<Record<string, number>>((acc, expense) => {
-      for (const split of expense.splits) {
-        if (split.userId === expense.payerId) continue;
-
-        if (expense.payerId === currentUserId) {
-          // Others owe me — ES2021 ??= to initialise
-          acc[split.userId] ??= 0;
-          acc[split.userId] += split.value;
-        } else if (split.userId === currentUserId) {
-          // I owe payer
-          acc[expense.payerId] ??= 0;
-          acc[expense.payerId] -= split.value;
-        }
+    .forEach(expense => {
+      const mySplit = expense.splits.find((s: ExpenseSplit) => s.userId === currentUserId)?.value ?? 0;
+      
+      if (expense.payerId === currentUserId) {
+        expense.splits.forEach((s: ExpenseSplit) => {
+          if (s.userId !== currentUserId) {
+            balances[s.userId] = (balances[s.userId] || 0) + s.value;
+          }
+        });
+      } else {
+        const myActualSplit = expense.splits.find((s: ExpenseSplit) => s.userId === currentUserId)?.value ?? 0;
+        balances[expense.payerId] = (balances[expense.payerId] || 0) - myActualSplit;
       }
-      return acc;
-    }, {});
+    });
 
-  return Object.entries(balanceMap)
-    .filter(([id]) => id !== currentUserId)
-    .map(([userId, amount]) => ({
-      userId,
-      name: MEMBER_MAP.get(userId)?.name ?? userId,  // O(1) Map lookup
-      amount,
-    }));
-}
+  return Object.entries(balances).map(([userId, amount]) => ({
+    userId,
+    name: MOCK_MEMBERS.find(m => m.id === userId)?.name ?? 'Someone',
+    amount,
+  }));
+};
 
 /** Spending by category — Object.fromEntries (ES2019) + reduce pipeline */
 export const getSpendingByCategory = (

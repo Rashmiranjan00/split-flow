@@ -1,56 +1,86 @@
 import React from 'react';
-import { View } from 'react-native';
 import styled from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import { useAuthStore } from '@/features/auth/store';
-import { ActionButton } from '@/components/ActionButton';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
-import { Spacing } from '@/constants/spacing';
+import { ActionButton } from '@/shared/components/ActionButton';
+import { Colors } from '@/shared/constants/colors';
+import { Typography } from '@/shared/constants/typography';
+import { Spacing } from '@/shared/constants/spacing';
+import { Screen, Spacer } from '@/shared/components/Layout';
+import { Display, Title, BodyMd } from '@/shared/components/Typography';
 
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.background};
+const HeroSection = styled.View`
+  flex: 2;
+  align-items: center;
+  justify(content: center;
+  padding: ${Spacing.lg}px;
+`;
+
+const IconContainer = styled.View`
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  background-color: ${Colors.primaryContainer};
   align-items: center;
   justify-content: center;
-  padding: ${Spacing.xl}px;
+  margin-bottom: ${Spacing.xl}px;
 `;
 
-const Title = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displayLg}px;
-  font-weight: ${Typography.weights.bold};
-  margin-bottom: ${Spacing.md}px;
-`;
-
-const Subtitle = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  margin-bottom: ${Spacing.xxxl}px;
+const WelcomeText = styled(Display)`
   text-align: center;
+  color: ${Colors.primary};
 `;
 
-const LoginScreen = () => {
-  const login = useAuthStore((state) => state.login);
+const SubtitleText = styled(BodyMd)`
+  text-align: center;
+  color: ${Colors.onSurfaceVariant};
+  margin-top: ${Spacing.md}px;
+`;
+
+const AuthActions = styled.View`
+  flex: 1;
+  padding: ${Spacing.lg}px;
+  justify-content: flex-end;
+  padding-bottom: ${Spacing.xxl}px;
+`;
+
+const AuthScreen = () => {
   const router = useRouter();
+  const login = useAuthStore((state) => state.login);
 
   const handleLogin = () => {
-    login({ id: 'usr_1', name: 'Demo User', email: 'demo@splitflow.com' });
+    login({ id: 'usr_1', name: 'Rashmi Ranjan', email: 'rashmi@example.com' });
     router.replace('/(tabs)');
   };
 
   return (
-    <Container>
-      <Title>SplitFlow</Title>
-      <Subtitle>The Ethereal Vault for your shared expenses.</Subtitle>
-      <View style={{ width: '100%' }}>
-        <ActionButton title="Enter the Vault" onPress={handleLogin} />
-      </View>
-    </Container>
+    <Screen>
+      <HeroSection>
+        <IconContainer>
+          <MaterialIcons name="account-balance-wallet" size={48} color={Colors.primary} />
+        </IconContainer>
+        <WelcomeText>SplitFlow</WelcomeText>
+        <SubtitleText>
+          Split bills, share expenses, and manage group finances with ease.
+        </SubtitleText>
+      </HeroSection>
+
+      <AuthActions>
+        <ActionButton 
+          title="Get Started" 
+          onPress={handleLogin} 
+        />
+        <Spacer size="md" />
+        <ActionButton 
+          title="Log In" 
+          onPress={handleLogin} 
+          variant="outline"
+        />
+      </AuthActions>
+    </Screen>
   );
 };
 
-export default LoginScreen;
+export default AuthScreen;

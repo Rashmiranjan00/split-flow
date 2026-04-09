@@ -1,24 +1,28 @@
 import React from 'react';
 import styled from 'styled-components/native';
 import { Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
-import { Spacing, Radius } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
-import { useAuthStore } from '@/features/auth/store';
-import { ActionButton } from '@/components/ActionButton';
-import { getTotalBalance, MOCK_EXPENSES } from '@/data/mockData';
-
-const Container = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.background};
-`;
-
-const Content = styled.ScrollView`
-  flex: 1;
-`;
+import { Colors } from '@/shared/constants/colors';
+import { Spacing, Radius } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Title, 
+  BodyMd, 
+  BodySm, 
+  Label,
+  Display
+} from '@/shared/components/Typography';
+import { Avatar } from '@/shared/components/Avatar';
+import { ActionButton } from '@/shared/components/ActionButton';
+import { useUser } from '@/shared/hooks/useUser';
+import { useBalances } from '@/features/balances/hooks/useBalances';
+import { MOCK_EXPENSES } from '@/shared/data/mockData';
 
 const HeaderBanner = styled.View`
   background-color: ${Colors.surfaceContainerLow};
@@ -29,41 +33,7 @@ const HeaderBanner = styled.View`
   border-bottom-right-radius: ${Radius.xl}px;
 `;
 
-const AvatarRing = styled.View`
-  width: 88px;
-  height: 88px;
-  border-radius: 44px;
-  background-color: ${Colors.primaryContainer};
-  align-items: center;
-  justify-content: center;
-  border-width: 3px;
-  border-color: ${Colors.primary};
-  margin-bottom: ${Spacing.md}px;
-`;
-
-const AvatarInitial = styled.Text`
-  color: ${Colors.primary};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displaySm}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
-const UserName = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleLg}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
-const UserEmail = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  margin-top: 4px;
-`;
-
-const StatsRow = styled.View`
-  flex-direction: row;
+const StatsRow = styled(Row)`
   width: 100%;
   margin-top: ${Spacing.xl}px;
 `;
@@ -77,34 +47,12 @@ const StatDivider = styled.View`
   width: 1px;
   background-color: ${Colors.outlineVariant};
   margin-vertical: ${Spacing.xs}px;
-`;
-
-const StatNum = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleLg}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
-const StatLabel = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  margin-top: 2px;
+  height: 24px;
 `;
 
 const Section = styled.View`
   margin-horizontal: ${Spacing.lg}px;
   margin-bottom: ${Spacing.lg}px;
-`;
-
-const SectionTitle = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: ${Spacing.sm}px;
 `;
 
 const MenuCard = styled.View`
@@ -128,18 +76,13 @@ const MenuItemBorder = styled.View`
   opacity: 0.4;
 `;
 
-const MenuLabel = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
+const MenuLabel = styled(BodyMd)`
   flex: 1;
   margin-left: ${Spacing.md}px;
 `;
 
-const MenuValue = styled.Text`
+const MenuValue = styled(BodySm)`
   color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
   margin-right: ${Spacing.sm}px;
 `;
 
@@ -149,15 +92,22 @@ const LogoutSection = styled.View`
 `;
 
 const ProfileScreen = () => {
-  const { user, logout } = useAuthStore();
+  const { user, userId, logout } = useUser();
+  const { totalBalance } = useBalances();
   const router = useRouter();
 
-  const totalBalance = getTotalBalance('usr_1');
-  const expenseCount = MOCK_EXPENSES.filter(e => e.splits.some(s => s.userId === 'usr_1')).length;
-  const totalSpent = MOCK_EXPENSES
-    .flatMap(e => e.splits)
-    .filter(s => s.userId === 'usr_1')
-    .reduce((sum, s) => sum + s.value, 0);
+  const expenseCount = React.useMemo(() => 
+    MOCK_EXPENSES.filter(e => e.splits.some(s => s.userId === userId)).length,
+    [userId]
+  );
+  
+  const totalSpent = React.useMemo(() => 
+    MOCK_EXPENSES
+      .flatMap(e => e.splits)
+      .filter(s => s.userId === userId)
+      .reduce((sum, s) => sum + s.value, 0),
+    [userId]
+  );
 
   const handleLogout = () => {
     Alert.alert(
@@ -178,39 +128,40 @@ const ProfileScreen = () => {
   ];
 
   return (
-    <Container edges={['top']}>
+    <Screen>
       <Content showsVerticalScrollIndicator={false}>
         {/* Hero Banner */}
         <HeaderBanner>
-          <AvatarRing>
-            <AvatarInitial>{(user?.name?.[0] ?? 'U').toUpperCase()}</AvatarInitial>
-          </AvatarRing>
-          <UserName>{user?.name ?? 'Guest'}</UserName>
-          <UserEmail>{user?.email ?? ''}</UserEmail>
+          <Avatar name={user?.name ?? 'User'} size={88} borderWidth={3} borderColor={Colors.primary} />
+          <Spacer size="md" />
+          <Display style={{ fontSize: 24 }}>{user?.name ?? 'Guest'}</Display>
+          <BodySm>{user?.email ?? ''}</BodySm>
 
           <StatsRow>
             <StatItem>
-              <StatNum>{expenseCount}</StatNum>
-              <StatLabel>Expenses</StatLabel>
+              <Title>{expenseCount}</Title>
+              <Label>Expenses</Label>
             </StatItem>
             <StatDivider />
             <StatItem>
-              <StatNum style={{ color: totalBalance >= 0 ? Colors.tertiary : Colors.error }}>
+              <Title style={{ color: totalBalance >= 0 ? Colors.tertiary : Colors.error }}>
                 {totalBalance >= 0 ? '+' : ''}${Math.abs(totalBalance).toFixed(0)}
-              </StatNum>
-              <StatLabel>Balance</StatLabel>
+              </Title>
+              <Label>Balance</Label>
             </StatItem>
             <StatDivider />
             <StatItem>
-              <StatNum>${totalSpent.toFixed(0)}</StatNum>
-              <StatLabel>Total spent</StatLabel>
+              <Title>${totalSpent.toFixed(0)}</Title>
+              <Label>Total spent</Label>
             </StatItem>
           </StatsRow>
         </HeaderBanner>
 
         {/* Settings Menu */}
         <Section>
-          <SectionTitle>Preferences</SectionTitle>
+          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
+            Preferences
+          </Label>
           <MenuCard>
             {menuItems.map((item, idx) => (
               <React.Fragment key={item.label}>
@@ -227,7 +178,9 @@ const ProfileScreen = () => {
         </Section>
 
         <Section>
-          <SectionTitle>Account</SectionTitle>
+          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
+            Account
+          </Label>
           <MenuCard>
             <MenuItem onPress={() => Alert.alert('Export', 'Data export coming soon!')} activeOpacity={0.7}>
               <MaterialIcons name="download" size={20} color={Colors.onSurfaceVariant} />
@@ -247,7 +200,7 @@ const ProfileScreen = () => {
           <ActionButton title="Sign Out" variant="secondary" onPress={handleLogout} />
         </LogoutSection>
       </Content>
-    </Container>
+    </Screen>
   );
 };
 

@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '@/constants/colors';
-import { Radius, Spacing } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
+import { Colors } from '@/shared/constants/colors';
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography } from '@/shared/constants/typography';
 
 const GradientContainer = styled(LinearGradient)`
   border-radius: ${Radius.xl}px;

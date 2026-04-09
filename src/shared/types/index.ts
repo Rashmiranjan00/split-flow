@@ -14,6 +14,11 @@ export interface Group {
   coverImage?: string;
 }
 
+export interface ExpenseSplit {
+  userId: string;
+  value: number;
+}
+
 export interface Expense {
   id: string;
   groupId: string;
@@ -22,7 +27,7 @@ export interface Expense {
   payerId: string;
   date: string;
   splitType: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
-  splits: { userId: string; value: number }[];
+  splits: ExpenseSplit[];
   receiptUrl?: string;
   category?: string;
 }
@@ -32,4 +37,9 @@ export interface Friend {
   userId: string;
   friendId: string;
   addedAt: string;
+}
+
+export interface Balance {
+  userId: string;
+  amount: number;
 }

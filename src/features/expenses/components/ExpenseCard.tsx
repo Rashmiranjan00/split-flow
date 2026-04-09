@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Colors } from '@/constants/colors';
-import { Radius, Spacing } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
+import { Colors } from '@/shared/constants/colors';
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography } from '@/shared/constants/typography';
 
 const CardContainer = styled.TouchableOpacity`
   background-color: ${Colors.surfaceContainerLow};

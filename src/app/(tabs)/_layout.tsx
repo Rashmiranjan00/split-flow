@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { Colors } from '@/shared/constants/colors';
+import { Typography } from '@/shared/constants/typography';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const TabsLayout = () => (

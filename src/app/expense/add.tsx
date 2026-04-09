@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import styled from 'styled-components/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
-import { Spacing, Radius } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
-import { MOCK_GROUPS, MOCK_MEMBERS } from '@/data/mockData';
+import { Colors } from '@/shared/constants/colors';
+import { Spacing, Radius } from '@/shared/constants/spacing';
+import { 
+  Screen, 
+  Content, 
+  Row, 
+  SpaceBetweenRow, 
+  Spacer 
+} from '@/shared/components/Layout';
+import { 
+  Title, 
+  BodyMd, 
+  BodySm, 
+  Label,
+  Headline
+} from '@/shared/components/Typography';
+import { ActionButton } from '@/shared/components/ActionButton';
+import { useUser } from '@/shared/hooks/useUser';
 import { useExpenseStore } from '@/features/expenses/store';
+import { MOCK_GROUPS, MOCK_MEMBERS } from '@/shared/data/mockData';
 
 const schema = z.object({
   description: z.string().min(1, 'Description is required').max(80, 'Too long'),
@@ -25,37 +39,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ── Styled components ─────────────────────────────────────────────
-const Wrapper = styled(SafeAreaView)`
-  flex: 1;
-  background-color: ${Colors.surface};
-`;
-
-const NavBar = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+const NavBar = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
   border-bottom-width: 1px;
   border-bottom-color: ${Colors.outlineVariant};
-`;
-
-const NavTitle = styled.Text`
-  color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.titleMd}px;
-  font-weight: ${Typography.weights.semibold};
+  margin-bottom: 0;
 `;
 
 const NavBtn = styled.TouchableOpacity`
   padding: ${Spacing.xs}px ${Spacing.sm}px;
-`;
-
-const NavBtnText = styled.Text<{ primary?: boolean }>`
-  color: ${({ primary }: { primary?: boolean }) => primary ? Colors.primary : Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${({ primary }: { primary?: boolean }) => primary ? '700' : '400'};
 `;
 
 const BigAmountContainer = styled.View`
@@ -63,32 +55,13 @@ const BigAmountContainer = styled.View`
   padding: ${Spacing.xxl}px ${Spacing.lg}px ${Spacing.xl}px;
 `;
 
-const CurrencySymbol = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displayLg}px;
-  font-weight: ${Typography.weights.bold};
-  position: absolute;
-  left: ${Spacing.lg + 10}px;
-  top: ${Spacing.xxl + 4}px;
-`;
-
 const BigInput = styled.TextInput`
   color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.display};
-  font-size: ${Typography.sizes.displayLg}px;
-  font-weight: ${Typography.weights.bold};
+  font-size: 56px;
+  font-weight: 700;
   text-align: center;
   width: 100%;
   letter-spacing: -2px;
-`;
-
-const ErrorHint = styled.Text`
-  color: ${Colors.error};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-align: center;
-  margin-top: ${Spacing.xs}px;
 `;
 
 const FieldSection = styled.View`
@@ -96,49 +69,41 @@ const FieldSection = styled.View`
   margin-bottom: ${Spacing.lg}px;
 `;
 
-const FieldLabel = styled.Text`
-  color: ${Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: ${Spacing.xs}px;
-`;
+interface ErrorProps {
+  error?: boolean;
+}
 
-const TextInputStyled = styled.TextInput`
+const TextInputStyled = styled.TextInput<ErrorProps>`
   background-color: ${Colors.surfaceContainerLow};
   border-radius: ${Radius.md}px;
   padding: ${Spacing.md}px;
   color: ${Colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
+  font-size: 16px;
   border-width: 1px;
-  border-color: ${Colors.outlineVariant};
-`;
-
-const TextInputError = styled(TextInputStyled)`
-  border-color: ${Colors.error};
+  border-color: ${(props: ErrorProps) => props.error ? Colors.error : Colors.outlineVariant};
 `;
 
 const ChipsRow = styled.ScrollView``;
 
-const Chip = styled.TouchableOpacity<{ selected: boolean }>`
+interface SelectedProps {
+  selected: boolean;
+}
+
+const Chip = styled.TouchableOpacity<SelectedProps>`
   padding-horizontal: ${Spacing.md}px;
   padding-vertical: ${Spacing.xs}px;
   border-radius: ${Radius.full}px;
   margin-right: ${Spacing.sm}px;
-  background-color: ${({ selected }: { selected: boolean }) =>
-    selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
+  background-color: ${(props: SelectedProps) =>
+    props.selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
   border-width: 1px;
-  border-color: ${({ selected }: { selected: boolean }) =>
-    selected ? Colors.primary : Colors.outlineVariant};
+  border-color: ${(props: SelectedProps) =>
+    props.selected ? Colors.primary : Colors.outlineVariant};
 `;
 
-const ChipText = styled.Text<{ selected: boolean }>`
-  color: ${({ selected }: { selected: boolean }) => selected ? Colors.primary : Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodySm}px;
-  font-weight: ${({ selected }: { selected: boolean }) => selected ? '700' : '400'};
+const ChipText = styled(BodySm)<SelectedProps>`
+  color: ${(props: SelectedProps) => props.selected ? Colors.primary : Colors.onSurfaceVariant};
+  font-weight: ${(props: SelectedProps) => props.selected ? '700' : '400'};
 `;
 
 const SplitTypeRow = styled.View`
@@ -146,23 +111,22 @@ const SplitTypeRow = styled.View`
   gap: ${Spacing.sm}px;
 `;
 
-const SplitTypeBtn = styled.TouchableOpacity<{ selected: boolean }>`
+const SplitTypeBtn = styled.TouchableOpacity<SelectedProps>`
   flex: 1;
   padding-vertical: ${Spacing.sm}px;
   border-radius: ${Radius.md}px;
   align-items: center;
-  background-color: ${({ selected }: { selected: boolean }) =>
-    selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
+  background-color: ${(props: SelectedProps) =>
+    props.selected ? Colors.primaryContainer : Colors.surfaceContainerLow};
   border-width: 1px;
-  border-color: ${({ selected }: { selected: boolean }) =>
-    selected ? Colors.primary : Colors.outlineVariant};
+  border-color: ${(props: SelectedProps) =>
+    props.selected ? Colors.primary : Colors.outlineVariant};
 `;
 
-const SplitTypeBtnText = styled.Text<{ selected: boolean }>`
-  color: ${({ selected }: { selected: boolean }) => selected ? Colors.primary : Colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
+const SplitTypeBtnText = styled(Label)<SelectedProps>`
+  color: ${(props: SelectedProps) => props.selected ? Colors.primary : Colors.onSurfaceVariant};
   font-size: 11px;
-  font-weight: ${({ selected }: { selected: boolean }) => selected ? '700' : '400'};
+  font-weight: ${(props: SelectedProps) => props.selected ? '700' : '400'};
 `;
 
 const BottomActions = styled.View`
@@ -172,24 +136,11 @@ const BottomActions = styled.View`
   border-top-color: ${Colors.outlineVariant};
 `;
 
-const PrimaryButton = styled.TouchableOpacity`
-  background-color: ${Colors.primary};
-  border-radius: ${Radius.full}px;
-  padding-vertical: ${Spacing.md}px;
-  align-items: center;
-`;
-
-const PrimaryButtonText = styled.Text`
-  color: ${Colors.onPrimaryFixed};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
 type SplitType = 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
 
 const AddExpenseScreen = () => {
   const router = useRouter();
+  const { userId } = useUser();
   const addExpense = useExpenseStore(state => state.addExpense);
   const [splitType, setSplitType] = useState<SplitType>('EQUAL');
 
@@ -204,7 +155,7 @@ const AddExpenseScreen = () => {
       description: '',
       amount: '',
       groupId: MOCK_GROUPS[0]?.id ?? '',
-      paidBy: 'usr_1',
+      paidBy: userId,
     },
   });
 
@@ -212,19 +163,19 @@ const AddExpenseScreen = () => {
   const selectedGroup = MOCK_GROUPS.find(g => g.id === selectedGroupId);
 
   const onSubmit = (data: FormValues) => {
-    const amount = parseFloat(data.amount);
-    const members = selectedGroup?.members ?? ['usr_1'];
-    const perPerson = amount / members.length;
+    const amountValue = parseFloat(data.amount);
+    const members = selectedGroup?.members ?? [userId];
+    const perPerson = amountValue / members.length;
 
     addExpense({
       id: `exp_${Date.now()}`,
       groupId: data.groupId,
       title: data.description,
-      amount,
+      amount: amountValue,
       payerId: data.paidBy,
       date: new Date().toISOString(),
       splitType,
-      splits: members.map(userId => ({ userId, value: perPerson })),
+      splits: members.map(mid => ({ userId: mid, value: perPerson })),
     });
 
     Alert.alert('Expense Added', `"${data.description}" has been added!`, [
@@ -240,14 +191,14 @@ const AddExpenseScreen = () => {
   ];
 
   return (
-    <Wrapper edges={['top']}>
+    <Screen>
       <NavBar>
         <NavBtn onPress={() => router.back()}>
-          <NavBtnText>Cancel</NavBtnText>
+          <BodyMd>Cancel</BodyMd>
         </NavBtn>
-        <NavTitle>New Expense</NavTitle>
+        <Title>New Expense</Title>
         <NavBtn onPress={handleSubmit(onSubmit)}>
-          <NavBtnText primary>Save</NavBtnText>
+          <BodyMd style={{ color: Colors.primary, fontWeight: '700' }}>Save</BodyMd>
         </NavBtn>
       </NavBar>
 
@@ -255,63 +206,56 @@ const AddExpenseScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView
+        <Content
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Big Amount Input */}
           <BigAmountContainer>
-            <CurrencySymbol>$</CurrencySymbol>
             <Controller
               control={control}
               name="amount"
               render={({ field: { onChange, value, onBlur } }) => (
-                <BigInput
-                  placeholder="0.00"
-                  placeholderTextColor={Colors.outlineVariant}
-                  keyboardType="decimal-pad"
-                  autoFocus
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                />
+                <Row>
+                  <Headline style={{ color: Colors.onSurfaceVariant, marginRight: 8 }}>$</Headline>
+                  <BigInput
+                    placeholder="0.00"
+                    placeholderTextColor={Colors.outlineVariant}
+                    keyboardType="decimal-pad"
+                    autoFocus
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                  />
+                </Row>
               )}
             />
-            {errors.amount && <ErrorHint>{errors.amount.message}</ErrorHint>}
+            {errors.amount && <BodySm style={{ color: Colors.error }}>{errors.amount.message}</BodySm>}
           </BigAmountContainer>
 
           {/* Description */}
           <FieldSection>
-            <FieldLabel>What's it for?</FieldLabel>
+            <Label style={{ marginBottom: Spacing.xs, textTransform: 'uppercase' }}>What's it for?</Label>
             <Controller
               control={control}
               name="description"
-              render={({ field: { onChange, value, onBlur } }) =>
-                errors.description ? (
-                  <TextInputError
-                    placeholder="e.g. Dinner, Uber, Airbnb..."
-                    placeholderTextColor={Colors.onSurfaceVariant}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                ) : (
-                  <TextInputStyled
-                    placeholder="e.g. Dinner, Uber, Airbnb..."
-                    placeholderTextColor={Colors.onSurfaceVariant}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
-                )
-              }
+              render={({ field: { onChange, value, onBlur } }) => (
+                <TextInputStyled
+                  placeholder="e.g. Dinner, Uber, Airbnb..."
+                  placeholderTextColor={Colors.onSurfaceVariant}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={!!errors.description}
+                />
+              )}
             />
-            {errors.description && <ErrorHint>{errors.description.message}</ErrorHint>}
+            {errors.description && <BodySm style={{ color: Colors.error, marginTop: 4 }}>{errors.description.message}</BodySm>}
           </FieldSection>
 
           {/* Group Picker */}
           <FieldSection>
-            <FieldLabel>Group / Vault</FieldLabel>
+            <Label style={{ marginBottom: Spacing.xs, textTransform: 'uppercase' }}>Group / Vault</Label>
             <Controller
               control={control}
               name="groupId"
@@ -332,27 +276,26 @@ const AddExpenseScreen = () => {
                 </ChipsRow>
               )}
             />
-            {errors.groupId && <ErrorHint>{errors.groupId.message}</ErrorHint>}
           </FieldSection>
 
           {/* Paid By */}
           <FieldSection>
-            <FieldLabel>Paid by</FieldLabel>
+            <Label style={{ marginBottom: Spacing.xs, textTransform: 'uppercase' }}>Paid by</Label>
             <Controller
               control={control}
               name="paidBy"
               render={({ field: { onChange, value } }) => (
                 <ChipsRow horizontal showsHorizontalScrollIndicator={false}>
-                  {(selectedGroup?.members ?? ['usr_1']).map(userId => {
-                    const member = MOCK_MEMBERS.find(m => m.id === userId);
-                    const label = userId === 'usr_1' ? 'You' : member?.name ?? userId;
+                  {(selectedGroup?.members ?? [userId]).map(mid => {
+                    const member = MOCK_MEMBERS.find(m => m.id === mid);
+                    const label = mid === userId ? 'You' : member?.name ?? mid;
                     return (
                       <Chip
-                        key={userId}
-                        selected={value === userId}
-                        onPress={() => onChange(userId)}
+                        key={mid}
+                        selected={value === mid}
+                        onPress={() => onChange(mid)}
                       >
-                        <ChipText selected={value === userId}>{label}</ChipText>
+                        <ChipText selected={value === mid}>{label}</ChipText>
                       </Chip>
                     );
                   })}
@@ -363,7 +306,7 @@ const AddExpenseScreen = () => {
 
           {/* Split Type */}
           <FieldSection>
-            <FieldLabel>Split method</FieldLabel>
+            <Label style={{ marginBottom: Spacing.xs, textTransform: 'uppercase' }}>Split method</Label>
             <SplitTypeRow>
               {splitTypes.map(st => (
                 <SplitTypeBtn
@@ -376,15 +319,13 @@ const AddExpenseScreen = () => {
               ))}
             </SplitTypeRow>
           </FieldSection>
-        </ScrollView>
+        </Content>
       </KeyboardAvoidingView>
 
       <BottomActions>
-        <PrimaryButton onPress={handleSubmit(onSubmit)} activeOpacity={0.85}>
-          <PrimaryButtonText>Add Expense</PrimaryButtonText>
-        </PrimaryButton>
+        <ActionButton title="Add Expense" onPress={handleSubmit(onSubmit)} />
       </BottomActions>
-    </Wrapper>
+    </Screen>
   );
 };
 

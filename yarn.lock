@@ -5412,6 +5412,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-blur@npm:~15.0.8":
+  version: 15.0.8
+  resolution: "expo-blur@npm:15.0.8"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/d71f3330928e5fa3be3f8e1ee69736669b4cdbcc2c9f44ac8f552a0279dbcc03cccddf8aed1454d86a00d56b53f855aaec574d0e53898166a22b367586ba1544
+  languageName: node
+  linkType: hard
+
 "expo-camera@npm:~17.0.10":
   version: 17.0.10
   resolution: "expo-camera@npm:17.0.10"
@@ -9620,6 +9631,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-native: "npm:^5.0.0"
     expo: "npm:~54.0.33"
+    expo-blur: "npm:~15.0.8"
     expo-camera: "npm:~17.0.10"
     expo-constants: "npm:~18.0.13"
     expo-image: "npm:~3.0.11"

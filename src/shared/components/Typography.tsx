@@ -11,6 +11,7 @@ export const Display = styled(BaseText)<{ positive?: boolean }>`
   font-family: ${TypographyTokens.fonts.display};
   font-size: ${TypographyTokens.sizes.displaySm}px;
   font-weight: ${TypographyTokens.weights.bold};
+  letter-spacing: -0.5px;
   color: ${({ theme, positive }) => 
     positive === undefined ? theme.colors.onSurface : 
     positive ? theme.colors.tertiary : theme.colors.error};
@@ -20,6 +21,7 @@ export const Headline = styled(BaseText)`
   font-family: ${TypographyTokens.fonts.display};
   font-size: ${TypographyTokens.sizes.titleLg}px;
   font-weight: ${TypographyTokens.weights.bold};
+  letter-spacing: -0.5px;
 `;
 
 export const Title = styled(BaseText)`

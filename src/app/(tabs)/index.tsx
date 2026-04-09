@@ -2,6 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
   Screen, 
@@ -26,17 +27,37 @@ import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 import { 
   MOCK_EXPENSES, 
   MOCK_GROUPS, 
+  MOCK_MEMBERS,
   GROUP_MAP,
 } from '@/shared/data/mockData';
 import { ExpenseSplit } from '@/shared/types';
 
-const HeaderRow = styled(SpaceBetweenRow)`
-  margin-top: ${Spacing.md}px;
-  margin-bottom: ${Spacing.xl}px;
+const HeaderSection = styled.View`
+  padding: ${Spacing.xl}px ${Spacing.lg}px ${Spacing.xxl}px;
 `;
 
-const SectionHeader = styled(SpaceBetweenRow)`
-  margin-top: ${Spacing.xl}px;
+const HeroName = styled(Display)`
+  font-size: 48px;
+  line-height: 52px;
+  margin-top: ${Spacing.sm}px;
+`;
+
+const GreetingGroup = styled.View`
+  align-self: flex-end;
+  margin-right: ${Spacing.md}px;
+  margin-top: -${Spacing.md}px;
+`;
+
+const MainContentArea = styled.View`
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  min-height: 600px;
+  padding: ${Spacing.lg}px;
+`;
+
+const ActivityHeader = styled(SpaceBetweenRow)`
+  margin-top: ${Spacing.lg}px;
   margin-bottom: ${Spacing.md}px;
 `;
 
@@ -72,36 +93,29 @@ const GroupChipText = styled(BodySm)<ActiveProps>`
   font-weight: ${({ active }: ActiveProps) => active ? '600' : '400'};
 `;
 
+const EmptyState = styled.View`
+  align-items: center;
+  padding: ${Spacing.xxl}px;
+`;
+
 const FABWrapper = styled.View`
   position: absolute;
-  bottom: ${Spacing.xl}px;
+  bottom: 110px; /* Elevated for the floating tab bar */
   right: ${Spacing.lg}px;
 `;
 
 const FABButton = styled.TouchableOpacity`
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
   background-color: ${({ theme }) => theme.colors.primary};
   align-items: center;
   justify-content: center;
-  elevation: 8;
   shadow-color: ${({ theme }) => theme.colors.primary};
-  shadow-offset: 0px 4px;
-  shadow-opacity: 0.4;
+  shadow-offset: 0px 8px;
+  shadow-opacity: 0.3;
   shadow-radius: 12px;
-`;
-
-const FABIcon = styled.Text`
-  color: ${({ theme }) => theme.colors.onPrimaryFixed};
-  font-size: 28px;
-  font-weight: 300;
-  margin-top: -2px;
-`;
-
-const EmptyState = styled.View`
-  align-items: center;
-  padding: ${Spacing.xxl}px;
+  elevation: 6;
 `;
 
 const HomeScreen = () => {
@@ -116,7 +130,7 @@ const HomeScreen = () => {
     return [...MOCK_EXPENSES]
       .filter(e => activeGroup ? e.groupId === activeGroup : true)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 6);
+      .slice(0, 8);
   }, [activeGroup]);
 
   const getExpenseAmount = (expenseId: string) => {
@@ -129,35 +143,44 @@ const HomeScreen = () => {
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
-        <View style={{ padding: Spacing.lg }}>
-          <HeaderRow>
-            <View>
-              <BodySm style={{ letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                Good morning
-              </BodySm>
-              <Display style={{ fontSize: 32 }}>
-                {user?.name?.split(' ')[0] ?? 'User'} 👋
-              </Display>
-            </View>
-            <Avatar name={user?.name ?? 'User'} size={48} borderWidth={2} borderColor={theme.colors.primary} />
-          </HeaderRow>
+        <HeaderSection>
+          <SpaceBetweenRow>
+            <Label>Dashboard</Label>
+            <Avatar 
+              name={user?.name ?? 'User'} 
+              size={40} 
+              borderWidth={0} 
+            />
+          </SpaceBetweenRow>
+          
+          <HeroName>
+            {user?.name?.split(' ')[0] ?? 'User'}
+          </HeroName>
+          
+          <GreetingGroup>
+            <BodySm style={{ opacity: 0.7 }}>
+              {new Date().getHours() < 12 ? 'Good morning' : 'Good evening'}
+            </BodySm>
+          </GreetingGroup>
+        </HeaderSection>
 
+        <MainContentArea>
           <BalanceCard totalBalance={totalBalance} />
 
-          <SectionHeader>
-            <Title>Recent Activity</Title>
+          <ActivityHeader>
+            <Headline style={{ fontSize: 24 }}>Recent Flows</Headline>
             <SeeAllText onPress={() => router.push('/(tabs)/activity')}>
-              <SeeAllLabel>See all</SeeAllLabel>
+              <SeeAllLabel>Discover all</SeeAllLabel>
             </SeeAllText>
-          </SectionHeader>
+          </ActivityHeader>
 
           <GroupChipsRow
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: Spacing.lg }}
+            contentContainerStyle={{ paddingBottom: Spacing.sm }}
           >
             <GroupChip active={activeGroup === null} onPress={() => setActiveGroup(null)}>
-              <GroupChipText active={activeGroup === null}>All</GroupChipText>
+              <GroupChipText active={activeGroup === null}>Overview</GroupChipText>
             </GroupChip>
             {MOCK_GROUPS.map(group => (
               <GroupChip
@@ -170,10 +193,12 @@ const HomeScreen = () => {
             ))}
           </GroupChipsRow>
 
+          <Spacer size="xs" />
+
           {recentExpenses.length === 0 ? (
             <EmptyState>
-              <BodySm style={{ textAlign: 'center' }}>
-                No expenses found.{"\n"}Add your first expense!
+              <BodySm style={{ textAlign: 'center', opacity: 0.6 }}>
+                Your financial feed is quiet.{"\n"}Start a new split to see activity.
               </BodySm>
             </EmptyState>
           ) : (
@@ -185,8 +210,8 @@ const HomeScreen = () => {
                   title={expense.title}
                   subtitle={
                     expense.payerId === userId
-                      ? `You paid · ${GROUP_MAP.get(expense.groupId)?.name}`
-                      : `${expense.splitType === 'EQUAL' ? 'Split equally' : 'Custom split'} · ${GROUP_MAP.get(expense.groupId)?.name}`
+                      ? `Paid by you · ${GROUP_MAP.get(expense.groupId)?.name}`
+                      : `Split by ${MOCK_MEMBERS.find(m => m.id === expense.payerId)?.name} · ${GROUP_MAP.get(expense.groupId)?.name}`
                   }
                   amount={amount}
                   date={formatDate(expense.date)}
@@ -198,12 +223,13 @@ const HomeScreen = () => {
           )}
 
           <Spacer size="xxxl" />
-        </View>
+          <Spacer size="xxxl" />
+        </MainContentArea>
       </Content>
 
       <FABWrapper>
         <FABButton onPress={() => router.push('/expense/add')} activeOpacity={0.85}>
-          <FABIcon>+</FABIcon>
+          <MaterialIcons name="add" size={32} color={theme.colors.onPrimaryFixed} />
         </FABButton>
       </FABWrapper>
     </Screen>

@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bdee308c-d032-426f-b09d-78607bffea72"
+      }
+    },
+    "owner": "split-flow"
   }
 }

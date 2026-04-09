@@ -200,7 +200,7 @@ const LegendAmount = styled.Text`
   font-weight: ${Typography.weights.semibold};
 `;
 
-export default function AnalyticsScreen() {
+const AnalyticsScreen = () => {
   const categoryData = getSpendingByCategory('usr_1');
   const totalBalance = getTotalBalance('usr_1');
   const totalSpent = MOCK_EXPENSES
@@ -302,4 +302,6 @@ export default function AnalyticsScreen() {
       </Content>
     </Container>
   );
-}
+};
+
+export default AnalyticsScreen;

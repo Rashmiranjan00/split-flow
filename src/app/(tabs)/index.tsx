@@ -10,7 +10,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { BalanceCard } from '@/components/BalanceCard';
 import { ExpenseCard } from '@/components/ExpenseCard';
 import { ActionButton } from '@/components/ActionButton';
-import { MOCK_EXPENSES, MOCK_GROUPS, getTotalBalance, getGroupBalance } from '@/data/mockData';
+import { MOCK_EXPENSES, MOCK_GROUPS, getTotalBalance, GROUP_MAP } from '@/data/mockData';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -153,23 +153,23 @@ const EmptyText = styled.Text`
   margin-top: ${Spacing.md}px;
 `;
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
   const [activeGroup, setActiveGroup] = React.useState<string | null>(null);
 
   const totalBalance = getTotalBalance('usr_1');
 
-  // Recent expenses — latest 5, optionally filtered by group
-  const recentExpenses = MOCK_EXPENSES
+  // Recent expenses — latest 6, optionally filtered by group; spread to avoid mutating source
+  const recentExpenses = [...MOCK_EXPENSES]
     .filter(e => activeGroup ? e.groupId === activeGroup : true)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 6);
 
+  const MS_PER_DAY = 1_000 * 60 * 60 * 24;
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor((new Date().getTime() - date.getTime()) / MS_PER_DAY);
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -241,8 +241,8 @@ export default function HomeScreen() {
                     title={expense.title}
                     subtitle={
                       expense.payerId === 'usr_1'
-                        ? `You paid · ${MOCK_GROUPS.find(g => g.id === expense.groupId)?.name}`
-                        : `${expense.splitType === 'EQUAL' ? 'Split equally' : 'Custom split'} · ${MOCK_GROUPS.find(g => g.id === expense.groupId)?.name}`
+                        ? `You paid · ${GROUP_MAP.get(expense.groupId)?.name}`
+                        : `${expense.splitType === 'EQUAL' ? 'Split equally' : 'Custom split'} · ${GROUP_MAP.get(expense.groupId)?.name}`
                     }
                     amount={amount}
                     date={formatDate(expense.date)}
@@ -265,4 +265,6 @@ export default function HomeScreen() {
       </FABWrapper>
     </>
   );
-}
+};
+
+export default HomeScreen;

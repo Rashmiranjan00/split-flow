@@ -9,7 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const queryClient = new QueryClient();
 
-export default function RootLayout() {
+const RootLayout = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return (
@@ -35,4 +35,6 @@ export default function RootLayout() {
       </ThemeProvider>
     </QueryClientProvider>
   );
-}
+};
+
+export default RootLayout;

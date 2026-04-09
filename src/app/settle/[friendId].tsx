@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text } from 'react-native';
 import styled from 'styled-components/native';
+import { useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Typography } from '@/constants/typography';
-import { useLocalSearchParams } from 'expo-router';
 
 const Container = styled.View`
   flex: 1;
@@ -18,7 +17,7 @@ const Title = styled.Text`
   font-size: ${Typography.sizes.titleLg}px;
 `;
 
-export default function SettleScreen() {
+const SettleScreen = () => {
   const { friendId } = useLocalSearchParams();
 
   return (
@@ -26,4 +25,6 @@ export default function SettleScreen() {
       <Title>Settle with {friendId}</Title>
     </Container>
   );
-}
+};
+
+export default SettleScreen;

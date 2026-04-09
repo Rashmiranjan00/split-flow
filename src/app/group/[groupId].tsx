@@ -219,15 +219,15 @@ const AddExpenseBtnText = styled.Text`
   font-weight: ${Typography.weights.semibold};
 `;
 
-function getCategoryEmoji(cat?: string) {
+const getCategoryEmoji = (cat?: string) => {
   const map: Record<string, string> = {
     Food: '🍽', Transport: '🚗', Accommodation: '🏠',
     Utilities: '⚡', Housing: '🏠', Other: '💳',
   };
   return map[cat ?? 'Other'] ?? '💳';
-}
+};
 
-export default function GroupDetailScreen() {
+const GroupDetailScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const router = useRouter();
 
@@ -345,4 +345,6 @@ export default function GroupDetailScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default GroupDetailScreen;

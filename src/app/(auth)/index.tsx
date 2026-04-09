@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import styled from 'styled-components/native';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/features/auth/store';
 import { ActionButton } from '@/components/ActionButton';
 import { Colors } from '@/constants/colors';
 import { Typography } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -32,19 +33,12 @@ const Subtitle = styled.Text`
   text-align: center;
 `;
 
-import { useRouter } from 'expo-router';
-
-export default function LoginScreen() {
+const LoginScreen = () => {
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
 
   const handleLogin = () => {
-    // Mock user login
-    login({
-      id: 'usr_1',
-      name: 'Demo User',
-      email: 'demo@splitflow.com',
-    });
+    login({ id: 'usr_1', name: 'Demo User', email: 'demo@splitflow.com' });
     router.replace('/(tabs)');
   };
 
@@ -57,4 +51,6 @@ export default function LoginScreen() {
       </View>
     </Container>
   );
-}
+};
+
+export default LoginScreen;

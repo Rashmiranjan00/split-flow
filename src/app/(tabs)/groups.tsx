@@ -173,15 +173,15 @@ const EmptyDesc = styled.Text`
   text-align: center;
 `;
 
-function getGroupEmoji(name: string): string {
+const getGroupEmoji = (name: string): string => {
   if (name.includes('🏖')) return '🏖';
   if (name.includes('🏠')) return '🏠';
   if (name.includes('🍽')) return '🍽';
   if (name.includes('✈')) return '✈';
   return '💼';
-}
+};
 
-export default function GroupsScreen() {
+const GroupsScreen = () => {
   const router = useRouter();
 
   return (
@@ -254,4 +254,6 @@ export default function GroupsScreen() {
       </Content>
     </Container>
   );
-}
+};
+
+export default GroupsScreen;

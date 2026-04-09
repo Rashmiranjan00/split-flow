@@ -175,7 +175,7 @@ const DEMO_EXPENSE = {
   ],
 };
 
-export default function SplitExpenseScreen() {
+const SplitExpenseScreen = () => {
   const router = useRouter();
 
   return (
@@ -233,4 +233,6 @@ export default function SplitExpenseScreen() {
       </Content>
     </Container>
   );
-}
+};
+
+export default SplitExpenseScreen;

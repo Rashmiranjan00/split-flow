@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Spacing, Radius } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
-import { MOCK_EXPENSES, MOCK_GROUPS, MOCK_MEMBERS } from '@/data/mockData';
+import { MOCK_EXPENSES, GROUP_MAP, MEMBER_MAP } from '@/data/mockData';
 
 interface ActivityItem {
   id: string;
@@ -100,45 +100,49 @@ const AmountText = styled.Text<{ positive: boolean }>`
   font-weight: ${Typography.weights.bold};
 `;
 
-function groupByDate(items: ActivityItem[]): { date: string; items: ActivityItem[] }[] {
+const MS_PER_DAY = 1_000 * 60 * 60 * 24;
+
+const groupByDate = (items: ActivityItem[]): { date: string; items: ActivityItem[] }[] => {
   const groups: Record<string, ActivityItem[]> = {};
   const now = new Date();
 
-  items.forEach(item => {
+  for (const item of items) {
     const date = new Date(item.date);
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    let label: string;
-    if (diffDays === 0) label = 'Today';
-    else if (diffDays === 1) label = 'Yesterday';
-    else if (diffDays < 7) label = `${diffDays} days ago`;
-    else label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / MS_PER_DAY);
 
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(item);
-  });
+    const label =
+      diffDays === 0 ? 'Today'
+      : diffDays === 1 ? 'Yesterday'
+      : diffDays < 7 ? `${diffDays} days ago`
+      : date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    // ES2021 ??= — initialise array only if key absent
+    (groups[label] ??= []).push(item);
+  }
 
   return Object.entries(groups).map(([date, items]) => ({ date, items }));
 }
 
-export default function ActivityScreen() {
+const ActivityScreen = () => {
   const router = useRouter();
 
   // Build activity feed from mock expenses
-  const activities: ActivityItem[] = MOCK_EXPENSES
+  // GROUP_MAP / MEMBER_MAP: O(1) Map lookups (ES2019) instead of repeated .find()
+  const activities: ActivityItem[] = [...MOCK_EXPENSES]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .map(expense => {
       const myShare = expense.splits.find(s => s.userId === 'usr_1')?.value ?? 0;
       const iAmPayer = expense.payerId === 'usr_1';
       const amount = iAmPayer ? expense.amount - myShare : -myShare;
-      const group = MOCK_GROUPS.find(g => g.id === expense.groupId);
-      const payer = MOCK_MEMBERS.find(m => m.id === expense.payerId);
+      const groupName = GROUP_MAP.get(expense.groupId)?.name ?? '';
+      const payerName = MEMBER_MAP.get(expense.payerId)?.name ?? 'Someone';
 
       return {
         id: expense.id,
         title: expense.title,
         subtitle: iAmPayer
-          ? `You paid · ${group?.name ?? ''}`
-          : `${payer?.name ?? 'Someone'} paid · ${group?.name ?? ''}`,
+          ? `You paid · ${groupName}`
+          : `${payerName} paid · ${groupName}`,
         amount,
         date: expense.date,
         timestamp: new Date(expense.date).getTime(),
@@ -202,4 +206,6 @@ export default function ActivityScreen() {
       </Content>
     </Container>
   );
-}
+};
+
+export default ActivityScreen;

@@ -23,116 +23,120 @@ export interface Debt {
   amount: number;
 }
 
+// Moved out of function body — clean module-level type
+interface Balance {
+  userId: string;
+  amount: number;
+}
+
+/** Round a number to 2 decimal places */
+const round2 = (n: number): number => Number(n.toFixed(2));
+
 /**
- * Validates and calculates the exact amount owed by each participant based on the split type
+ * Validates and calculates the exact amount owed by each participant
+ * based on the split type. Uses Object.fromEntries (ES2019) for declarative
+ * object construction and Array.at() (ES2022) for safe first-element access.
  */
 export const calculateSplits = (expense: ExpenseData): Record<string, number> => {
   const { totalAmount, splitType, splits } = expense;
-  const owedAmounts: Record<string, number> = {};
-  
+
   if (splitType === 'EQUAL') {
-    const amountPerPerson = Number((totalAmount / splits.length).toFixed(2));
-    // To handle precision issues (e.g. 100/3 = 33.33 => 99.99), we adjust the first person
-    let sum = 0;
-    splits.forEach(s => {
-      owedAmounts[s.userId] = amountPerPerson;
-      sum += amountPerPerson;
-    });
-    const difference = Number((totalAmount - sum).toFixed(2));
-    if (difference !== 0 && splits.length > 0) {
-      owedAmounts[splits[0].userId] = Number((owedAmounts[splits[0].userId] + difference).toFixed(2));
-    }
-  } else if (splitType === 'PERCENTAGE') {
-    let totalPercent = 0;
-    splits.forEach(s => totalPercent += s.value);
-    if (Math.abs(totalPercent - 100) > 0.01) throw new Error("Percentages must add up to 100%");
-    
-    let sum = 0;
-    splits.forEach(s => {
-      const amount = Number(((s.value / 100) * totalAmount).toFixed(2));
-      owedAmounts[s.userId] = amount;
-      sum += amount;
-    });
-    
-    const difference = Number((totalAmount - sum).toFixed(2));
-    if (difference !== 0 && splits.length > 0) {
-       owedAmounts[splits[0].userId] = Number((owedAmounts[splits[0].userId] + difference).toFixed(2));
-    }
-  } else if (splitType === 'SHARES') {
-    let totalShares = 0;
-    splits.forEach(s => totalShares += s.value);
-    
-    let sum = 0;
-    splits.forEach(s => {
-      const amount = Number(((s.value / totalShares) * totalAmount).toFixed(2));
-      owedAmounts[s.userId] = amount;
-      sum += amount;
-    });
-    
-    const difference = Number((totalAmount - sum).toFixed(2));
-    if (difference !== 0 && splits.length > 0) {
-       owedAmounts[splits[0].userId] = Number((owedAmounts[splits[0].userId] + difference).toFixed(2));
-    }
-  } else if (splitType === 'EXACT') {
-    let sum = 0;
-    splits.forEach(s => {
-      owedAmounts[s.userId] = s.value;
-      sum += s.value;
-    });
-    if (Math.abs(sum - totalAmount) > 0.01) throw new Error("Exact amounts must add up to total amount");
+    const amountPerPerson = round2(totalAmount / splits.length);
+    const initial = Object.fromEntries(splits.map(s => [s.userId, amountPerPerson]));
+
+    // Precision correction: adjust the first participant for rounding drift
+    const sum = splits.reduce((acc) => acc + amountPerPerson, 0);
+    const diff = round2(totalAmount - sum);
+    const firstId = splits.at(0)?.userId;
+    if (diff !== 0 && firstId) initial[firstId] = round2(initial[firstId] + diff);
+
+    return initial;
   }
 
-  return owedAmounts;
+  if (splitType === 'PERCENTAGE') {
+    const totalPercent = splits.reduce((acc, s) => acc + s.value, 0);
+    if (Math.abs(totalPercent - 100) > 0.01) {
+      throw new Error('Percentages must add up to 100%');
+    }
+
+    const result = Object.fromEntries(
+      splits.map(s => [s.userId, round2((s.value / 100) * totalAmount)])
+    );
+    const sum = Object.values(result).reduce((acc, v) => acc + v, 0);
+    const diff = round2(totalAmount - sum);
+    const firstId = splits.at(0)?.userId;
+    if (diff !== 0 && firstId) result[firstId] = round2(result[firstId] + diff);
+
+    return result;
+  }
+
+  if (splitType === 'SHARES') {
+    const totalShares = splits.reduce((acc, s) => acc + s.value, 0);
+
+    const result = Object.fromEntries(
+      splits.map(s => [s.userId, round2((s.value / totalShares) * totalAmount)])
+    );
+    const sum = Object.values(result).reduce((acc, v) => acc + v, 0);
+    const diff = round2(totalAmount - sum);
+    const firstId = splits.at(0)?.userId;
+    if (diff !== 0 && firstId) result[firstId] = round2(result[firstId] + diff);
+
+    return result;
+  }
+
+  // EXACT
+  const result = Object.fromEntries(splits.map(s => [s.userId, s.value]));
+  const sum = splits.reduce((acc, s) => acc + s.value, 0);
+  if (Math.abs(sum - totalAmount) > 0.01) {
+    throw new Error('Exact amounts must add up to total amount');
+  }
+
+  return result;
 };
 
 /**
- * Calculates simplified debts (Minimal Transactions)
+ * Calculates simplified debts using minimal transactions algorithm.
+ * Uses ??= logical assignment (ES2021) and for...of with Object.entries.
  */
 export const simplifyDebts = (expenses: ExpenseData[]): Debt[] => {
   const netBalances: Record<string, number> = {};
 
-  // For every expense, payer gets positive balance, participants get negative balance
-  expenses.forEach(exp => {
-    if (!netBalances[exp.payerId]) netBalances[exp.payerId] = 0;
+  for (const exp of expenses) {
+    // ES2021 logical nullish assignment — init to 0 only if not yet set
+    netBalances[exp.payerId] ??= 0;
     netBalances[exp.payerId] += exp.totalAmount;
 
     const splits = calculateSplits(exp);
     for (const [userId, amount] of Object.entries(splits)) {
-      if (!netBalances[userId]) netBalances[userId] = 0;
+      netBalances[userId] ??= 0;
       netBalances[userId] -= amount;
     }
-  });
-
-  // Separate creditors (balance > 0) and debtors (balance < 0)
-  interface Balance {
-    userId: string;
-    amount: number;
   }
 
   const creditors: Balance[] = [];
   const debtors: Balance[] = [];
 
   for (const [userId, amount] of Object.entries(netBalances)) {
-    if (amount > 0.01) creditors.push({ userId, amount: Number(amount.toFixed(2)) });
-    else if (amount < -0.01) debtors.push({ userId, amount: Number(Math.abs(amount).toFixed(2)) });
+    if (amount > 0.01) creditors.push({ userId, amount: round2(amount) });
+    else if (amount < -0.01) debtors.push({ userId, amount: round2(Math.abs(amount)) });
   }
 
   creditors.sort((a, b) => b.amount - a.amount);
   debtors.sort((a, b) => b.amount - a.amount);
 
   const simplifiedDebts: Debt[] = [];
-  let i = 0, j = 0;
+  let i = 0;
+  let j = 0;
 
   while (i < debtors.length && j < creditors.length) {
     const debtor = debtors[i];
     const creditor = creditors[j];
-
     const settledAmount = Math.min(debtor.amount, creditor.amount);
 
     simplifiedDebts.push({
       from: debtor.userId,
       to: creditor.userId,
-      amount: Number(settledAmount.toFixed(2))
+      amount: round2(settledAmount),
     });
 
     debtor.amount -= settledAmount;

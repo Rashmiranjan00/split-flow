@@ -188,7 +188,7 @@ const PrimaryButtonText = styled.Text`
 
 type SplitType = 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
 
-export default function AddExpenseScreen() {
+const AddExpenseScreen = () => {
   const router = useRouter();
   const addExpense = useExpenseStore(state => state.addExpense);
   const [splitType, setSplitType] = useState<SplitType>('EQUAL');
@@ -386,4 +386,6 @@ export default function AddExpenseScreen() {
       </BottomActions>
     </Wrapper>
   );
-}
+};
+
+export default AddExpenseScreen;

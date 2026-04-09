@@ -148,7 +148,7 @@ const LogoutSection = styled.View`
   margin-bottom: ${Spacing.xxxl}px;
 `;
 
-export default function ProfileScreen() {
+const ProfileScreen = () => {
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
@@ -249,4 +249,6 @@ export default function ProfileScreen() {
       </Content>
     </Container>
   );
-}
+};
+
+export default ProfileScreen;

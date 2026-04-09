@@ -31,6 +31,16 @@
         "projectId": "bdee308c-d032-426f-b09d-78607bffea72"
       }
     },
-    "owner": "split-flow"
+    "owner": "split-flow",
+    "scheme": "split-flow",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan receipts."
+        }
+      ]
+    ]
   }
 }

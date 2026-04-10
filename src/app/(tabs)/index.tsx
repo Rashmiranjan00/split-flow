@@ -23,15 +23,10 @@ import { BalanceCard } from '@/shared/components/BalanceCard';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
+import { useGroups } from '@/features/groups/hooks/useGroups';
+import { useActivity } from '@/features/activity/hooks/useActivity';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { 
-  MOCK_EXPENSES, 
-  MOCK_GROUPS, 
-  MOCK_MEMBERS,
-  GROUP_MAP,
-} from '@/shared/data/mockData';
-import { ExpenseSplit } from '@/shared/types';
 
 const HeaderSection = styled.View`
   padding: ${Spacing.xl}px ${Spacing.lg}px ${Spacing.xxl}px;
@@ -120,27 +115,20 @@ const FABButton = styled.TouchableOpacity`
 `;
 
 const HomeScreen = () => {
-  const { user, userId } = useUser();
-  const { totalBalance } = useBalances();
+  const { user } = useUser();
+  const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
+  const { recent: recentActivities, isEmpty: activityEmpty } = useActivity();
+  const { groups } = useGroups();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
   const router = useRouter();
   const theme = useTheme();
   const [activeGroup, setActiveGroup] = React.useState<string | null>(null);
 
-  const recentExpenses = React.useMemo(() => {
-    return [...MOCK_EXPENSES]
-      .filter(e => activeGroup ? e.groupId === activeGroup : true)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 8);
-  }, [activeGroup]);
-
-  const getExpenseAmount = (expenseId: string) => {
-    const expense = MOCK_EXPENSES.find(e => e.id === expenseId);
-    if (!expense) return 0;
-    const myShare = expense.splits.find((s: ExpenseSplit) => s.userId === userId)?.value ?? 0;
-    return expense.payerId === userId ? expense.amount - myShare : -myShare;
-  };
+  const filteredActivities = React.useMemo(() => {
+    if (!activeGroup) return recentActivities;
+    return recentActivities.filter(a => a.groupId === activeGroup);
+  }, [recentActivities, activeGroup]);
 
   return (
     <Screen>
@@ -167,7 +155,18 @@ const HomeScreen = () => {
         </HeaderSection>
 
         <MainContentArea>
-          <BalanceCard totalBalance={totalBalance} />
+          <BalanceCard totalBalance={netBalance} />
+
+          <Row style={{ gap: Spacing.md, marginTop: Spacing.md }}>
+            <View style={{ flex: 1 }}>
+              <Label>Owed to you</Label>
+              <Title style={{ color: theme.colors.tertiary }}>{formatCurrency(totalOwedToYou)}</Title>
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              <Label>You owe</Label>
+              <Title style={{ color: theme.colors.error }}>{formatCurrency(totalYouOwe)}</Title>
+            </View>
+          </Row>
 
           <ActivityHeader>
             <Headline style={{ fontSize: 24 }}>Recent Flows</Headline>
@@ -184,7 +183,7 @@ const HomeScreen = () => {
             <GroupChip active={activeGroup === null} onPress={() => setActiveGroup(null)}>
               <GroupChipText active={activeGroup === null}>Overview</GroupChipText>
             </GroupChip>
-            {MOCK_GROUPS.map(group => (
+            {groups.map(group => (
               <GroupChip
                 key={group.id}
                 active={activeGroup === group.id}
@@ -197,27 +196,22 @@ const HomeScreen = () => {
 
           <Spacer size="xs" />
 
-          {recentExpenses.length === 0 ? (
+          {filteredActivities.length === 0 ? (
             <EmptyState>
               <BodySm style={{ textAlign: 'center', opacity: 0.6 }}>
                 Your financial feed is quiet.{"\n"}Start a new split to see activity.
               </BodySm>
             </EmptyState>
           ) : (
-            recentExpenses.map(expense => {
-              const amount = getExpenseAmount(expense.id);
+            filteredActivities.map(activity => {
               return (
                 <ExpenseCard
-                  key={expense.id}
-                  title={expense.title}
-                  subtitle={
-                    expense.payerId === userId
-                      ? `Paid by you · ${GROUP_MAP.get(expense.groupId)?.name}`
-                      : `Split by ${MOCK_MEMBERS.find(m => m.id === expense.payerId)?.name} · ${GROUP_MAP.get(expense.groupId)?.name}`
-                  }
-                  amount={amount}
-                  date={formatDate(expense.date)}
-                  highlighted={amount > 0}
+                  key={activity.id}
+                  title={activity.title}
+                  subtitle={activity.subtitle}
+                  amount={activity.amount}
+                  date={formatDate(activity.date)}
+                  highlighted={activity.amount > 0}
                   onPress={() => {}}
                 />
               );

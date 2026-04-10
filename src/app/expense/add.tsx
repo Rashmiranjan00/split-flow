@@ -153,12 +153,13 @@ const AddExpenseScreen = () => {
   const { currencySymbol } = useCurrencyFormatter();
   const { groupId = 'group_1' } = useLocalSearchParams<{ groupId: string }>();
   
-  // Try to find the group in store, fallback to mock for now if needed
+  // Try to find the group in store
   const groups = useGroupStore(state => state.groups);
-  const currentGroup = groups.length > 0 ? groups[0] : MOCK_GROUPS[0];
+  const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
+  const currentGroup = groups.find(g => g.id === currentGroupId);
   
-  // Get all members for selection (using mock for now as we don't have a user store for all users yet)
-  const groupMembers = MOCK_MEMBERS; 
+  // Get all members for selection
+  const groupMembers = currentGroup ? currentGroup.members : [];
 
   const {
     form,
@@ -168,7 +169,7 @@ const AddExpenseScreen = () => {
     splitDetails,
     setSplitType,
     updateSplitValues,
-  } = useAddExpenseForm(currentGroup.id);
+  } = useAddExpenseForm(currentGroupId);
 
   const { control, watch, setValue, formState: { errors } } = form;
   const amountStr = watch('amount');

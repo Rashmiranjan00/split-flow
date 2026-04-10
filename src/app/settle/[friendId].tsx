@@ -16,7 +16,8 @@ import {
   Label
 } from '@/shared/components/Typography';
 import { ActionButton } from '@/shared/components/ActionButton';
-import { MOCK_MEMBERS } from '@/shared/data/mockData';
+import { useFriends } from '@/features/friends/hooks/useFriends';
+import { useUser } from '@/shared/hooks/useUser';
 
 const Header = styled(Row)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
@@ -28,9 +29,11 @@ const BackBtn = styled.TouchableOpacity`
 
 const SettleScreen = () => {
   const { friendId } = useLocalSearchParams<{ friendId: string }>();
+  const { friends } = useFriends();
+  const { user } = useUser();
   const router = useRouter();
   const theme = useTheme();
-  const friend = MOCK_MEMBERS.find(m => m.id === friendId);
+  const friend = friends.find(m => m.id === friendId);
 
   return (
     <SafeScreen>

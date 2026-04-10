@@ -17,14 +17,10 @@ import {
   Headline,
   Display
 } from '@/shared/components/Typography';
-import { 
-  getSpendingByCategory, 
-  getTotalBalance, 
-  MONTHLY_SPENDING, 
-  MOCK_EXPENSES
-} from '@/shared/data/mockData';
-import { ExpenseSplit } from '@/shared/types';
 import { useUser } from '@/shared/hooks/useUser';
+import { useBalances } from '@/features/balances/hooks/useBalances';
+import { useExpenseStore } from '@/features/expenses/store';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 const BAR_CHART_HEIGHT = 140;
 
@@ -128,38 +124,55 @@ const LegendDot = styled.View<BgColorProps>`
 const AnalyticsScreen = () => {
   const { userId } = useUser();
   const theme = useTheme();
-  const categoryData = getSpendingByCategory(userId);
-  const totalBalance = getTotalBalance(userId);
+  const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
+  const allExpenses = useExpenseStore(s => s.expenses);
+  const { formatCurrency } = useCurrencyFormatter();
+
+  const spendingByCategory = React.useMemo(() => {
+    const categoryColors: Record<string, string> = {
+      Food: '#ffb783',
+      Transport: '#c0c1ff',
+      Accommodation: '#c7c4d7',
+      Utilities: '#f59e0b',
+      Housing: '#ef4444',
+      Other: '#6b7280',
+    };
+
+    const totals = allExpenses.reduce<Record<string, number>>((acc, exp) => {
+      const splitDetails = exp.splitDetails || [];
+      const myShare = splitDetails.find(s => s.userId === userId)?.owedAmount ?? 0;
+      const cat = exp.category ?? 'Other';
+      acc[cat] = (acc[cat] || 0) + myShare;
+      return acc;
+    }, {});
+
+    return Object.entries(totals).map(([category, amount]) => ({
+      category,
+      amount,
+      color: categoryColors[category] || categoryColors['Other'],
+    }));
+  }, [allExpenses, userId]);
 
   const totalSpent = React.useMemo(() => 
-    MOCK_EXPENSES
-      .flatMap(e => e.splits)
-      .filter((s: ExpenseSplit) => s.userId === userId)
-      .reduce((sum, s) => sum + s.value, 0),
-    [userId]
+    allExpenses
+      .flatMap(e => e.splitDetails || [])
+      .filter(s => s.userId === userId)
+      .reduce((sum, s) => sum + s.owedAmount, 0),
+    [allExpenses, userId]
   );
 
-  const totalOwed = React.useMemo(() => 
-    MOCK_EXPENSES
-      .filter(e => e.payerId === userId)
-      .reduce((sum, e) => {
-        const myShare = e.splits.find((s: ExpenseSplit) => s.userId === userId)?.value ?? 0;
-        return sum + (e.amount - myShare);
-      }, 0),
-    [userId]
-  );
+  // Mock monthly spending still used as we don't have historical data in store yet
+  const MONTHLY_SPENDING_MOCK = [
+    { month: 'Nov', amount: 0 },
+    { month: 'Dec', amount: 0 },
+    { month: 'Jan', amount: 0 },
+    { month: 'Feb', amount: 0 },
+    { month: 'Mar', amount: 0 },
+    { month: 'Apr', amount: totalSpent },
+  ];
 
-  const totalIOwe = React.useMemo(() => 
-    MOCK_EXPENSES
-      .filter(e => e.payerId !== userId)
-      .flatMap(e => e.splits)
-      .filter((s: ExpenseSplit) => s.userId === userId)
-      .reduce((sum, s) => sum + s.value, 0),
-    [userId]
-  );
-
-  const maxMonthly = Math.max(...MONTHLY_SPENDING.map(m => m.amount));
-  const activeIdx = MONTHLY_SPENDING.length - 1;
+  const maxMonthly = Math.max(...MONTHLY_SPENDING_MOCK.map(m => m.amount)) || 1;
+  const activeIdx = MONTHLY_SPENDING_MOCK.length - 1;
 
   return (
     <Screen>
@@ -170,11 +183,11 @@ const AnalyticsScreen = () => {
           <StatCard>
             <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Net Balance</Label>
             <SpaceBetweenRow>
-              <Display positive={totalBalance >= 0}>
-                ${Math.abs(totalBalance).toFixed(2)}
+              <Display positive={netBalance >= 0}>
+                {formatCurrency(Math.abs(netBalance))}
               </Display>
-              <BodyMd style={{ color: totalBalance >= 0 ? theme.colors.tertiary : theme.colors.error, fontWeight: '600' }}>
-                {totalBalance >= 0 ? '▲ Owed to you' : '▼ You owe'}
+              <BodyMd style={{ color: netBalance >= 0 ? theme.colors.tertiary : theme.colors.error, fontWeight: '600' }}>
+                {netBalance >= 0 ? '▲ Owed to you' : '▼ You owe'}
               </BodyMd>
             </SpaceBetweenRow>
           </StatCard>
@@ -182,18 +195,18 @@ const AnalyticsScreen = () => {
           <Row style={{ gap: Spacing.md, marginBottom: Spacing.md }}>
             <HalfCard>
               <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>They owe you</Label>
-              <Title style={{ fontSize: 24 }}>${totalOwed.toFixed(0)}</Title>
+              <Title style={{ fontSize: 24 }}>{formatCurrency(totalOwedToYou)}</Title>
             </HalfCard>
             <HalfCard>
               <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>You owe</Label>
-              <Title style={{ fontSize: 24, color: theme.colors.error }}>${totalIOwe.toFixed(0)}</Title>
+              <Title style={{ fontSize: 24, color: theme.colors.error }}>{formatCurrency(totalYouOwe)}</Title>
             </HalfCard>
           </Row>
 
           <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Monthly Spending</Title>
           <BarChartContainer>
             <BarsRow>
-              {MONTHLY_SPENDING.map((m, i) => {
+              {MONTHLY_SPENDING_MOCK.map((m, i) => {
                 const barH = Math.max(8, (m.amount / maxMonthly) * BAR_CHART_HEIGHT * 0.9);
                 const isActive = i === activeIdx;
                 return (
@@ -210,14 +223,14 @@ const AnalyticsScreen = () => {
           <DonutContainer>
             <Row>
               <DonutVisual>
-                <Title>${totalSpent.toFixed(0)}</Title>
+                <Title>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
               </DonutVisual>
               <View style={{ flex: 1 }}>
-                {categoryData.map(item => (
+                {spendingByCategory.map(item => (
                   <Row key={item.category} style={{ marginBottom: 4 }}>
                     <LegendDot bgColor={item.color} />
                     <BodySm style={{ flex: 1 }}>{item.category}</BodySm>
-                    <BodySm style={{ fontWeight: '600' }}>${item.amount.toFixed(0)}</BodySm>
+                    <BodySm style={{ fontWeight: '600' }}>{formatCurrency(item.amount, { decimals: 0 })}</BodySm>
                   </Row>
                 ))}
               </View>
@@ -228,11 +241,11 @@ const AnalyticsScreen = () => {
           <Row style={{ gap: Spacing.md }}>
             <HalfCard>
               <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Expenses</Label>
-              <Display style={{ fontSize: 28 }}>{MOCK_EXPENSES.length}</Display>
+              <Display style={{ fontSize: 28 }}>{allExpenses.length}</Display>
             </HalfCard>
             <HalfCard>
               <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Total spent</Label>
-              <Title style={{ fontSize: 24 }}>${totalSpent.toFixed(0)}</Title>
+              <Title style={{ fontSize: 24 }}>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
             </HalfCard>
           </Row>
 

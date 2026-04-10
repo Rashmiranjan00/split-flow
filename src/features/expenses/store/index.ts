@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '@/shared/services/storage';
-import { Expense, ExpenseSplit } from '@/shared/types';
+import { Expense, SplitDetail } from '@/shared/types';
 import { MOCK_EXPENSES } from '@/shared/data/mockData';
 
 interface ExpenseState {

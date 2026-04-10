@@ -23,13 +23,11 @@ import { Avatar } from '@/shared/components/Avatar';
 import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
 import { useUser } from '@/shared/hooks/useUser';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
-import {
-  MOCK_GROUPS,
-  MOCK_EXPENSES,
-  MOCK_MEMBERS,
-  getGroupBalance,
-  getGroupMemberBalances,
-} from '@/shared/data/mockData';
+import { useGroups, useGroup } from '@/features/groups/hooks/useGroups';
+import { useFriends } from '@/features/friends/hooks/useFriends';
+import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
+import { useExpenseStore } from '@/features/expenses/store';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 const Header = styled(Row)`
   padding: ${Spacing.md}px ${Spacing.lg}px;
@@ -107,23 +105,34 @@ const AddExpenseBtn = styled.TouchableOpacity`
 
 const GroupDetailScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  const { userId } = useUser();
-  const { formatDate } = useDateFormatter();
-  const router = useRouter();
+  const groups = useGroupStore(state => state.groups);
+  const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
+  const currentGroup = groups.find(g => g.id === currentGroupId);
+  
+  // Get all members for selection
+  const groupMembers = currentGroup ? currentGroup.members : [];
   const theme = useTheme();
 
-  const group = React.useMemo(() => MOCK_GROUPS.find(g => g.id === groupId), [groupId]);
+  const { userId, user } = useUser();
+  const { formatDate } = useDateFormatter();
+  const { formatCurrency } = useCurrencyFormatter();
+  const router = useRouter();
+
+  const { group } = useGroup(groupId!);
+  const { friends } = useFriends();
+  const allExpenses = useExpenseStore(s => s.expenses);
+  const { netPositions, simplifiedDebts } = useGroupBalances(groupId!);
   
   if (!group) return null;
 
-  const balance = getGroupBalance(groupId!, userId);
+  const balance = netPositions[userId] || 0;
   const isPositive = balance >= 0;
-  const memberBalances = getGroupMemberBalances(groupId!, userId);
+
   const groupExpenses = React.useMemo(() => 
-    MOCK_EXPENSES
+    allExpenses
       .filter(e => e.groupId === groupId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [groupId]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [allExpenses, groupId]
   );
 
   const getGroupEmoji = (name: string) => {
@@ -132,6 +141,7 @@ const GroupDetailScreen = () => {
     if (name.includes('🍽')) return '🍽';
     return '💼';
   };
+  const displayName = group?.name?.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim() ?? 'Vault';
 
   return (
     <SafeScreen>
@@ -140,7 +150,7 @@ const GroupDetailScreen = () => {
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </BackBtn>
         <Title numberOfLines={1} style={{ flex: 1 }}>
-          {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
+          {displayName}
         </Title>
       </Header>
 
@@ -174,23 +184,34 @@ const GroupDetailScreen = () => {
           <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
             Balances
           </Label>
-          {memberBalances.length === 0 ? (
+          {simplifiedDebts.length === 0 ? (
             <BodySm style={{ color: theme.colors.tertiary, paddingVertical: Spacing.sm, fontWeight: '600' }}>
               ✓ All settled up!
             </BodySm>
           ) : (
-            memberBalances.map(mb => (
-              <MemberRow key={mb.userId}>
-                <Row style={{ marginBottom: 0 }}>
-                  <Avatar name={mb.name} size={40} />
-                  <Spacer size="md" horizontal />
-                  <BodyMd style={{ fontWeight: '500' }}>{mb.name}</BodyMd>
-                </Row>
-                <MemberBalance positive={mb.amount > 0}>
-                  {mb.amount > 0 ? `owes you $${mb.amount.toFixed(2)}` : `you owe $${Math.abs(mb.amount).toFixed(2)}`}
-                </MemberBalance>
-              </MemberRow>
-            ))
+            simplifiedDebts.map((debt, idx) => {
+              const fromFriend = friends.find(f => f.id === debt.from);
+              const toFriend = friends.find(f => f.id === debt.to);
+              
+              const fromName = debt.from === userId ? 'You' : fromFriend?.name ?? 'Someone';
+              const toName = debt.to === userId ? 'you' : toFriend?.name ?? 'someone';
+              const isRelevant = debt.from === userId || debt.to === userId;
+
+              return (
+                <MemberRow key={`${debt.from}-${debt.to}-${idx}`}>
+                  <Row style={{ marginBottom: 0, opacity: isRelevant ? 1 : 0.6 }}>
+                    <Avatar name={fromFriend?.name ?? 'U'} size={32} />
+                    <Spacer size="sm" horizontal />
+                    <BodyMd style={{ fontWeight: '500' }}>
+                      {fromName} owe {toName}
+                    </BodyMd>
+                  </Row>
+                  <MemberBalance positive={debt.to === userId}>
+                    {formatCurrency(debt.amount)}
+                  </MemberBalance>
+                </MemberRow>
+              );
+            })
           )}
 
           <Spacer size="lg" />
@@ -199,7 +220,7 @@ const GroupDetailScreen = () => {
             Members ({group.members.length})
           </Label>
           {group.members.map(mid => {
-            const member = MOCK_MEMBERS.find(m => m.id === mid);
+            const member = friends.find(f => f.id === mid) || (mid === userId ? user : null);
             return (
               <MemberRow key={mid}>
                 <Row style={{ marginBottom: 0 }}>
@@ -223,14 +244,14 @@ const GroupDetailScreen = () => {
             Expenses ({groupExpenses.length})
           </Label>
           {groupExpenses.map(expense => {
-            const payer = MOCK_MEMBERS.find(m => m.id === expense.payerId);
+            const payer = friends.find(f => f.id === expense.paidBy) || (expense.paidBy === userId ? user : null);
             return (
               <ExpenseCard
                 key={expense.id}
                 title={expense.title}
-                subtitle={`${expense.payerId === userId ? 'You' : payer?.name} paid · ${formatDate(expense.date)}`}
+                subtitle={`${expense.paidBy === userId ? 'You' : payer?.name} paid · ${formatDate(expense.createdAt)}`}
                 amount={expense.amount}
-                date={formatDate(expense.date)}
+                date={formatDate(expense.createdAt)}
                 onPress={() => {}}
               />
             );

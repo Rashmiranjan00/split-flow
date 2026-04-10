@@ -21,10 +21,10 @@ import { Avatar } from '@/shared/components/Avatar';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
+import { useExpenseStore } from '@/features/expenses/store';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
 import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { MOCK_EXPENSES } from '@/shared/data/mockData';
 
 const HeaderBanner = styled.View`
   background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
@@ -130,26 +130,28 @@ const THEME_OPTIONS: { key: ThemeMode; label: string; icon: string }[] = [
 
 const ProfileScreen = () => {
   const { user, userId, logout } = useUser();
-  const { totalBalance } = useBalances();
+  const { netBalance } = useBalances();
   const router = useRouter();
   const theme = useTheme();
   const themeMode = useThemeStore((state) => state.mode);
   const setThemeMode = useThemeStore((state) => state.setMode);
   const selectedCurrency = useCurrencyStore((state) => state.currency);
   const setCurrency = useCurrencyStore((state) => state.setCurrency);
+  const expenseStore = useExpenseStore();
+  const allExpenses = expenseStore.expenses;
   const { formatCurrency } = useCurrencyFormatter();
 
   const expenseCount = React.useMemo(() => 
-    MOCK_EXPENSES.filter(e => e.splits.some(s => s.userId === userId)).length,
-    [userId]
+    allExpenses.filter(e => (e.splitDetails || []).some(s => s.userId === userId)).length,
+    [allExpenses, userId]
   );
   
   const totalSpent = React.useMemo(() => 
-    MOCK_EXPENSES
-      .flatMap(e => e.splits)
+    allExpenses
+      .flatMap(e => e.splitDetails || [])
       .filter(s => s.userId === userId)
-      .reduce((sum, s) => sum + s.value, 0),
-    [userId]
+      .reduce((sum, s) => sum + s.owedAmount, 0),
+    [allExpenses, userId]
   );
 
   const handleLogout = () => {
@@ -185,8 +187,8 @@ const ProfileScreen = () => {
             </StatItem>
             <StatDivider />
             <StatItem>
-              <Title style={{ color: totalBalance >= 0 ? theme.colors.tertiary : theme.colors.error }}>
-                {formatCurrency(totalBalance, { sign: totalBalance > 0, decimals: 0 })}
+              <Title style={{ color: netBalance >= 0 ? theme.colors.tertiary : theme.colors.error }}>
+                {formatCurrency(netBalance, { sign: netBalance > 0, decimals: 0 })}
               </Title>
               <Label>Balance</Label>
             </StatItem>

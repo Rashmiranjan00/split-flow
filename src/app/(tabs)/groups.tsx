@@ -17,7 +17,12 @@ import {
 } from '@/shared/components/Typography';
 import { GroupCard } from '@/features/groups/components/GroupCard';
 import { useUser } from '@/shared/hooks/useUser';
-import { MOCK_GROUPS, MOCK_MEMBERS, getGroupBalance } from '@/shared/data/mockData';
+import { useGroups } from '@/features/groups/hooks/useGroups';
+import { useFriends } from '@/features/friends/hooks/useFriends';
+import { useGroupStore } from '@/features/groups/store';
+import { useExpenseStore } from '@/features/expenses/store';
+import { useSettlementStore } from '@/features/settlements/store';
+import { calculateGroupBalances } from '@/shared/utils/balanceEngine';
 
 const HeaderRow = styled(SpaceBetweenRow)`
   margin-top: ${Spacing.md}px;
@@ -45,6 +50,10 @@ const EmptyEmoji = styled.Text`
 
 const GroupsScreen = () => {
   const { userId } = useUser();
+  const { groups } = useGroups();
+  const { friends } = useFriends();
+  const expenses = useExpenseStore(s => s.expenses);
+  const settlements = useSettlementStore(s => s.settlements);
   const router = useRouter();
   const theme = useTheme();
 
@@ -62,7 +71,7 @@ const GroupsScreen = () => {
             </AddButton>
           </HeaderRow>
 
-          {MOCK_GROUPS.length === 0 ? (
+          {groups.length === 0 ? (
             <EmptyState>
               <EmptyEmoji>🏛</EmptyEmoji>
               <Title>No vaults yet</Title>
@@ -71,10 +80,14 @@ const GroupsScreen = () => {
               </BodyMd>
             </EmptyState>
           ) : (
-            MOCK_GROUPS.map(group => {
-              const balance = getGroupBalance(group.id, userId);
-              const members = group.members.map(
-                mid => MOCK_MEMBERS.find(m => m.id === mid) || { id: mid, name: 'User', email: '' }
+            groups.map(group => {
+              const groupExpenses = expenses.filter(e => e.groupId === group.id);
+              const groupSettlements = settlements.filter(s => s.groupId === group.id);
+              const { netPositions } = calculateGroupBalances(groupExpenses, groupSettlements);
+              const balance = netPositions[userId] || 0;
+              
+              const groupMembers = group.members.map(mid => 
+                friends.find(f => f.id === mid) || { id: mid, name: 'User' }
               );
 
               return (
@@ -82,7 +95,7 @@ const GroupsScreen = () => {
                   key={group.id}
                   group={group}
                   balance={balance}
-                  members={members}
+                  members={groupMembers}
                   onPress={() => router.push(`/group/${group.id}` as any)}
                 />
               );

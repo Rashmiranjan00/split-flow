@@ -1,5 +1,7 @@
+export type UserId = string;
+
 export interface User {
-  id: string;
+  id: UserId;
   name: string;
   email: string;
   avatarUrl?: string;
@@ -9,14 +11,14 @@ export interface Group {
   id: string;
   name: string;
   description?: string;
-  members: string[]; // Array of User IDs
+  members: UserId[];
   createdAt: string;
   coverImage?: string;
 }
 
-export interface ExpenseSplit {
-  userId: string;
-  value: number;
+export interface SplitDetail {
+  userId: UserId;
+  owedAmount: number;
 }
 
 export interface Expense {
@@ -24,12 +26,27 @@ export interface Expense {
   groupId: string;
   title: string;
   amount: number;
-  payerId: string;
-  date: string;
-  splitType: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
-  splits: ExpenseSplit[];
-  receiptUrl?: string;
+  paidBy: UserId;
+  participants: UserId[];
+  splitDetails: SplitDetail[];
+  createdAt: string;
   category?: string;
+  splitType: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES';
+}
+
+export interface Settlement {
+  id: string;
+  groupId: string;
+  from: UserId;
+  to: UserId;
+  amount: number;
+  createdAt: string;
+}
+
+export interface Balance {
+  from: UserId;
+  to: UserId;
+  amount: number;
 }
 
 export interface Friend {
@@ -37,9 +54,4 @@ export interface Friend {
   userId: string;
   friendId: string;
   addedAt: string;
-}
-
-export interface Balance {
-  userId: string;
-  amount: number;
 }

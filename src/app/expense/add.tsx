@@ -1,47 +1,36 @@
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Alert, ScrollView, View } from 'react-native';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
-import { useRouter } from 'expo-router';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Controller } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { 
   SafeScreen, 
-  Content, 
-  Row, 
-  SpaceBetweenRow, 
-  Spacer 
+  Spacer,
+  Row,
+  SpaceBetweenRow
 } from '@/shared/components/Layout';
 import { 
   Title, 
   BodyMd, 
-  BodySm, 
   Label,
   Display,
-  Headline
 } from '@/shared/components/Typography';
-import { Avatar } from '@/shared/components/Avatar';
-import { ActionButton } from '@/shared/components/ActionButton';
-import { useUser } from '@/shared/hooks/useUser';
-import { useExpenseStore } from '@/features/expenses/store';
+import { useAddExpenseForm } from '@/features/expenses/hooks/useAddExpenseForm';
+import { ParticipantSelector } from '@/features/expenses/components/ParticipantSelector';
+import { PaidBySelector } from '@/features/expenses/components/PaidBySelector';
+import { CategorySelector } from '@/features/expenses/components/CategorySelector';
+import { ReceiptUploader } from '@/features/expenses/components/ReceiptUploader';
+import { EqualSplitEditor } from '@/features/expenses/components/split/EqualSplitEditor';
+import { ExactSplitEditor } from '@/features/expenses/components/split/ExactSplitEditor';
+import { PercentageSplitEditor } from '@/features/expenses/components/split/PercentageSplitEditor';
+import { SharesSplitEditor } from '@/features/expenses/components/split/SharesSplitEditor';
+import { SplitPreviewCard } from '@/features/expenses/components/SplitPreviewCard';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 import { useCurrencyStore } from '@/shared/hooks/useCurrencyStore';
 import { MOCK_GROUPS, MOCK_MEMBERS } from '@/shared/data/mockData';
-
-const schema = z.object({
-  description: z.string().min(1, 'Description is required').max(80, 'Too long'),
-  amount: z
-    .string()
-    .min(1, 'Amount is required')
-    .refine(v => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Enter a valid amount'),
-  groupId: z.string().min(1, 'Select a group'),
-  paidBy: z.string().min(1, 'Select who paid'),
-  category: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { useGroupStore } from '@/features/groups/store';
 
 const HeaderSection = styled.View`
   background-color: ${({ theme }) => theme.colors.surface};
@@ -62,10 +51,12 @@ const NavIconButton = styled.TouchableOpacity`
   background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
 `;
 
-const SaveButton = styled.TouchableOpacity`
-  background-color: ${({ theme }) => theme.colors.primary};
+const SaveButton = styled.TouchableOpacity<{ disabled?: boolean }>`
+  background-color: ${({ theme, disabled }) => 
+    disabled ? theme.colors.surfaceContainerHighest : theme.colors.primary};
   padding: ${Spacing.sm}px ${Spacing.lg}px;
   border-radius: ${Radius.full}px;
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
 `;
 
 const SaveButtonText = styled(Label)`
@@ -104,8 +95,8 @@ const AmountInput = styled.TextInput`
 const FormBody = styled.View`
   flex: 1;
   background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-top-left-radius: ${Radius.xl} * 2px;
-  border-top-right-radius: ${Radius.xl} * 2px;
+  border-top-left-radius: ${Radius.xl * 2}px;
+  border-top-right-radius: ${Radius.xl * 2}px;
   padding-top: ${Spacing.xl}px;
 `;
 
@@ -119,48 +110,7 @@ const SectionLabel = styled(Label)`
   opacity: 0.7;
 `;
 
-const SelectionCard = styled.TouchableOpacity`
-  margin-horizontal: ${Spacing.lg}px;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.lg}px;
-  flex-direction: row;
-  align-items: center;
-`;
-
-const GhostGrid = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-  padding-horizontal: ${Spacing.lg}px;
-  gap: ${Spacing.sm}px;
-`;
-
-interface GridCardProps {
-  selected: boolean;
-}
-
-const GridCard = styled.TouchableOpacity<GridCardProps>`
-  width: 23%;
-  aspect-ratio: 1;
-  background-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.md}px;
-  align-items: center;
-  justify-content: center;
-  border-width: 0.5px;
-  border-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primary : `${theme.colors.outlineVariant}66`};
-`;
-
-const GridCardText = styled(Label)<GridCardProps>`
-  margin-top: ${Spacing.xs}px;
-  font-size: 9px;
-  color: ${({ selected, theme }) => 
-    selected ? theme.colors.primary : theme.colors.onSurfaceVariant};
-  font-weight: ${({ selected }) => selected ? '700' : '400'};
-`;
-
-const DescriptionInput = styled.TextInput`
+const TitleInput = styled.TextInput`
   margin-horizontal: ${Spacing.lg}px;
   background-color: ${({ theme }) => theme.colors.surfaceContainerHighest};
   border-radius: ${Radius.full}px;
@@ -169,96 +119,70 @@ const DescriptionInput = styled.TextInput`
   font-size: 16px;
 `;
 
-const AvatarStack = styled.View`
+const SplitGrid = styled.View`
   flex-direction: row;
-  align-items: center;
+  flex-wrap: wrap;
+  padding-horizontal: ${Spacing.lg}px;
+  gap: ${Spacing.sm}px;
+  margin-bottom: ${Spacing.lg}px;
 `;
 
-const AvatarOverlap = styled.View<{ index: number }>`
-  margin-left: ${({ index }) => (index === 0 ? 0 : -12)}px;
-  border-width: 2px;
-  border-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.full}px;
-`;
-
-const PlusCircle = styled.TouchableOpacity`
-  width: 32px;
-  height: 32px;
-  border-radius: ${Radius.full}px;
-  background-color: ${({ theme }) => theme.colors.primaryContainer};
+const SplitCard = styled.TouchableOpacity<{ selected: boolean }>`
+  width: 23%;
+  aspect-ratio: 1;
+  background-color: ${({ selected, theme }) => 
+    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh};
+  border-radius: ${Radius.md}px;
   align-items: center;
   justify-content: center;
-  margin-left: ${Spacing.sm}px;
+  border-width: 1px;
+  border-color: ${({ selected, theme }) => 
+    selected ? theme.colors.primary : 'transparent'};
 `;
 
-type SplitType = 'EQUAL' | 'EXACT' | 'SHARES' | 'ADJUST';
-
-const CATEGORIES = [
-  { id: 'dining', label: 'DINING', icon: 'restaurant' as const },
-  { id: 'shopping', label: 'SHOPPING', icon: 'shopping-bag' as const },
-  { id: 'travel', label: 'TRAVEL', icon: 'flight' as const },
-  { id: 'home', label: 'HOME', icon: 'home' as const },
-  { id: 'fun', label: 'FUN', icon: 'confirmation-number' as const },
-  { id: 'other', label: 'OTHER', icon: 'more-horiz' as const },
-];
-
-const SPLIT_METHODS: { key: SplitType; label: string; icon: string }[] = [
+const SPLIT_METHODS: { key: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES'; label: string; icon: string }[] = [
   { key: 'EQUAL', label: 'EQUAL', icon: 'equalizer' },
   { key: 'EXACT', label: 'EXACT', icon: 'pin' },
-  { key: 'SHARES', label: 'SHARES', icon: 'pie-chart' },
-  { key: 'ADJUST', label: 'ADJUST', icon: 'adjust' },
+  { key: 'PERCENTAGE', label: 'PERCENT', icon: 'pie-chart' },
+  { key: 'SHARES', label: 'SHARES', icon: 'reorder' },
 ];
 
 const AddExpenseScreen = () => {
   const router = useRouter();
-  const { userId } = useUser();
-  const addExpense = useExpenseStore(state => state.addExpense);
-  const [splitType, setSplitType] = useState<SplitType>('EQUAL');
   const theme = useTheme();
-  const activeCurrency = useCurrencyStore(state => state.currency);
-  const { currencySymbol, formatCurrency } = useCurrencyFormatter();
+  const { currencySymbol } = useCurrencyFormatter();
+  const { groupId = 'group_1' } = useLocalSearchParams<{ groupId: string }>();
+  
+  // Try to find the group in store, fallback to mock for now if needed
+  const groups = useGroupStore(state => state.groups);
+  const currentGroup = groups.length > 0 ? groups[0] : MOCK_GROUPS[0];
+  
+  // Get all members for selection (using mock for now as we don't have a user store for all users yet)
+  const groupMembers = MOCK_MEMBERS; 
 
   const {
-    control,
+    form,
     handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      description: '',
-      amount: '',
-      groupId: MOCK_GROUPS[0]?.id ?? '',
-      paidBy: userId,
-      category: 'dining',
-    },
-  });
+    participants,
+    splitType,
+    splitDetails,
+    setSplitType,
+    updateSplitValues,
+  } = useAddExpenseForm(currentGroup.id);
 
-  const selectedGroupId = watch('groupId');
-  const selectedCategory = watch('category');
-  const selectedGroup = MOCK_GROUPS.find(g => g.id === selectedGroupId);
+  const { control, watch, setValue, formState: { errors } } = form;
+  const amountStr = watch('amount');
+  const amount = parseFloat(amountStr) || 0;
 
-  const onSubmit = (data: FormValues) => {
-    const amountValue = parseFloat(data.amount);
-    const members = selectedGroup?.members ?? [userId];
-    const perPerson = amountValue / members.length;
-
-    addExpense({
-      id: `exp_${Date.now()}`,
-      groupId: data.groupId,
-      title: data.description,
-      amount: amountValue,
-      payerId: data.paidBy,
-      date: new Date().toISOString(),
-      splitType: (splitType === 'ADJUST' ? 'PERCENTAGE' : splitType) as any,
-      splits: members.map(mid => ({ userId: mid, value: perPerson })),
-      category: CATEGORIES.find(c => c.id === data.category)?.label ?? 'Other',
-    });
-
-    Alert.alert('Expense Added', `"${data.description}" has been added!`, [
-      { text: 'OK', onPress: () => router.back() },
-    ]);
+  const toggleParticipant = (id: string) => {
+    const current = [...participants];
+    if (current.includes(id)) {
+      if (current.length > 1) {
+        setValue('participants', current.filter(pid => pid !== id));
+      }
+    } else {
+      setValue('participants', [...current, id]);
+    }
   };
 
   return (
@@ -272,18 +196,18 @@ const AddExpenseScreen = () => {
             <NavIconButton onPress={() => router.back()}>
               <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
             </NavIconButton>
-            <Title style={{ letterSpacing: -0.5 }}>SplitFlow</Title>
-            <SaveButton onPress={handleSubmit(onSubmit)}>
-              <SaveButtonText>Save Expense</SaveButtonText>
+            <Title style={{ letterSpacing: -0.5 }}>New Expense</Title>
+            <SaveButton onPress={handleSubmit}>
+              <SaveButtonText>Save</SaveButtonText>
             </SaveButton>
           </LuxeNavBar>
 
           <AmountInputContainer>
-            <SectionLabel style={{ marginHorizontal: 0, marginBottom: 0 }}>Amount to split</SectionLabel>
+            <SectionLabel style={{ marginHorizontal: 0, marginBottom: 0 }}>Amount</SectionLabel>
             <Controller
               control={control}
               name="amount"
-              render={({ field: { onChange, value, onBlur } }) => (
+              render={({ field: { onChange, value } }) => (
                 <AmountRow>
                   <CurrencySymbol>{currencySymbol}</CurrencySymbol>
                   <AmountInput
@@ -293,9 +217,7 @@ const AddExpenseScreen = () => {
                     autoFocus
                     value={value}
                     onChangeText={onChange}
-                    onBlur={onBlur}
                   />
-                  <MaterialIcons name="unfold-more" size={24} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.3 }} />
                 </AmountRow>
               )}
             />
@@ -303,14 +225,13 @@ const AddExpenseScreen = () => {
 
           <Controller
             control={control}
-            name="description"
-            render={({ field: { onChange, value, onBlur } }) => (
-              <DescriptionInput
+            name="title"
+            render={({ field: { onChange, value } }) => (
+              <TitleInput
                 placeholder="What was this for?"
                 placeholderTextColor={`${theme.colors.onSurfaceVariant}77`}
                 value={value}
                 onChangeText={onChange}
-                onBlur={onBlur}
               />
             )}
           />
@@ -319,42 +240,33 @@ const AddExpenseScreen = () => {
         <FormBody>
           <ScrollView showsVerticalScrollIndicator={false}>
             <SectionLabel>Paid By</SectionLabel>
-            <SelectionCard activeOpacity={0.7} onPress={() => Alert.alert('Select Payer', 'Feature coming soon')}>
-              <Avatar name="You" size={40} />
-              <Spacer size="md" horizontal />
-              <View style={{ flex: 1 }}>
-                <BodyMd style={{ fontWeight: '600' }}>You</BodyMd>
-                <BodySm style={{ opacity: 0.6 }}>Account Balance: $1,240</BodySm>
-              </View>
-              <MaterialIcons name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
-            </SelectionCard>
+            <Controller
+              control={control}
+              name="paidBy"
+              render={({ field: { value, onChange } }) => (
+                <PaidBySelector 
+                  members={groupMembers} 
+                  selectedId={value} 
+                  onSelect={onChange} 
+                />
+              )}
+            />
 
             <Spacer size="lg" />
 
             <SectionLabel>Split With</SectionLabel>
-            <Row style={{ marginHorizontal: Spacing.xl }}>
-              <AvatarStack>
-                {MOCK_MEMBERS.slice(1, 4).map((m, i) => (
-                  <AvatarOverlap key={m.id} index={i}>
-                    <Avatar name={m.name} size={32} />
-                  </AvatarOverlap>
-                ))}
-              </AvatarStack>
-              <PlusCircle>
-                <MaterialIcons name="person-add" size={16} color={theme.colors.primary} />
-              </PlusCircle>
-            </Row>
+            <ParticipantSelector 
+              members={groupMembers} 
+              selectedIds={participants} 
+              onToggle={toggleParticipant} 
+            />
 
-            <Spacer size="xl" />
+            <Spacer size="lg" />
 
-            <SpaceBetweenRow style={{ marginHorizontal: Spacing.xl, marginBottom: Spacing.sm }}>
-              <Label style={{ fontSize: 10, letterSpacing: 1.2 }}>Split Method</Label>
-              <Label style={{ color: theme.colors.primary, fontSize: 10 }}>Equally divided</Label>
-            </SpaceBetweenRow>
-            
-            <GhostGrid>
+            <SectionLabel>Split Method</SectionLabel>
+            <SplitGrid>
               {SPLIT_METHODS.map(method => (
-                <GridCard 
+                <SplitCard 
                   key={method.key} 
                   selected={splitType === method.key}
                   onPress={() => setSplitType(method.key)}
@@ -364,49 +276,90 @@ const AddExpenseScreen = () => {
                     size={20} 
                     color={splitType === method.key ? theme.colors.primary : theme.colors.onSurfaceVariant} 
                   />
-                  <GridCardText selected={splitType === method.key}>{method.label}</GridCardText>
-                </GridCard>
+                  <Label style={{ 
+                    marginTop: 4, 
+                    fontSize: 8, 
+                    color: splitType === method.key ? theme.colors.primary : theme.colors.onSurfaceVariant 
+                  }}>
+                    {method.label}
+                  </Label>
+                </SplitCard>
               ))}
-            </GhostGrid>
+            </SplitGrid>
+
+            {/* Split Editors */}
+            <View style={{ marginBottom: Spacing.xl }}>
+              {splitType === 'EQUAL' && (
+                <EqualSplitEditor 
+                  participants={participants} 
+                  allMembers={groupMembers} 
+                  onToggle={toggleParticipant} 
+                  totalAmount={amount}
+                />
+              )}
+              {splitType === 'EXACT' && (
+                <ExactSplitEditor 
+                  participants={participants} 
+                  allMembers={groupMembers} 
+                  splitDetails={splitDetails}
+                  onUpdate={updateSplitValues}
+                  totalAmount={amount}
+                />
+              )}
+              {splitType === 'PERCENTAGE' && (
+                <PercentageSplitEditor 
+                  participants={participants} 
+                  allMembers={groupMembers} 
+                  splitDetails={splitDetails}
+                  onUpdate={updateSplitValues}
+                  totalAmount={amount}
+                />
+              )}
+              {splitType === 'SHARES' && (
+                <SharesSplitEditor 
+                  participants={participants} 
+                  allMembers={groupMembers} 
+                  splitDetails={splitDetails}
+                  onUpdate={updateSplitValues}
+                  totalAmount={amount}
+                />
+              )}
+            </View>
+
+            <SectionLabel>Preview</SectionLabel>
+            <SplitPreviewCard 
+              paidBy={watch('paidBy')}
+              splitDetails={splitDetails}
+              allMembers={groupMembers}
+            />
 
             <Spacer size="xl" />
 
             <SectionLabel>Category</SectionLabel>
-            <GhostGrid>
-              {CATEGORIES.map(cat => (
-                <GridCard 
-                  key={cat.id}
-                  selected={selectedCategory === cat.id}
-                  onPress={() => setValue('category', cat.id)}
-                >
-                  <MaterialIcons 
-                    name={cat.icon as any} 
-                    size={20} 
-                    color={selectedCategory === cat.id ? theme.colors.primary : theme.colors.onSurfaceVariant} 
-                  />
-                  <GridCardText selected={selectedCategory === cat.id}>{cat.label}</GridCardText>
-                </GridCard>
-              ))}
-            </GhostGrid>
+            <Controller
+              control={control}
+              name="category"
+              render={({ field: { value, onChange } }) => (
+                <CategorySelector 
+                  selectedCategory={value || 'Other'} 
+                  onSelect={onChange} 
+                />
+              )}
+            />
 
             <Spacer size="xl" />
 
-            <Row style={{ marginHorizontal: Spacing.lg, gap: Spacing.sm }}>
-              <ActionButton 
-                title="Add Receipt" 
-                variant="secondary" 
-                style={{ flex: 1, height: 48 }} 
-                icon="camera-alt"
-                onPress={() => Alert.alert('Add Receipt', 'Camera feature coming soon')}
-              />
-              <ActionButton 
-                title="Add Note" 
-                variant="secondary" 
-                style={{ flex: 1, height: 48 }} 
-                icon="notes"
-                onPress={() => Alert.alert('Add Note', 'Notes feature coming soon')}
-              />
-            </Row>
+            <SectionLabel>Media</SectionLabel>
+            <Controller
+              control={control}
+              name="receiptUri"
+              render={({ field: { value, onChange } }) => (
+                <ReceiptUploader 
+                  imageUri={value} 
+                  onImageSelected={onChange} 
+                />
+              )}
+            />
 
             <Spacer size="xxxl" />
           </ScrollView>

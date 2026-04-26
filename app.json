@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fraeloth.splitflow"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,17 +22,22 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.fraeloth.splitflow"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "bdee308c-d032-426f-b09d-78607bffea72"
+        "projectId": "cb392d7f-0a71-46c1-a3ee-7294668a6bd0"
       }
     },
-    "owner": "split-flow",
     "scheme": "split-flow",
     "plugins": [
       "expo-router",
@@ -41,6 +47,7 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan receipts."
         }
       ]
-    ]
+    ],
+    "owner": "fraeloth-dev"
   }
 }

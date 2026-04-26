@@ -4,8 +4,9 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild",
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -20,6 +21,7 @@
     "expo-blur": "~15.0.8",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.20",
     "expo-image": "~3.0.11",
     "expo-image-picker": "^55.0.18",
     "expo-linear-gradient": "~15.0.8",

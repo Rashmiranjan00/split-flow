@@ -60,7 +60,7 @@ const HeroSection = styled.View`
 `;
 
 const GroupEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
   font-size: 32px;
   margin-bottom: ${Spacing.sm}px;
 `;

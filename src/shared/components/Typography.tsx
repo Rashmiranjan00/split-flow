@@ -3,7 +3,7 @@ import { Typography as TypographyTokens } from '@/shared/constants/typography';
 
 const BaseText = styled.Text`
   color: ${({ theme }) => theme.colors.onSurface};
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
 `;
 
 /**
@@ -37,12 +37,12 @@ export const Title = styled(BaseText)`
 `;
 
 export const BodyMd = styled(BaseText)`
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
   font-size: ${TypographyTokens.sizes.bodyMd}px;
 `;
 
 export const BodySm = styled(BaseText)`
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
   font-size: ${TypographyTokens.sizes.bodySm}px;
 `;
 

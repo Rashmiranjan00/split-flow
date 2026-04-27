@@ -46,7 +46,7 @@ const EmptyState = styled.View`
 `;
 
 const EmptyEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
   font-size: 40px;
   margin-bottom: ${Spacing.md}px;
 `;

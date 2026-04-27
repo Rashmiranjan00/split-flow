@@ -15,7 +15,7 @@ const IconCircle = styled.View`
 `;
 
 const IconEmoji = styled.Text`
-  font-family: ${Typography.fonts.body};
+  font-family: ${Typography.fonts.regular};
   font-size: 18px;
 `;
 

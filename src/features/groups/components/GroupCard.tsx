@@ -39,7 +39,7 @@ const GroupIcon = styled.View`
 `;
 
 const GroupEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.body};
+  font-family: ${TypographyTokens.fonts.regular};
   font-size: 20px;
 `;
 

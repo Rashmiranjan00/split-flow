@@ -2,19 +2,14 @@
  * Typography scale for the SplitFlow "Warm Minimalist Finance" design system.
  *
  * Font family: Inter (loaded via @expo-google-fonts/inter in src/app/_layout.tsx).
- * The legacy `display` / `body` aliases now point at Inter weight-specific keys.
  * Size ramp matches the Stitch spec (balance-display 48, section-header 13,
- * body 15, label 12) but exported names are kept from the Luxe ramp so no
- * downstream import needs to change.
+ * body 15, label 12).
  */
 export const Typography = {
   fonts: {
-    display: 'Inter_700Bold',
-    body: 'Inter_400Regular',
     regular: 'Inter_400Regular',
     medium: 'Inter_500Medium',
     semibold: 'Inter_600SemiBold',
-    semiBold: 'Inter_600SemiBold',
     bold: 'Inter_700Bold',
   },
   sizes: {
@@ -38,7 +33,6 @@ export const Typography = {
     regular: '400',
     medium: '500',
     semibold: '600',
-    semiBold: '600',
     bold: '700',
   } as const,
 };

@@ -1,13 +1,12 @@
 import React from 'react';
-import { Image, TouchableOpacity, View, Alert } from 'react-native';
+import { View, Alert } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { BodySm, Label } from '@/shared/components/Typography';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 
 const Container = styled.View`
-  margin-horizontal: ${Spacing.lg}px;
   flex-direction: row;
   align-items: center;
 `;
@@ -16,12 +15,19 @@ const UploadBox = styled.TouchableOpacity`
   width: 80px;
   height: 80px;
   border-radius: ${Radius.md}px;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLowest};
   border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
+  border-color: ${({ theme }) => theme.colors.divider};
   border-style: dashed;
   align-items: center;
   justify-content: center;
+`;
+
+const UploadLabel = styled.Text`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 10px;
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
 `;
 
 const PreviewContainer = styled.View`
@@ -41,9 +47,29 @@ const RemoveButton = styled.TouchableOpacity`
   position: absolute;
   top: 2px;
   right: 2px;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: ${Radius.full}px;
   padding: 2px;
+`;
+
+const InfoColumn = styled.View`
+  margin-left: ${Spacing.md}px;
+  flex: 1;
+`;
+
+const InfoLabel = styled.Text`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const InfoSubtitle = styled.Text`
+  margin-top: 4px;
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
 `;
 
 interface ReceiptUploaderProps {
@@ -60,7 +86,10 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need camera roll permissions to upload receipts.');
+      Alert.alert(
+        'Permission Denied',
+        'We need camera roll permissions to upload receipts.'
+      );
       return;
     }
 
@@ -86,18 +115,14 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
         </PreviewContainer>
       ) : (
         <UploadBox onPress={pickImage} activeOpacity={0.7}>
-          <MaterialIcons name="add-a-photo" size={24} color={theme.colors.onSurfaceVariant} />
-          <Label style={{ fontSize: 8, marginTop: 4 }}>ADD RECEIPT</Label>
+          <MaterialIcons name="add-a-photo" size={22} color={theme.colors.onSurfaceVariant} />
+          <UploadLabel>Add</UploadLabel>
         </UploadBox>
       )}
-      <View style={{ marginLeft: Spacing.md, flex: 1 }}>
-        <Label style={{ color: theme.colors.onSurfaceVariant }}>
-          Receipt Image
-        </Label>
-        <BodySm style={{ opacity: 0.6 }}>
-          {imageUri ? 'Image attached' : 'No receipt attached'}
-        </BodySm>
-      </View>
+      <InfoColumn>
+        <InfoLabel>Receipt image</InfoLabel>
+        <InfoSubtitle>{imageUri ? 'Image attached' : 'No receipt attached'}</InfoSubtitle>
+      </InfoColumn>
     </Container>
   );
 };

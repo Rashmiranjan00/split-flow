@@ -1,35 +1,37 @@
 import React from 'react';
-import styled, { useTheme } from 'styled-components/native';
+import styled from 'styled-components/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Label } from '@/shared/components/Typography';
 import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
 
 const Container = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
-  padding-horizontal: ${Spacing.lg}px;
+  padding: 0 ${Spacing.screenPadding}px;
   gap: ${Spacing.sm}px;
 `;
 
 const CategoryCard = styled.TouchableOpacity<{ selected: boolean }>`
   width: 31%;
-  aspect-ratio: 1.1;
-  background-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh};
+  aspect-ratio: 1.3;
+  background-color: ${({ selected, theme }: { selected: boolean; theme: any }) =>
+    selected ? theme.colors.primaryFixedDim : theme.colors.surfaceContainerLowest};
   border-radius: ${Radius.md}px;
   align-items: center;
   justify-content: center;
   border-width: 1px;
-  border-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primary : 'transparent'};
+  border-color: ${({ selected, theme }: { selected: boolean; theme: any }) =>
+    selected ? theme.colors.primary : theme.colors.divider};
 `;
 
-const CategoryLabel = styled(Label)<{ selected: boolean }>`
+const CategoryText = styled.Text<{ selected: boolean }>`
   margin-top: ${Spacing.xs}px;
-  font-size: 10px;
-  color: ${({ selected, theme }) => 
-    selected ? theme.colors.primary : theme.colors.onSurfaceVariant};
-  font-weight: ${({ selected }) => (selected ? '700' : '400')};
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 11px;
+  color: ${({ selected, theme }: { selected: boolean; theme: any }) =>
+    selected ? theme.colors.brandDark : theme.colors.onSurfaceVariant};
+  font-weight: ${({ selected }: { selected: boolean }) =>
+    selected ? TypographyTokens.weights.semibold : TypographyTokens.weights.medium};
 `;
 
 const CATEGORIES = [
@@ -50,27 +52,26 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   selectedCategory,
   onSelect,
 }) => {
-  const theme = useTheme();
-
   return (
     <Container>
-      {CATEGORIES.map((cat) => (
-        <CategoryCard
-          key={cat.id}
-          selected={selectedCategory === cat.id}
-          activeOpacity={0.7}
-          onPress={() => onSelect(cat.id)}
-        >
-          <MaterialIcons 
-            name={cat.icon} 
-            size={24} 
-            color={selectedCategory === cat.id ? theme.colors.primary : theme.colors.onSurfaceVariant} 
-          />
-          <CategoryLabel selected={selectedCategory === cat.id}>
-            {cat.id.toUpperCase()}
-          </CategoryLabel>
-        </CategoryCard>
-      ))}
+      {CATEGORIES.map((cat) => {
+        const selected = selectedCategory === cat.id;
+        return (
+          <CategoryCard
+            key={cat.id}
+            selected={selected}
+            activeOpacity={0.7}
+            onPress={() => onSelect(cat.id)}
+          >
+            <MaterialIcons
+              name={cat.icon}
+              size={22}
+              color={selected ? '#004D38' : '#6C7A72'}
+            />
+            <CategoryText selected={selected}>{cat.id}</CategoryText>
+          </CategoryCard>
+        );
+      })}
     </Container>
   );
 };

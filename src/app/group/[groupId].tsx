@@ -2,269 +2,301 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View } from 'react-native';
-import { Spacing, Radius } from '@/shared/constants/spacing';
-import { 
-  SafeScreen, 
-  Content, 
-  Row, 
-  SpaceBetweenRow, 
-  Spacer 
+import { Alert, View } from 'react-native';
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import {
+  SafeScreen,
+  Content,
+  Row,
+  SectionHeader,
+  SpaceBetweenRow,
+  Spacer,
+  TxnRow,
 } from '@/shared/components/Layout';
-import { 
-  Display, 
-  Headline, 
-  Title, 
-  BodyMd, 
-  BodySm, 
-  Label 
+import {
+  BodyMd,
+  RowSubtitle,
+  RowTitle,
+  Timestamp,
 } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
-import { ExpenseCard } from '@/features/expenses/components/ExpenseCard';
+import { ActionButton } from '@/shared/components/ActionButton';
 import { useUser } from '@/shared/hooks/useUser';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
-import { useGroups, useGroup } from '@/features/groups/hooks/useGroups';
+import { useGroup } from '@/features/groups/hooks/useGroups';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
 import { useExpenseStore } from '@/features/expenses/store';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
-const Header = styled(Row)`
-  padding: ${Spacing.md}px ${Spacing.lg}px;
+const HeaderBar = styled(Row)`
+  padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
   margin-bottom: 0;
 `;
 
-const BackBtn = styled.TouchableOpacity`
-  width: 40px;
-  height: 40px;
+const IconButton = styled.TouchableOpacity`
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
-  margin-right: ${Spacing.sm}px;
 `;
 
-const HeroBanner = styled.View`
-  background-color: ${({ theme }) => theme.colors.primaryContainer};
-  padding: ${Spacing.xxl}px ${Spacing.lg}px ${Spacing.xl}px;
+const HeaderTitleRow = styled.View`
+  flex: 1;
   align-items: center;
-  margin-bottom: ${Spacing.xl}px;
 `;
 
-const GroupEmojiLarge = styled.Text`
-  font-size: 56px;
+const HeaderTitle = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const HeroSection = styled.View`
+  align-items: center;
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.lg}px;
+`;
+
+const GroupEmoji = styled.Text`
+  font-family: ${TypographyTokens.fonts.body};
+  font-size: 32px;
   margin-bottom: ${Spacing.sm}px;
 `;
 
-const BalanceBanner = styled.View`
-  padding-horizontal: ${Spacing.lg}px;
-  margin-bottom: ${Spacing.xl}px;
+const GroupName = styled.Text`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 20px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme }) => theme.colors.onSurface};
+  letter-spacing: -0.3px;
 `;
 
-interface PositiveProps {
-  positive: boolean;
-  tertiaryColor: string;
-  errorColor: string;
-}
+const GroupDescription = styled.Text`
+  margin-top: 4px;
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
 
-const BalanceCardStyled = styled.View<PositiveProps>`
-  background-color: ${(props: PositiveProps) =>
-    props.positive ? props.tertiaryColor + '1A' : props.errorColor + '1A'};
+const BalanceText = styled.Text<{ positive: boolean }>`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 18px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ positive, theme }: { positive: boolean; theme: any }) =>
+    positive ? theme.colors.tertiary : theme.colors.danger};
+  text-align: center;
+`;
+
+const BalanceRow = styled.View`
+  align-items: center;
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px;
+`;
+
+const SettleUpPill = styled.TouchableOpacity`
+  margin-top: ${Spacing.md}px;
+  padding: 10px 20px;
+  border-radius: ${Radius.full}px;
   border-width: 1px;
-  border-color: ${(props: PositiveProps) =>
-    props.positive ? props.tertiaryColor : props.errorColor};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.lg}px;
-  align-items: center;
+  border-color: ${({ theme }) => theme.colors.primary};
 `;
 
-const SectionPad = styled.View`
-  padding-horizontal: ${Spacing.lg}px;
+const SettleUpText = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 14px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
-const MemberRow = styled(SpaceBetweenRow)`
-  padding: ${Spacing.sm}px 0;
-  border-bottom-width: 1px;
-  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
-  margin-bottom: 0;
+const Divider = styled.View`
+  height: 1px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin: 0 ${Spacing.screenPadding}px;
 `;
 
-const MemberBalance = styled(BodySm)<{ positive: boolean }>`
-  color: ${({ positive, theme }: { positive: boolean; theme: any }) => positive ? theme.colors.tertiary : theme.colors.error};
-  font-weight: 600;
+const BottomCTA = styled.View`
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.xl}px;
 `;
 
-const AddExpenseBtn = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding: ${Spacing.md}px;
-  margin: ${Spacing.lg}px;
-  background-color: ${({ theme }) => theme.colors.primaryContainer};
-  border-radius: ${Radius.lg}px;
-  gap: ${Spacing.sm}px;
-`;
+const getGroupEmoji = (name: string): string => {
+  const match = name.match(/[\u{1F300}-\u{1FAFF}]/u);
+  return match ? match[0] : '💼';
+};
 
 const GroupDetailScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  const groups = useGroupStore(state => state.groups);
-  const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
-  const currentGroup = groups.find(g => g.id === currentGroupId);
-  
-  // Get all members for selection
-  const groupMembers = currentGroup ? currentGroup.members : [];
-  const theme = useTheme();
-
+  const { group } = useGroup(groupId ?? '');
+  const { friends } = useFriends();
   const { userId, user } = useUser();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
+  const allExpenses = useExpenseStore((s) => s.expenses);
+  const { netPositions, simplifiedDebts } = useGroupBalances(groupId ?? '');
   const router = useRouter();
+  const theme = useTheme();
 
-  const { group } = useGroup(groupId!);
-  const { friends } = useFriends();
-  const allExpenses = useExpenseStore(s => s.expenses);
-  const { netPositions, simplifiedDebts } = useGroupBalances(groupId!);
-  
+  const groupExpenses = React.useMemo(() => {
+    if (!groupId) return [];
+    return allExpenses
+      .filter((e) => e.groupId === groupId)
+      .sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }, [allExpenses, groupId]);
+
   if (!group) return null;
 
   const balance = netPositions[userId] || 0;
   const isPositive = balance >= 0;
-
-  const groupExpenses = React.useMemo(() => 
-    allExpenses
-      .filter(e => e.groupId === groupId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [allExpenses, groupId]
-  );
-
-  const getGroupEmoji = (name: string) => {
-    if (name.includes('🏖')) return '🏖';
-    if (name.includes('🏠')) return '🏠';
-    if (name.includes('🍽')) return '🍽';
-    return '💼';
-  };
-  const displayName = group?.name?.replace(/[\u{1F300}-\u{1FAFF}]/gu, "").trim() ?? 'Vault';
+  const displayName = group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
 
   return (
     <SafeScreen>
-      <Header>
-        <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
-        </BackBtn>
-        <Title numberOfLines={1} style={{ flex: 1 }}>
-          {displayName}
-        </Title>
-      </Header>
+      <HeaderBar>
+        <IconButton onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={22} color={theme.colors.onSurface} />
+        </IconButton>
+        <HeaderTitleRow>
+          <HeaderTitle numberOfLines={1}>{displayName}</HeaderTitle>
+        </HeaderTitleRow>
+        <IconButton onPress={() => Alert.alert('Menu', 'Group options coming soon!')}>
+          <MaterialIcons name="more-horiz" size={22} color={theme.colors.onSurface} />
+        </IconButton>
+      </HeaderBar>
 
       <Content showsVerticalScrollIndicator={false}>
-        <HeroBanner>
-          <GroupEmojiLarge>{getGroupEmoji(group.name)}</GroupEmojiLarge>
-          <Headline style={{ color: theme.colors.primary }}>
-            {group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim()}
-          </Headline>
-          <BodySm style={{ color: theme.colors.primary, opacity: 0.7 }}>
-            {group.description}
-          </BodySm>
-        </HeroBanner>
+        <HeroSection>
+          <GroupEmoji>{getGroupEmoji(group.name)}</GroupEmoji>
+          <GroupName>{displayName}</GroupName>
+          {group.description ? (
+            <GroupDescription>{group.description}</GroupDescription>
+          ) : null}
+        </HeroSection>
 
-        <BalanceBanner>
-          <BalanceCardStyled
-            positive={isPositive}
-            tertiaryColor={theme.colors.tertiary}
-            errorColor={theme.colors.error}
-          >
-            <Label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {isPositive ? 'You are owed' : 'You owe in total'}
-            </Label>
-            <Display style={{ color: isPositive ? theme.colors.tertiary : theme.colors.error }}>
-              {isPositive ? '+' : '-'}${Math.abs(balance).toFixed(2)}
-            </Display>
-          </BalanceCardStyled>
-        </BalanceBanner>
-
-        <SectionPad>
-          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
-            Balances
-          </Label>
-          {simplifiedDebts.length === 0 ? (
-            <BodySm style={{ color: theme.colors.tertiary, paddingVertical: Spacing.sm, fontWeight: '600' }}>
-              ✓ All settled up!
-            </BodySm>
+        <BalanceRow>
+          {balance === 0 ? (
+            <BodyMd style={{ color: theme.colors.onSurfaceVariant }}>
+              You&apos;re all settled up in this group.
+            </BodyMd>
           ) : (
-            simplifiedDebts.map((debt, idx) => {
-              const fromFriend = friends.find(f => f.id === debt.from);
-              const toFriend = friends.find(f => f.id === debt.to);
-              
-              const fromName = debt.from === userId ? 'You' : fromFriend?.name ?? 'Someone';
-              const toName = debt.to === userId ? 'you' : toFriend?.name ?? 'someone';
-              const isRelevant = debt.from === userId || debt.to === userId;
-
-              return (
-                <MemberRow key={`${debt.from}-${debt.to}-${idx}`}>
-                  <Row style={{ marginBottom: 0, opacity: isRelevant ? 1 : 0.6 }}>
-                    <Avatar name={fromFriend?.name ?? 'U'} size={32} />
-                    <Spacer size="sm" horizontal />
-                    <BodyMd style={{ fontWeight: '500' }}>
-                      {fromName} owe {toName}
-                    </BodyMd>
-                  </Row>
-                  <MemberBalance positive={debt.to === userId}>
-                    {formatCurrency(debt.amount)}
-                  </MemberBalance>
-                </MemberRow>
-              );
-            })
+            <>
+              <BalanceText positive={isPositive}>
+                {isPositive ? 'You are owed ' : 'You owe '}
+                {formatCurrency(Math.abs(balance), { decimals: 0 })}
+              </BalanceText>
+              <SettleUpPill
+                activeOpacity={0.7}
+                onPress={() => {
+                  const friend = simplifiedDebts.find((d) => d.from === userId || d.to === userId);
+                  const targetId =
+                    friend?.from === userId ? friend?.to : friend?.from;
+                  if (targetId) router.push(`/settle/${targetId}` as any);
+                }}
+              >
+                <SettleUpText>Settle up</SettleUpText>
+              </SettleUpPill>
+            </>
           )}
+        </BalanceRow>
 
-          <Spacer size="lg" />
+        <Divider />
 
-          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
-            Members ({group.members.length})
-          </Label>
-          {group.members.map(mid => {
-            const member = friends.find(f => f.id === mid) || (mid === userId ? user : null);
+        <SectionHeader label="Who owes what" />
+        {simplifiedDebts.length === 0 ? (
+          <View style={{ paddingHorizontal: Spacing.screenPadding, paddingVertical: Spacing.md }}>
+            <RowSubtitle style={{ color: theme.colors.primary, fontWeight: '600' }}>
+              ✓ All settled up!
+            </RowSubtitle>
+          </View>
+        ) : (
+          simplifiedDebts.map((debt, idx) => {
+            const fromFriend = friends.find((f) => f.id === debt.from);
+            const toFriend = friends.find((f) => f.id === debt.to);
+            const fromName = debt.from === userId ? 'You' : fromFriend?.name ?? 'Someone';
+            const toName = debt.to === userId ? 'you' : toFriend?.name ?? 'someone';
+            const toUser = debt.to === userId;
             return (
-              <MemberRow key={mid}>
-                <Row style={{ marginBottom: 0 }}>
-                  <Avatar name={member?.name ?? 'User'} size={40} />
-                  <Spacer size="md" horizontal />
-                  <BodyMd style={{ fontWeight: '500' }}>{member?.name ?? mid}</BodyMd>
-                  {mid === userId && (
-                    <>
-                      <Spacer size="xs" horizontal />
-                      <MaterialIcons name="star" size={16} color={theme.colors.primary} />
-                    </>
-                  )}
-                </Row>
-              </MemberRow>
-            );
-          })}
-
-          <Spacer size="lg" />
-
-          <Label style={{ textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.sm }}>
-            Expenses ({groupExpenses.length})
-          </Label>
-          {groupExpenses.map(expense => {
-            const payer = friends.find(f => f.id === expense.paidBy) || (expense.paidBy === userId ? user : null);
-            return (
-              <ExpenseCard
-                key={expense.id}
-                title={expense.title}
-                subtitle={`${expense.paidBy === userId ? 'You' : payer?.name} paid · ${formatDate(expense.createdAt)}`}
-                amount={expense.amount}
-                date={formatDate(expense.createdAt)}
+              <TxnRow
+                key={`${debt.from}-${debt.to}-${idx}`}
+                isLast={idx === simplifiedDebts.length - 1}
                 onPress={() => {}}
+                leading={<Avatar name={fromFriend?.name ?? 'U'} size={Spacing.avatarSm} />}
+                title={<RowTitle numberOfLines={1}>{`${fromName} owes ${toName}`}</RowTitle>}
+                trailing={
+                  <RowTitle style={{ color: toUser ? theme.colors.tertiary : theme.colors.danger }}>
+                    {formatCurrency(debt.amount, { decimals: 0 })}
+                  </RowTitle>
+                }
               />
             );
-          })}
-        </SectionPad>
+          })
+        )}
 
-        <AddExpenseBtn onPress={() => router.push('/expense/add')} activeOpacity={0.8}>
-          <MaterialIcons name="add" size={20} color={theme.colors.primary} />
-          <BodyMd style={{ color: theme.colors.primary, fontWeight: '600' }}>Add Expense</BodyMd>
-        </AddExpenseBtn>
+        <Spacer size="md" />
 
-        <Spacer size="xxl" />
+        <SectionHeader label={`Members · ${group.members.length}`} />
+        {group.members.map((mid, idx) => {
+          const member =
+            friends.find((f) => f.id === mid) || (mid === userId ? user : null);
+          return (
+            <TxnRow
+              key={mid}
+              isLast={idx === group.members.length - 1}
+              onPress={() => {}}
+              leading={<Avatar name={member?.name ?? 'User'} size={Spacing.avatarSm} />}
+              title={<RowTitle numberOfLines={1}>{member?.name ?? mid}</RowTitle>}
+              trailing={
+                mid === userId ? (
+                  <RowSubtitle style={{ color: theme.colors.primary }}>You</RowSubtitle>
+                ) : null
+              }
+            />
+          );
+        })}
+
+        <Spacer size="md" />
+
+        <SectionHeader label={`Expenses · ${groupExpenses.length}`} />
+        {groupExpenses.length === 0 ? (
+          <View style={{ paddingHorizontal: Spacing.screenPadding, paddingVertical: Spacing.md }}>
+            <RowSubtitle>No expenses yet.</RowSubtitle>
+          </View>
+        ) : (
+          groupExpenses.map((expense, idx) => {
+            const payer =
+              friends.find((f) => f.id === expense.paidBy) ||
+              (expense.paidBy === userId ? user : null);
+            const paidByLabel = expense.paidBy === userId ? 'You' : payer?.name ?? 'Someone';
+            return (
+              <TxnRow
+                key={expense.id}
+                isLast={idx === groupExpenses.length - 1}
+                onPress={() => {}}
+                leading={<Avatar name={expense.title} size={Spacing.avatarSm} />}
+                title={<RowTitle numberOfLines={1}>{expense.title}</RowTitle>}
+                subtitle={
+                  <RowSubtitle numberOfLines={1}>
+                    {paidByLabel} paid
+                  </RowSubtitle>
+                }
+                trailing={
+                  <>
+                    <RowTitle>{formatCurrency(expense.amount, { decimals: 0 })}</RowTitle>
+                    <Timestamp style={{ marginTop: 2 }}>{formatDate(expense.createdAt)}</Timestamp>
+                  </>
+                }
+              />
+            );
+          })
+        )}
+
+        <Spacer size="xl" />
       </Content>
+
+      <BottomCTA>
+        <ActionButton title="Add Expense" onPress={() => router.push('/expense/add')} />
+      </BottomCTA>
     </SafeScreen>
   );
 };

@@ -1,24 +1,24 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { BodySm, Label } from '@/shared/components/Typography';
-import { Radius, Spacing } from '@/shared/constants/spacing';
-import { User, UserId, SplitDetail } from '@/shared/types';
-import { Avatar } from '@/shared/components/Avatar';
 import { View } from 'react-native';
-
+import { Avatar } from '@/shared/components/Avatar';
+import { RowSubtitle, SectionLabel } from '@/shared/components/Typography';
+import { Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import { User, UserId, SplitDetail } from '@/shared/types';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-
-const Card = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.lg}px;
-  margin-horizontal: ${Spacing.lg}px;
-  padding: ${Spacing.lg}px;
-`;
 
 const OwesRow = styled.View`
   flex-direction: row;
   align-items: center;
   margin-bottom: ${Spacing.sm}px;
+`;
+
+const OweAmount = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 15px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
 interface SplitPreviewCardProps {
@@ -34,39 +34,43 @@ export const SplitPreviewCard: React.FC<SplitPreviewCardProps> = ({
 }) => {
   const theme = useTheme();
   const { formatCurrency } = useCurrencyFormatter();
-  const payer = allMembers.find(m => m.id === paidBy);
+  const payer = allMembers.find((m) => m.id === paidBy);
+
+  const owes = splitDetails.filter(
+    (d) => d.userId !== paidBy && d.owedAmount > 0
+  );
 
   return (
-    <Card>
-      <Label style={{ marginBottom: Spacing.md, opacity: 0.7 }}>SUMMARY</Label>
-      {splitDetails.map((detail) => {
-        if (detail.userId === paidBy) return null;
-        if (detail.owedAmount <= 0) return null;
-
-        const debtor = allMembers.find(m => m.id === detail.userId);
-        
-        return (
-          <OwesRow key={detail.userId}>
-            <Avatar name={debtor?.name || 'User'} size={24} />
-            <View style={{ flex: 1, marginLeft: Spacing.md }}>
-              <BodySm>
-                <BodySm style={{ fontWeight: '700' }}>{debtor?.id === 'me' ? 'You' : debtor?.name}</BodySm>
-                {` owes `}
-                <BodySm style={{ fontWeight: '700' }}>{payer?.id === 'me' ? 'You' : payer?.name}</BodySm>
-              </BodySm>
-            </View>
-            <BodySm style={{ fontWeight: '700', color: theme.colors.primary }}>
-              {formatCurrency(detail.owedAmount)}
-            </BodySm>
-          </OwesRow>
-        );
-      })}
-      
-      {splitDetails.every(d => d.userId === paidBy || d.owedAmount <= 0) && (
-        <BodySm style={{ opacity: 0.6, fontStyle: 'italic' }}>
+    <View>
+      <SectionLabel style={{ marginBottom: Spacing.md, fontSize: 11 }}>
+        Summary
+      </SectionLabel>
+      {owes.length === 0 ? (
+        <RowSubtitle style={{ color: theme.colors.onSurfaceVariant }}>
           No debts created. Payer is the sole participant.
-        </BodySm>
+        </RowSubtitle>
+      ) : (
+        owes.map((detail) => {
+          const debtor = allMembers.find((m) => m.id === detail.userId);
+          return (
+            <OwesRow key={detail.userId}>
+              <Avatar name={debtor?.name || 'User'} size={24} />
+              <View style={{ flex: 1, marginLeft: Spacing.md }}>
+                <RowSubtitle>
+                  <RowSubtitle style={{ fontWeight: '600', color: theme.colors.onSurface }}>
+                    {debtor?.name ?? 'Someone'}
+                  </RowSubtitle>
+                  {' owes '}
+                  <RowSubtitle style={{ fontWeight: '600', color: theme.colors.onSurface }}>
+                    {payer?.name ?? 'someone'}
+                  </RowSubtitle>
+                </RowSubtitle>
+              </View>
+              <OweAmount>{formatCurrency(detail.owedAmount)}</OweAmount>
+            </OwesRow>
+          );
+        })
       )}
-    </Card>
+    </View>
   );
 };

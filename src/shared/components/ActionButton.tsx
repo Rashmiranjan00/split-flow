@@ -3,10 +3,12 @@ import { ViewStyle } from 'react-native';
 import styled from 'styled-components/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Radius, Spacing } from '@/shared/constants/spacing';
-import { BodyMd } from './Typography';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+
+type ButtonVariant = 'primary' | 'secondary' | 'outline';
 
 interface ButtonContainerProps {
-  variant: 'primary' | 'secondary' | 'outline';
+  variant: ButtonVariant;
   disabled?: boolean;
 }
 
@@ -14,61 +16,72 @@ const ButtonContainer = styled.TouchableOpacity<ButtonContainerProps>`
   background-color: ${({ theme, variant, disabled }: ButtonContainerProps & { theme: any }) => {
     if (disabled) return theme.colors.surfaceContainerHigh;
     if (variant === 'primary') return theme.colors.primary;
-    if (variant === 'secondary') return theme.colors.primaryContainer;
+    if (variant === 'secondary') return theme.colors.surfaceContainerLowest;
     return 'transparent';
   }};
-  padding: ${Spacing.md}px ${Spacing.xl}px;
-  border-radius: ${Radius.full}px;
+  height: 50px;
+  padding: 0 ${Spacing.xl}px;
+  border-radius: ${Radius.buttonRadius}px;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  border-width: ${({ variant }: ButtonContainerProps) => (variant === 'outline' ? 1 : 0)}px;
-  border-color: ${({ theme }) => theme.colors.primary};
+  border-width: ${({ variant, disabled }: ButtonContainerProps) =>
+    variant === 'outline' ? 1 : variant === 'secondary' && !disabled ? 1 : 0}px;
+  border-color: ${({ theme, variant, disabled }: ButtonContainerProps & { theme: any }) => {
+    if (disabled) return 'transparent';
+    if (variant === 'outline') return theme.colors.primary;
+    if (variant === 'secondary') return theme.colors.surfaceContainerHighest;
+    return 'transparent';
+  }};
 `;
 
-const ButtonText = styled(BodyMd)<ButtonContainerProps>`
+const ButtonText = styled.Text<ButtonContainerProps>`
   color: ${({ theme, variant, disabled }: ButtonContainerProps & { theme: any }) => {
     if (disabled) return theme.colors.onSurfaceVariant;
-    if (variant === 'primary') return theme.colors.onPrimaryFixed;
+    if (variant === 'primary') return theme.colors.onPrimary;
     return theme.colors.primary;
   }};
-  font-weight: 700;
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 16px;
+  font-weight: ${TypographyTokens.weights.semibold};
 `;
 
 interface ActionButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: ButtonVariant;
   disabled?: boolean;
   icon?: string;
   style?: ViewStyle;
 }
 
-export const ActionButton: React.FC<ActionButtonProps> = ({ 
-  title, 
-  onPress, 
+export const ActionButton: React.FC<ActionButtonProps> = ({
+  title,
+  onPress,
   variant = 'primary',
   disabled = false,
   icon,
-  style
+  style,
 }) => {
   return (
-    <ButtonContainer 
-      variant={variant} 
-      onPress={onPress} 
-      disabled={disabled} 
-      activeOpacity={0.8}
+    <ButtonContainer
+      variant={variant}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.85}
       style={style}
     >
       {icon && (
-        <MaterialIcons 
-          name={icon as any} 
-          size={18} 
-          color={disabled ? '#999' : (variant === 'primary' ? 'white' : '#8083FF')} 
-          style={{ marginRight: Spacing.xs }}
+        <MaterialIcons
+          name={icon as any}
+          size={18}
+          color={disabled ? '#BBBBBB' : variant === 'primary' ? '#FFFFFF' : '#006C4F'}
+          style={{ marginRight: Spacing.sm }}
         />
       )}
-      <ButtonText variant={variant} disabled={disabled}>{title}</ButtonText>
+      <ButtonText variant={variant} disabled={disabled}>
+        {title}
+      </ButtonText>
     </ButtonContainer>
   );
 };

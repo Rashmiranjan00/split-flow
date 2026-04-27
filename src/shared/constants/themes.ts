@@ -1,7 +1,19 @@
 /**
- * SplitFlow Luxe Design Tokens
- * Source: Stitch project 8279022266749790484
- * Design Systems: "SplitFlow Luxe" (dark) & "SplitFlow Luxe Light" (light)
+ * SplitFlow "Warm Minimalist Finance" Design Tokens.
+ *
+ * Source: Stitch project 16404945722807422720, `designMd` spec
+ * (Warm Minimalist Finance — Inter font, teal primary #006C4F + accent #00C896,
+ *  warm coral #FF6B6B, background #FCF9F8, 16px cards, 12px buttons).
+ *
+ * The `ThemeColors` interface keeps every Luxe key so that the ~15 files that
+ * already read `theme.colors.primaryContainer`, `tertiary`, `error`, etc. keep
+ * compiling without downstream edits. Values are remapped semantically:
+ *   - `tertiary`   → teal (positive balance) — was Luxe orange/peach
+ *   - `error`      → warm coral (you-owe)    — was Luxe Material red
+ *   - `primary`    → dark teal (CTAs)
+ *   - `primaryContainer` → vibrant teal (FAB, bar chart, toggles)
+ *   - `primaryFixedDim`  → light mint (avatar bg, selected pill bg)
+ *   - `onPrimaryFixed`   → WHITE (fixes the Home FAB icon-on-teal bug)
  */
 
 export interface ThemeColors {
@@ -46,103 +58,76 @@ export interface ThemeColors {
   inverseOnSurface: string;
   inversePrimary: string;
 
-  // Glassmorphism helpers
+  // Legacy glassmorphism keys — kept for API compat only. No glass effect.
   glassFill: string;
   glassBorder: string;
+
+  // Additive keys introduced for "Warm Minimalist Finance" call-sites.
+  brandAccent: string;   // #00C896 vibrant teal — FAB, bar-chart, toggle-on
+  brandDark: string;     // #004D38 initials / text-on-light-mint
+  danger: string;        // #FF6B6B warm coral — alias of `error`
+  dangerLight: string;   // #FFDAD6 tint — alias of `errorContainer`
+  divider: string;       // #F0F0F0 row divider
+  rowPressed: string;    // #F6F3F2 row press-state
 }
 
-/** SplitFlow Luxe — Dark Mode */
-export const LuxeDark: ThemeColors = {
-  background: '#131313',
-  surface: '#131313',
-  surfaceContainer: '#201f1f',
-  surfaceContainerLowest: '#0e0e0e',
-  surfaceContainerLow: '#1c1b1b',
-  surfaceContainerHigh: '#2a2a2a',
-  surfaceContainerHighest: '#353534',
-  surfaceVariant: '#353534',
-  surfaceBright: '#3a3939',
-  surfaceDim: '#131313',
-  surfaceTint: '#c0c1ff',
+/** SplitFlow Clear / Warm Minimalist Finance */
+export const ClearLight: ThemeColors = {
+  background: '#FCF9F8',
+  surface: '#FCF9F8',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#F6F3F2',
+  surfaceContainer: '#F0EDED',
+  surfaceContainerHigh: '#EAE7E7',
+  surfaceContainerHighest: '#E5E2E1',
+  surfaceVariant: '#E5E2E1',
+  surfaceBright: '#FCF9F8',
+  surfaceDim: '#DCD9D9',
+  surfaceTint: '#006C4F',
 
-  primary: '#c0c1ff',
-  primaryContainer: '#8083ff',
-  primaryFixedDim: '#c0c1ff',
-  onPrimary: '#1000a9',
-  onPrimaryContainer: '#0d0096',
-  onPrimaryFixed: '#07006c',
+  primary: '#006C4F',
+  primaryContainer: '#00C896',
+  primaryFixedDim: '#60FCC6',
+  onPrimary: '#FFFFFF',
+  onPrimaryContainer: '#004D38',
+  onPrimaryFixed: '#FFFFFF',
 
-  secondary: '#c0c1ff',
-  secondaryContainer: '#42447b',
+  secondary: '#AE2F34',
+  secondaryContainer: '#FF6B6B',
 
-  tertiary: '#ffb783',
-  tertiaryContainer: '#d97721',
+  tertiary: '#006C4F',
+  tertiaryContainer: '#FFDAD8',
 
-  error: '#ffb4ab',
-  errorContainer: '#93000a',
-  onError: '#690005',
+  error: '#FF6B6B',
+  errorContainer: '#FFDAD6',
+  onError: '#FFFFFF',
 
-  onBackground: '#e5e2e1',
-  onSurface: '#e5e2e1',
-  onSurfaceVariant: '#c7c4d7',
-  onSecondaryContainer: '#b2b3f2',
+  onBackground: '#1C1B1B',
+  onSurface: '#1C1B1B',
+  onSurfaceVariant: '#6C7A72',
+  onSecondaryContainer: '#6D0010',
 
-  outline: '#908fa0',
-  outlineVariant: '#464554',
+  outline: '#6C7A72',
+  outlineVariant: '#F0F0F0',
 
-  inverseSurface: '#e5e2e1',
-  inverseOnSurface: '#313030',
-  inversePrimary: '#494bd6',
+  inverseSurface: '#313030',
+  inverseOnSurface: '#F3F0EF',
+  inversePrimary: '#3ADFAB',
 
-  // Glassmorphism: surfaceVariant at 60% opacity, outlineVariant at 40%
-  glassFill: 'rgba(53, 53, 52, 0.6)',
-  glassBorder: 'rgba(70, 69, 84, 0.4)',
+  glassFill: 'transparent',
+  glassBorder: '#F0F0F0',
+
+  brandAccent: '#00C896',
+  brandDark: '#004D38',
+  danger: '#FF6B6B',
+  dangerLight: '#FFDAD6',
+  divider: '#F0F0F0',
+  rowPressed: '#F6F3F2',
 };
 
-/** SplitFlow Luxe Light */
-export const LuxeLight: ThemeColors = {
-  background: '#f7f9fb',
-  surface: '#f7f9fb',
-  surfaceContainer: '#eceef0',
-  surfaceContainerLowest: '#ffffff',
-  surfaceContainerLow: '#f2f4f6',
-  surfaceContainerHigh: '#e6e8ea',
-  surfaceContainerHighest: '#e0e3e5',
-  surfaceVariant: '#e0e3e5',
-  surfaceBright: '#f7f9fb',
-  surfaceDim: '#d8dadc',
-  surfaceTint: '#494bd6',
-
-  primary: '#4648d4',
-  primaryContainer: '#6063ee',
-  primaryFixedDim: '#c0c1ff',
-  onPrimary: '#ffffff',
-  onPrimaryContainer: '#fffbff',
-  onPrimaryFixed: '#07006c',
-
-  secondary: '#505f76',
-  secondaryContainer: '#d0e1fb',
-
-  tertiary: '#904900',
-  tertiaryContainer: '#b55d00',
-
-  error: '#ba1a1a',
-  errorContainer: '#ffdad6',
-  onError: '#ffffff',
-
-  onBackground: '#191c1e',
-  onSurface: '#191c1e',
-  onSurfaceVariant: '#464554',
-  onSecondaryContainer: '#54647a',
-
-  outline: '#767586',
-  outlineVariant: '#c7c4d7',
-
-  inverseSurface: '#2d3133',
-  inverseOnSurface: '#eff1f3',
-  inversePrimary: '#c0c1ff',
-
-  // Glassmorphism: surface at 80% opacity with outline-variant whisper
-  glassFill: 'rgba(247, 249, 251, 0.8)',
-  glassBorder: 'rgba(199, 196, 215, 0.15)',
-};
+/**
+ * Legacy exports. The dark-first Luxe palette has been retired for this revamp.
+ * Both names now alias `ClearLight` so existing imports compile unchanged.
+ */
+export const LuxeDark: ThemeColors = ClearLight;
+export const LuxeLight: ThemeColors = ClearLight;

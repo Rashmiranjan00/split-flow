@@ -2,29 +2,111 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spacing } from '@/shared/constants/spacing';
-import { 
-  SafeScreen, 
-  Content, 
-  Row, 
-  Spacer 
-} from '@/shared/components/Layout';
-import { 
-  Title, 
-  Headline,
-  BodyMd,
-  Label
-} from '@/shared/components/Typography';
+import { View } from 'react-native';
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
+import { Avatar } from '@/shared/components/Avatar';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useUser } from '@/shared/hooks/useUser';
 
-const Header = styled(Row)`
-  padding: ${Spacing.md}px ${Spacing.lg}px;
+type PaymentMethod = 'UPI' | 'Cash' | 'Bank';
+
+const HeaderBar = styled(Row)`
+  padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
+  margin-bottom: 0;
 `;
 
 const BackBtn = styled.TouchableOpacity`
-  margin-right: ${Spacing.md}px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+`;
+
+const HeaderTitle = styled.Text`
+  flex: 1;
+  text-align: center;
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const Body = styled.View`
+  flex: 1;
+  padding: ${Spacing.xl}px ${Spacing.screenPadding}px;
+  align-items: center;
+`;
+
+const AvatarRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: ${Spacing.lg}px;
+  margin-bottom: ${Spacing.xl}px;
+`;
+
+const ArrowCircle = styled.View`
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  background-color: ${({ theme }) => theme.colors.primaryFixedDim};
+  align-items: center;
+  justify-content: center;
+  margin: 0 ${Spacing.md}px;
+`;
+
+const FriendName = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const OweLine = styled.Text`
+  margin-top: 4px;
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const Amount = styled.Text`
+  margin-top: ${Spacing.lg}px;
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 40px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme }) => theme.colors.danger};
+  letter-spacing: -1px;
+`;
+
+const PaymentMethods = styled.View`
+  flex-direction: row;
+  gap: ${Spacing.sm}px;
+  margin-top: ${Spacing.xl}px;
+`;
+
+const MethodPill = styled.TouchableOpacity<{ active: boolean }>`
+  padding: 10px 20px;
+  border-radius: ${Radius.full}px;
+  border-width: 1px;
+  border-color: ${({ active, theme }: { active: boolean; theme: any }) =>
+    active ? theme.colors.primary : theme.colors.divider};
+  background-color: ${({ active, theme }: { active: boolean; theme: any }) =>
+    active ? theme.colors.primary : 'transparent'};
+`;
+
+const MethodText = styled.Text<{ active: boolean }>`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 14px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ active, theme }: { active: boolean; theme: any }) =>
+    active ? theme.colors.onPrimary : theme.colors.primary};
+`;
+
+const BottomCTA = styled.View`
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.xl}px;
 `;
 
 const SettleScreen = () => {
@@ -33,40 +115,58 @@ const SettleScreen = () => {
   const { user } = useUser();
   const router = useRouter();
   const theme = useTheme();
-  const friend = friends.find(m => m.id === friendId);
+
+  const friend = friends.find((m) => m.id === friendId);
+  const [method, setMethod] = React.useState<PaymentMethod>('UPI');
+  const owedAmount = 0;
 
   return (
     <SafeScreen>
-      <Header>
+      <HeaderBar>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
+          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
         </BackBtn>
-        <Title>Record Payment</Title>
-      </Header>
+        <HeaderTitle>Settle up</HeaderTitle>
+        <View style={{ width: 36 }} />
+      </HeaderBar>
 
-      <Content contentContainerStyle={{ alignItems: 'center', justifyContent: 'center', paddingTop: 60 }}>
-        <Label style={{ textTransform: 'uppercase', marginBottom: Spacing.md }}>Settling with</Label>
-        <Headline style={{ fontSize: 32 }}>{friend?.name ?? 'Friend'}</Headline>
-        
-        <Spacer size="xxxl" />
-        
-        <View style={{ width: '100%', paddingHorizontal: Spacing.xl }}>
-          <ActionButton 
-            title="Confirm Payment" 
-            onPress={() => router.back()} 
-          />
-          <Spacer size="md" />
-          <ActionButton 
-            title="Cancel" 
-            variant="outline"
-            onPress={() => router.back()} 
-          />
-        </View>
-      </Content>
+      <Body>
+        <AvatarRow>
+          <Avatar name={user?.name ?? 'You'} size={Spacing.avatarLg} />
+          <ArrowCircle>
+            <MaterialIcons name="arrow-forward" size={18} color={theme.colors.brandDark} />
+          </ArrowCircle>
+          <Avatar name={friend?.name ?? 'Friend'} size={Spacing.avatarLg} />
+        </AvatarRow>
+
+        <FriendName>{friend?.name ?? 'Friend'}</FriendName>
+        <OweLine>You owe {friend?.name ?? 'them'}</OweLine>
+        <Amount>${Math.abs(owedAmount).toFixed(2)}</Amount>
+
+        <PaymentMethods>
+          {(['UPI', 'Cash', 'Bank'] as PaymentMethod[]).map((m) => {
+            const active = method === m;
+            return (
+              <MethodPill
+                key={m}
+                active={active}
+                activeOpacity={0.7}
+                onPress={() => setMethod(m)}
+              >
+                <MethodText active={active}>{m}</MethodText>
+              </MethodPill>
+            );
+          })}
+        </PaymentMethods>
+
+        <Spacer size="xxl" />
+      </Body>
+
+      <BottomCTA>
+        <ActionButton title="Mark as Settled" onPress={() => router.back()} />
+      </BottomCTA>
     </SafeScreen>
   );
 };
-
-const View = styled.View``;
 
 export default SettleScreen;

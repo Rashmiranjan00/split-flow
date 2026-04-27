@@ -1,9 +1,13 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useTheme } from 'styled-components/native';
-import { Spacing, Radius } from '@/shared/constants/spacing';
-import { BodyMd, BodySm } from '@/shared/components/Typography';
+import { TxnRow } from '@/shared/components/Layout';
+import {
+  Amount,
+  RowTitle,
+  RowSubtitle,
+  Timestamp,
+} from '@/shared/components/Typography';
 
 interface ActivityItemProps {
   type: 'EXPENSE' | 'SETTLEMENT' | 'SYSTEM';
@@ -12,51 +16,21 @@ interface ActivityItemProps {
   amount?: number;
   payerName: string;
   date: string;
+  isLast?: boolean;
   onPress?: () => void;
 }
 
-const ItemContainer = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-  padding-vertical: ${Spacing.md}px;
-  border-bottom-width: 1px;
-  border-bottom-color: ${({ theme }) => theme.colors.outlineVariant};
-`;
-
-interface IconTypeProps {
-  type: string;
-  bgExpense: string;
-  bgSettlement: string;
-  bgDefault: string;
-}
-
-const IconContainer = styled.View<IconTypeProps>`
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  background-color: ${(props: IconTypeProps) => {
-    switch (props.type) {
-      case 'EXPENSE': return props.bgExpense;
-      case 'SETTLEMENT': return props.bgSettlement;
-      default: return props.bgDefault;
-    }
-  }};
+const IconCircle = styled.View<{ bgColor: string }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  background-color: ${(props: { bgColor: string }) => props.bgColor};
   align-items: center;
   justify-content: center;
 `;
 
-const TextContainer = styled.View`
-  flex: 1;
-  margin-horizontal: ${Spacing.md}px;
-`;
-
-interface PositiveProps {
-  positive?: boolean;
-}
-
-const AmountText = styled(BodyMd)<PositiveProps>`
-  color: ${({ positive, theme }: PositiveProps & { theme: any }) => positive ? theme.colors.tertiary : theme.colors.onSurfaceVariant};
-  font-weight: 600;
+const TrailingColumn = styled.View`
+  align-items: flex-end;
 `;
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({
@@ -65,52 +39,60 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
   subtitle,
   amount,
   date,
-  onPress
+  isLast,
+  onPress,
 }) => {
   const theme = useTheme();
 
-  const getIcon = () => {
+  const { icon, bg, iconColor, positive } = (() => {
     switch (type) {
-      case 'EXPENSE': return 'receipt';
-      case 'SETTLEMENT': return 'payment';
-      default: return 'notifications';
+      case 'EXPENSE':
+        return {
+          icon: 'receipt-long' as const,
+          bg: theme.colors.primaryFixedDim,
+          iconColor: theme.colors.brandDark,
+          positive: undefined as boolean | undefined,
+        };
+      case 'SETTLEMENT':
+        return {
+          icon: 'check-circle' as const,
+          bg: theme.colors.tertiaryContainer,
+          iconColor: theme.colors.secondary,
+          positive: true,
+        };
+      default:
+        return {
+          icon: 'notifications' as const,
+          bg: theme.colors.surfaceContainerHigh,
+          iconColor: theme.colors.onSurfaceVariant,
+          positive: undefined as boolean | undefined,
+        };
     }
-  };
-
-  const getIconColor = () => {
-    switch (type) {
-      case 'EXPENSE': return theme.colors.primary;
-      case 'SETTLEMENT': return theme.colors.tertiary;
-      default: return theme.colors.onSurfaceVariant;
-    }
-  };
+  })();
 
   return (
-    <ItemContainer activeOpacity={0.7} onPress={onPress}>
-      <IconContainer
-        type={type}
-        bgExpense={theme.colors.primaryContainer}
-        bgSettlement={theme.colors.tertiaryContainer}
-        bgDefault={theme.colors.surfaceContainerHigh}
-      >
-        <MaterialIcons name={getIcon() as any} size={20} color={getIconColor()} />
-      </IconContainer>
-      
-      <TextContainer>
-        <BodyMd numberOfLines={1} style={{ fontWeight: '500' }}>{title}</BodyMd>
-        <BodySm style={{ color: theme.colors.onSurfaceVariant }}>{subtitle}</BodySm>
-      </TextContainer>
-      
-      {amount !== undefined && (
-        <View style={{ alignItems: 'flex-end' }}>
-          <AmountText positive={type === 'SETTLEMENT'}>
-            {type === 'SETTLEMENT' ? '+' : ''}${Math.abs(amount).toFixed(2)}
-          </AmountText>
-          <BodySm style={{ color: theme.colors.onSurfaceVariant, fontSize: 10 }}>{date}</BodySm>
-        </View>
-      )}
-    </ItemContainer>
+    <TxnRow
+      onPress={onPress}
+      isLast={isLast}
+      leading={
+        <IconCircle bgColor={bg}>
+          <MaterialIcons name={icon} size={18} color={iconColor} />
+        </IconCircle>
+      }
+      title={<RowTitle numberOfLines={1}>{title}</RowTitle>}
+      subtitle={<RowSubtitle numberOfLines={1}>{subtitle}</RowSubtitle>}
+      trailing={
+        amount !== undefined ? (
+          <TrailingColumn>
+            <Amount positive={positive}>
+              {type === 'SETTLEMENT' ? '+' : ''}${Math.abs(amount).toFixed(2)}
+            </Amount>
+            <Timestamp style={{ marginTop: 2 }}>{date}</Timestamp>
+          </TrailingColumn>
+        ) : (
+          <Timestamp>{date}</Timestamp>
+        )
+      }
+    />
   );
 };
-
-const View = styled.View``;

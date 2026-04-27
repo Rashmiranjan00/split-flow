@@ -1,25 +1,28 @@
 import React from 'react';
-import { View, TouchableOpacity, ScrollView } from 'react-native';
+import { View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { Avatar } from '@/shared/components/Avatar';
-import { BodyMd, Label } from '@/shared/components/Typography';
-import { Radius, Spacing } from '@/shared/constants/spacing';
+import { RowTitle } from '@/shared/components/Typography';
+import { Spacing } from '@/shared/constants/spacing';
 import { User, UserId } from '@/shared/types';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const Container = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.lg}px;
-  margin-horizontal: ${Spacing.lg}px;
-  overflow: hidden;
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLowest};
 `;
 
 const MemberItem = styled.TouchableOpacity<{ selected: boolean }>`
   flex-direction: row;
   align-items: center;
-  padding: ${Spacing.md}px ${Spacing.lg}px;
-  background-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primaryContainer : 'transparent'};
+  padding: 12px ${Spacing.screenPadding}px;
+  background-color: ${({ selected, theme }: { selected: boolean; theme: any }) =>
+    selected ? theme.colors.surfaceContainerLow : 'transparent'};
+`;
+
+const RowDivider = styled.View`
+  height: 0.5px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin-left: ${Spacing.screenPadding + Spacing.avatarSm + Spacing.md}px;
 `;
 
 interface PaidBySelectorProps {
@@ -37,23 +40,23 @@ export const PaidBySelector: React.FC<PaidBySelectorProps> = ({
 
   return (
     <Container>
-      {members.map((member) => (
-        <MemberItem
-          key={member.id}
-          selected={member.id === selectedId}
-          activeOpacity={0.7}
-          onPress={() => onSelect(member.id)}
-        >
-          <Avatar name={member.name} size={32} />
-          <View style={{ flex: 1, marginLeft: Spacing.md }}>
-            <BodyMd style={{ fontWeight: member.id === selectedId ? '700' : '400' }}>
-              {member.name}
-            </BodyMd>
-          </View>
-          {member.id === selectedId && (
-            <MaterialIcons name="check" size={20} color={theme.colors.primary} />
-          )}
-        </MemberItem>
+      {members.map((member, idx) => (
+        <React.Fragment key={member.id}>
+          <MemberItem
+            selected={member.id === selectedId}
+            activeOpacity={0.7}
+            onPress={() => onSelect(member.id)}
+          >
+            <Avatar name={member.name} size={Spacing.avatarSm} />
+            <View style={{ flex: 1, marginLeft: Spacing.md }}>
+              <RowTitle>{member.name}</RowTitle>
+            </View>
+            {member.id === selectedId && (
+              <MaterialIcons name="check" size={20} color={theme.colors.primary} />
+            )}
+          </MemberItem>
+          {idx < members.length - 1 && <RowDivider />}
+        </React.Fragment>
       ))}
     </Container>
   );

@@ -1,9 +1,9 @@
 import React from 'react';
-import { FlatList, TouchableOpacity, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import styled from 'styled-components/native';
 import { Avatar } from '@/shared/components/Avatar';
-import { BodySm, Label } from '@/shared/components/Typography';
 import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { User } from '@/shared/types';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -13,9 +13,9 @@ const Container = styled.View`
 
 const UserItem = styled.TouchableOpacity<{ selected: boolean }>`
   align-items: center;
-  margin-right: ${Spacing.lg}px;
+  margin-right: ${Spacing.md}px;
   width: 64px;
-  opacity: ${({ selected }) => (selected ? 1 : 0.4)};
+  opacity: ${({ selected }: { selected: boolean }) => (selected ? 1 : 0.5)};
 `;
 
 const SelectedBadge = styled.View`
@@ -29,7 +29,15 @@ const SelectedBadge = styled.View`
   align-items: center;
   justify-content: center;
   border-width: 1.5px;
-  border-color: ${({ theme }) => theme.colors.surface};
+  border-color: ${({ theme }) => theme.colors.background};
+`;
+
+const NameLabel = styled.Text`
+  margin-top: ${Spacing.xs}px;
+  text-align: center;
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.onSurface};
 `;
 
 interface ParticipantSelectorProps {
@@ -50,29 +58,20 @@ export const ParticipantSelector: React.FC<ParticipantSelectorProps> = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: Spacing.lg }}
+        contentContainerStyle={{ paddingHorizontal: Spacing.screenPadding }}
         renderItem={({ item }) => {
           const isSelected = selectedIds.includes(item.id);
           return (
-            <UserItem 
-              selected={isSelected} 
-              activeOpacity={0.7}
-              onPress={() => onToggle(item.id)}
-            >
+            <UserItem selected={isSelected} activeOpacity={0.7} onPress={() => onToggle(item.id)}>
               <View>
-                <Avatar name={item.name} size={48} />
+                <Avatar name={item.name} size={Spacing.avatarMd} />
                 {isSelected && (
                   <SelectedBadge>
                     <MaterialIcons name="check" size={12} color="white" />
                   </SelectedBadge>
                 )}
               </View>
-              <Label 
-                numberOfLines={1} 
-                style={{ marginTop: Spacing.xs, textAlign: 'center', fontSize: 10 }}
-              >
-                {item.name}
-              </Label>
+              <NameLabel numberOfLines={1}>{item.name}</NameLabel>
             </UserItem>
           );
         }}

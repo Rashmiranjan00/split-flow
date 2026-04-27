@@ -1,64 +1,26 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography } from '@/shared/constants/typography';
+import { TxnRow } from '@/shared/components/Layout';
+import { Amount, RowTitle, RowSubtitle, Timestamp } from '@/shared/components/Typography';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
-const CardContainer = styled.TouchableOpacity`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.md}px;
-  padding: ${Spacing.md}px;
-  margin-bottom: ${Spacing.sm}px;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const LeftSide = styled.View`
-  flex-direction: row;
-  align-items: center;
-`;
-
-const IconWrapper = styled.View`
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
+const IconCircle = styled.View`
+  width: 38px;
+  height: 38px;
+  border-radius: 19px;
+  background-color: ${({ theme }) => theme.colors.surfaceContainer};
   align-items: center;
   justify-content: center;
-  margin-right: ${Spacing.md}px;
 `;
 
-const TitleColumn = styled.View``;
-
-const Title = styled.Text`
-  color: ${({ theme }) => theme.colors.onSurface};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.bold};
+const IconEmoji = styled.Text`
+  font-family: ${Typography.fonts.regular};
+  font-size: 18px;
 `;
 
-const Subtitle = styled.Text`
-  color: ${({ theme }) => theme.colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-`;
-
-const AmountColumn = styled.View`
+const TrailingColumn = styled.View`
   align-items: flex-end;
-`;
-
-const Amount = styled.Text<{ highlight: boolean }>`
-    color: ${({ highlight, theme }: { highlight: boolean; theme: any }) => (highlight ? theme.colors.tertiary : theme.colors.onSurface)};
-  font-family: ${Typography.fonts.body};
-  font-size: ${Typography.sizes.bodyMd}px;
-  font-weight: ${Typography.weights.bold};
-`;
-
-const DateText = styled.Text`
-  color: ${({ theme }) => theme.colors.onSurfaceVariant};
-  font-family: ${Typography.fonts.body};
-  font-size: 12px;
 `;
 
 interface ExpenseCardProps {
@@ -66,7 +28,11 @@ interface ExpenseCardProps {
   subtitle: string;
   amount: number;
   date: string;
+  /** Emoji shown in the leading icon circle. Defaults to 💸. */
+  icon?: string;
+  /** true = teal (owed to you), false = coral, undefined = neutral. */
   highlighted?: boolean;
+  isLast?: boolean;
   onPress: () => void;
 }
 
@@ -75,28 +41,33 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   subtitle,
   amount,
   date,
-  highlighted = false,
+  icon = '💸',
+  highlighted,
+  isLast,
   onPress,
 }) => {
   const { formatCurrency } = useCurrencyFormatter();
+  const positive = highlighted === undefined ? undefined : highlighted;
 
   return (
-    <CardContainer activeOpacity={0.8} onPress={onPress}>
-      <LeftSide>
-        <IconWrapper>
-          <Title style={{ fontSize: 20 }}>💸</Title>
-        </IconWrapper>
-        <TitleColumn>
-          <Title>{title}</Title>
-          <Subtitle>{subtitle}</Subtitle>
-        </TitleColumn>
-      </LeftSide>
-      <AmountColumn>
-        <Amount highlight={highlighted}>
-          {formatCurrency(amount, { sign: amount > 0 })}
-        </Amount>
-        <DateText>{date}</DateText>
-      </AmountColumn>
-    </CardContainer>
+    <TxnRow
+      onPress={onPress}
+      isLast={isLast}
+      leading={
+        <IconCircle>
+          <IconEmoji>{icon}</IconEmoji>
+        </IconCircle>
+      }
+      title={<RowTitle numberOfLines={1}>{title}</RowTitle>}
+      subtitle={<RowSubtitle numberOfLines={1}>{subtitle}</RowSubtitle>}
+      trailing={
+        <TrailingColumn>
+          <Amount positive={positive}>
+            {formatCurrency(amount, { sign: amount !== 0 })}
+          </Amount>
+          <Timestamp style={{ marginTop: 2 }}>{date}</Timestamp>
+        </TrailingColumn>
+      }
+    />
   );
 };

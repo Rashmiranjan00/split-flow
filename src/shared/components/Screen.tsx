@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, { useTheme } from 'styled-components/native';
+import styled from 'styled-components/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
@@ -14,11 +14,9 @@ interface ScreenProps {
 }
 
 export const Screen: React.FC<ScreenProps> = ({ children, edges = ['top'] }) => {
-  const theme = useTheme();
-
   return (
     <StyledSafeAreaView edges={edges}>
-      <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+      <StatusBar style="dark" />
       {children}
     </StyledSafeAreaView>
   );

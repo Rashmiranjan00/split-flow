@@ -2,45 +2,42 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { View } from 'react-native';
 import { Spacing } from '@/shared/constants/spacing';
-import { 
-  Screen, 
-  Content, 
-  SpaceBetweenRow, 
-  Spacer 
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import {
+  Screen,
+  Content,
+  SectionHeader,
+  Spacer,
 } from '@/shared/components/Layout';
-import { 
-  Headline,
-  Title, 
-  BodyMd,
-  Label
-} from '@/shared/components/Typography';
+import { BodyMd } from '@/shared/components/Typography';
 import { ActivityItem } from '@/features/activity/components/ActivityItem';
-import { useUser } from '@/shared/hooks/useUser';
 import { useActivity } from '@/features/activity/hooks/useActivity';
-import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 
-// ActivityItemData is now imported from '@/features/activity/hooks/useActivity'
+const HeaderRow = styled.View`
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px;
+  margin-top: ${Spacing.md}px;
+  margin-bottom: ${Spacing.sm}px;
+`;
 
-const DateGroup = styled(Label)`
-  margin-top: ${Spacing.lg}px;
-  margin-bottom: ${Spacing.md}px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: ${({ theme }) => theme.colors.primary};
+const ScreenTitle = styled.Text`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 24px;
+  font-weight: ${TypographyTokens.weights.bold};
+  letter-spacing: -0.5px;
+  color: ${({ theme }) => theme.colors.onSurface};
 `;
 
 const ActivityScreen = () => {
-  const { userId } = useUser();
+  const theme = useTheme();
   const { activity } = useActivity();
-  const { formatDate } = useDateFormatter();
 
   const groupedActivity = React.useMemo(() => {
-    const groups: { [date: string]: any[] } = {};
-    
-    activity.forEach(item => {
-      const dateLabel = new Date(item.date).toLocaleDateString(undefined, { 
-        month: 'long', 
-        day: 'numeric' 
+    const groups: { [date: string]: typeof activity } = {};
+
+    activity.forEach((item) => {
+      const dateLabel = new Date(item.date).toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
       });
       if (!groups[dateLabel]) groups[dateLabel] = [];
       groups[dateLabel].push(item);
@@ -49,40 +46,44 @@ const ActivityScreen = () => {
     return Object.entries(groups).map(([date, data]) => ({ date, data }));
   }, [activity]);
 
-
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: Spacing.lg }}>
-          <SpaceBetweenRow style={{ marginTop: Spacing.md, marginBottom: Spacing.lg }}>
-            <Headline>Activity</Headline>
-          </SpaceBetweenRow>
+        <HeaderRow>
+          <ScreenTitle>Activity</ScreenTitle>
+        </HeaderRow>
 
-          {groupedActivity.length === 0 ? (
-            <View style={{ alignItems: 'center', marginTop: 100 }}>
-              <BodyMd style={{ opacity: 0.6 }}>No activity yet.</BodyMd>
+        {groupedActivity.length === 0 ? (
+          <View style={{ alignItems: 'center', marginTop: 80, paddingHorizontal: Spacing.screenPadding }}>
+            <BodyMd style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
+              No activity yet.{'\n'}Add an expense to see it here.
+            </BodyMd>
+          </View>
+        ) : (
+          groupedActivity.map((group) => (
+            <View key={group.date}>
+              <SectionHeader label={group.date} />
+              {group.data.map((item, idx) => (
+                <ActivityItem
+                  key={item.id}
+                  type={item.type}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  amount={item.amount}
+                  payerName=""
+                  date={new Date(item.date).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                  isLast={idx === group.data.length - 1}
+                  onPress={() => {}}
+                />
+              ))}
             </View>
-          ) : (
-            groupedActivity.map(group => (
-              <View key={group.date}>
-                <DateGroup>{group.date}</DateGroup>
-                {group.data.map(item => (
-                  <ActivityItem
-                    key={item.id}
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    amount={item.amount}
-                    type={item.type}
-                    payerName="" 
-                    date={new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    onPress={() => {}}
-                  />
-                ))}
-              </View>
-            ))
-          )}
-          <Spacer size="xxxl" />
-        </View>
+          ))
+        )}
+
+        <Spacer size="xxxl" />
       </Content>
     </Screen>
   );

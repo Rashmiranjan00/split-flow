@@ -1,43 +1,54 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spacing, Radius } from '@/shared/constants/spacing';
-import { 
-  Screen, 
-  Content, 
-  Row, 
-  Spacer 
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import {
+  Screen,
+  Content,
+  Row,
+  Spacer,
+  SurfaceCard,
 } from '@/shared/components/Layout';
-import { 
-  Title, 
-  BodyMd, 
-  BodySm, 
-  Label,
-  Display
-} from '@/shared/components/Typography';
+import { BodyMd, BodySm, SectionLabel } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
-import { ActionButton } from '@/shared/components/ActionButton';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useExpenseStore } from '@/features/expenses/store';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
 import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { seedDemoData, clearDemoData } from '@/shared/data/seedDemoData';
 
-const HeaderBanner = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  padding: ${Spacing.xxl}px ${Spacing.lg}px ${Spacing.xl}px;
-  align-items: center;
-  margin-bottom: ${Spacing.lg}px;
-  border-bottom-left-radius: ${Radius.xl}px;
-  border-bottom-right-radius: ${Radius.xl}px;
+const HeaderPadding = styled.View`
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.sm}px;
 `;
 
-const StatsRow = styled(Row)`
+const Name = styled.Text`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 18px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme }) => theme.colors.onSurface};
+  margin-top: ${Spacing.sm}px;
+`;
+
+const Email = styled.Text`
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const HeroCard = styled(SurfaceCard)`
+  align-items: center;
+  padding: ${Spacing.lg}px ${Spacing.md}px;
+`;
+
+const StatsRow = styled.View`
+  flex-direction: row;
   width: 100%;
-  margin-top: ${Spacing.xl}px;
+  margin-top: ${Spacing.md}px;
 `;
 
 const StatItem = styled.View`
@@ -45,87 +56,119 @@ const StatItem = styled.View`
   align-items: center;
 `;
 
+const StatValue = styled.Text<{ tone?: 'positive' | 'negative' }>`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme, tone }) =>
+    tone === 'positive'
+      ? theme.colors.tertiary
+      : tone === 'negative'
+      ? theme.colors.danger
+      : theme.colors.onSurface};
+`;
+
+const StatLabel = styled.Text`
+  margin-top: 2px;
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
 const StatDivider = styled.View`
   width: 1px;
-  background-color: ${({ theme }) => theme.colors.outlineVariant};
-  margin-vertical: ${Spacing.xs}px;
-  height: 24px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  height: 28px;
+  align-self: center;
 `;
 
 const Section = styled.View`
-  margin-horizontal: ${Spacing.lg}px;
-  margin-bottom: ${Spacing.lg}px;
+  padding: 0 ${Spacing.screenPadding}px;
+  margin-top: ${Spacing.lg}px;
 `;
 
-const MenuCard = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.lg}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
-  overflow: hidden;
-`;
-
-const MenuItem = styled.TouchableOpacity`
-  flex-direction: row;
-  align-items: center;
-  padding: ${Spacing.md}px ${Spacing.lg}px;
-`;
-
-const MenuItemBorder = styled.View`
-  height: 1px;
-  background-color: ${({ theme }) => theme.colors.outlineVariant};
-  margin-horizontal: ${Spacing.lg}px;
-  opacity: 0.4;
-`;
-
-const MenuLabel = styled(BodyMd)`
-  flex: 1;
-  margin-left: ${Spacing.md}px;
-`;
-
-const MenuValue = styled(BodySm)`
-  color: ${({ theme }) => theme.colors.onSurfaceVariant};
-  margin-right: ${Spacing.sm}px;
-`;
-
-const LogoutSection = styled.View`
-  margin-horizontal: ${Spacing.lg}px;
-  margin-bottom: ${Spacing.xxxl}px;
-`;
-
-// Theme Picker
-interface ThemeOptionProps {
-  active: boolean;
-}
-
-const ThemePickerRow = styled.View`
+const SegmentedRow = styled.View`
   flex-direction: row;
   gap: ${Spacing.sm}px;
   margin-top: ${Spacing.sm}px;
 `;
 
-const ThemeOption = styled.TouchableOpacity<ThemeOptionProps>`
+const PillOption = styled.TouchableOpacity<{ active: boolean }>`
   flex: 1;
-  padding-vertical: ${Spacing.sm}px;
-  border-radius: ${Radius.md}px;
+  padding: 10px;
+  border-radius: ${Radius.full}px;
   align-items: center;
-  background-color: ${({ active, theme }: ThemeOptionProps & { theme: any }) =>
-    active ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh};
+  background-color: ${({ active, theme }: { active: boolean; theme: any }) =>
+    active ? theme.colors.primary : theme.colors.surfaceContainerLow};
+`;
+
+const PillText = styled.Text<{ active: boolean }>`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 13px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ active, theme }: { active: boolean; theme: any }) =>
+    active ? theme.colors.onPrimary : theme.colors.onSurfaceVariant};
+`;
+
+const MenuCard = styled(SurfaceCard)`
+  padding: 0;
+`;
+
+const MenuItem = styled.TouchableOpacity<{ destructive?: boolean }>`
+  flex-direction: row;
+  align-items: center;
+  padding: ${Spacing.md}px;
+`;
+
+const MenuLabel = styled.Text<{ destructive?: boolean }>`
+  flex: 1;
+  margin-left: ${Spacing.md}px;
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 15px;
+  font-weight: ${TypographyTokens.weights.medium};
+  color: ${({ destructive, theme }: { destructive?: boolean; theme: any }) =>
+    destructive ? theme.colors.danger : theme.colors.onSurface};
+`;
+
+const MenuValue = styled.Text`
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+  margin-right: ${Spacing.xs}px;
+`;
+
+const MenuRowDivider = styled.View`
+  height: 0.5px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin-left: ${Spacing.md * 2 + 18}px;
+`;
+
+const LogoutWrapper = styled.View`
+  padding: ${Spacing.lg}px ${Spacing.screenPadding}px ${Spacing.xxxl}px;
+`;
+
+const LogoutButton = styled.TouchableOpacity`
+  height: 50px;
+  border-radius: ${Radius.buttonRadius}px;
   border-width: 1px;
-  border-color: ${({ active, theme }: ThemeOptionProps & { theme: any }) =>
-    active ? theme.colors.primary : 'transparent'};
+  border-color: ${({ theme }) => theme.colors.divider};
+  align-items: center;
+  justify-content: center;
 `;
 
-const ThemeOptionText = styled(BodySm)<ThemeOptionProps>`
-  color: ${({ active, theme }: ThemeOptionProps & { theme: any }) =>
-    active ? theme.colors.primary : theme.colors.onSurfaceVariant};
-  font-weight: ${({ active }: ThemeOptionProps) => active ? '700' : '400'};
+const LogoutText = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 15px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.danger};
 `;
 
-const THEME_OPTIONS: { key: ThemeMode; label: string; icon: string }[] = [
-  { key: 'light', label: 'Light', icon: 'light-mode' },
-  { key: 'dark', label: 'Dark', icon: 'dark-mode' },
-  { key: 'system', label: 'System', icon: 'settings-brightness' },
+const THEME_OPTIONS: { key: ThemeMode; label: string }[] = [
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+  { key: 'system', label: 'System' },
 ];
 
 const ProfileScreen = () => {
@@ -137,156 +180,220 @@ const ProfileScreen = () => {
   const setThemeMode = useThemeStore((state) => state.setMode);
   const selectedCurrency = useCurrencyStore((state) => state.currency);
   const setCurrency = useCurrencyStore((state) => state.setCurrency);
-  const expenseStore = useExpenseStore();
-  const allExpenses = expenseStore.expenses;
+  const allExpenses = useExpenseStore((s) => s.expenses);
   const { formatCurrency } = useCurrencyFormatter();
 
-  const expenseCount = React.useMemo(() => 
-    allExpenses.filter(e => (e.splitDetails || []).some(s => s.userId === userId)).length,
+  const expenseCount = React.useMemo(
+    () =>
+      allExpenses.filter((e) =>
+        (e.splitDetails || []).some((s) => s.userId === userId)
+      ).length,
     [allExpenses, userId]
   );
-  
-  const totalSpent = React.useMemo(() => 
-    allExpenses
-      .flatMap(e => e.splitDetails || [])
-      .filter(s => s.userId === userId)
-      .reduce((sum, s) => sum + s.owedAmount, 0),
+
+  const totalSpent = React.useMemo(
+    () =>
+      allExpenses
+        .flatMap((e) => e.splitDetails || [])
+        .filter((s) => s.userId === userId)
+        .reduce((sum, s) => sum + s.owedAmount, 0),
     [allExpenses, userId]
   );
 
   const handleLogout = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: () => {
+          logout();
+          router.replace('/(auth)' as any);
+        },
+      },
+    ]);
+  };
+
+  const menuItems: { icon: any; label: string; value?: string }[] = [
+    { icon: 'notifications-none', label: 'Notifications', value: 'On' },
+    { icon: 'privacy-tip', label: 'Privacy' },
+  ];
+
+  const accountItems: { icon: any; label: string; onPress: () => void }[] = [
+    {
+      icon: 'download',
+      label: 'Export data',
+      onPress: () => Alert.alert('Export', 'Data export coming soon!'),
+    },
+    {
+      icon: 'help-outline',
+      label: 'Help & support',
+      onPress: () => Alert.alert('Help', 'Help center coming soon!'),
+    },
+  ];
+
+  const handleLoadDemoData = () => {
+    seedDemoData();
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      'Demo data loaded',
+      'Groups, friends, and expenses have been populated.'
+    );
+  };
+
+  const handleClearDemoData = () => {
+    Alert.alert(
+      'Clear demo data?',
+      'This removes all groups, friends, expenses, and settlements. Your account stays signed in.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: () => { logout(); router.replace('/(auth)'); } },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => clearDemoData(),
+        },
       ]
     );
   };
 
-  const menuItems = [
-    { icon: 'notifications-none' as const, label: 'Notifications', value: 'On' },
-    { icon: 'privacy-tip' as const, label: 'Privacy', value: '' },
-  ];
+  const netTone: 'positive' | 'negative' | undefined =
+    netBalance > 0 ? 'positive' : netBalance < 0 ? 'negative' : undefined;
 
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
-        {/* Hero Banner */}
-        <HeaderBanner>
-          <Avatar name={user?.name ?? 'User'} size={88} borderWidth={3} borderColor={theme.colors.primary} />
-          <Spacer size="md" />
-          <Display style={{ fontSize: 24 }}>{user?.name ?? 'Guest'}</Display>
-          <BodySm>{user?.email ?? ''}</BodySm>
+        <HeaderPadding>
+          <HeroCard>
+            <Avatar
+              name={user?.name ?? 'User'}
+              size={Spacing.avatarLg}
+              borderWidth={2}
+              borderColor={theme.colors.brandAccent}
+            />
+            <Name>{user?.name ?? 'Guest'}</Name>
+            <Email>{user?.email ?? ''}</Email>
 
-          <StatsRow>
-            <StatItem>
-              <Title>{expenseCount}</Title>
-              <Label>Expenses</Label>
-            </StatItem>
-            <StatDivider />
-            <StatItem>
-              <Title style={{ color: netBalance >= 0 ? theme.colors.tertiary : theme.colors.error }}>
-                {formatCurrency(netBalance, { sign: netBalance > 0, decimals: 0 })}
-              </Title>
-              <Label>Balance</Label>
-            </StatItem>
-            <StatDivider />
-            <StatItem>
-              <Title>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
-              <Label>Total spent</Label>
-            </StatItem>
-          </StatsRow>
-        </HeaderBanner>
+            <StatsRow>
+              <StatItem>
+                <StatValue>{expenseCount}</StatValue>
+                <StatLabel>Expenses</StatLabel>
+              </StatItem>
+              <StatDivider />
+              <StatItem>
+                <StatValue tone={netTone}>
+                  {formatCurrency(netBalance, { sign: netBalance > 0, decimals: 0 })}
+                </StatValue>
+                <StatLabel>Balance</StatLabel>
+              </StatItem>
+              <StatDivider />
+              <StatItem>
+                <StatValue>{formatCurrency(totalSpent, { decimals: 0 })}</StatValue>
+                <StatLabel>Total spent</StatLabel>
+              </StatItem>
+            </StatsRow>
+          </HeroCard>
+        </HeaderPadding>
 
-        {/* Theme Picker */}
         <Section>
-          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
-            Appearance
-          </Label>
-          <ThemePickerRow>
-            {THEME_OPTIONS.map(opt => (
-              <ThemeOption
-                key={opt.key}
-                active={themeMode === opt.key}
-                onPress={() => setThemeMode(opt.key)}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons
-                  name={opt.icon as any}
-                  size={18}
-                  color={themeMode === opt.key ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                />
-                <ThemeOptionText active={themeMode === opt.key}>{opt.label}</ThemeOptionText>
-              </ThemeOption>
-            ))}
-          </ThemePickerRow>
+          <SectionLabel style={{ fontSize: 11 }}>Appearance</SectionLabel>
+          <SegmentedRow>
+            {THEME_OPTIONS.map((opt) => {
+              const active = themeMode === opt.key;
+              return (
+                <PillOption
+                  key={opt.key}
+                  active={active}
+                  activeOpacity={0.7}
+                  onPress={() => setThemeMode(opt.key)}
+                >
+                  <PillText active={active}>{opt.label}</PillText>
+                </PillOption>
+              );
+            })}
+          </SegmentedRow>
         </Section>
 
-        {/* Currency Picker */}
         <Section>
-          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
-            Default Currency
-          </Label>
-          <ThemePickerRow>
-            {(Object.keys(CURRENCIES) as CurrencyCode[]).map(code => (
-              <ThemeOption
-                key={code}
-                active={selectedCurrency === code}
-                onPress={() => setCurrency(code)}
-                activeOpacity={0.7}
-              >
-                <ThemeOptionText active={selectedCurrency === code}>
-                  {CURRENCIES[code].symbol} {CURRENCIES[code].code}
-                </ThemeOptionText>
-              </ThemeOption>
-            ))}
-          </ThemePickerRow>
+          <SectionLabel style={{ fontSize: 11 }}>Currency</SectionLabel>
+          <SegmentedRow>
+            {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => {
+              const active = selectedCurrency === code;
+              return (
+                <PillOption
+                  key={code}
+                  active={active}
+                  activeOpacity={0.7}
+                  onPress={() => setCurrency(code)}
+                >
+                  <PillText active={active}>
+                    {CURRENCIES[code].symbol} {CURRENCIES[code].code}
+                  </PillText>
+                </PillOption>
+              );
+            })}
+          </SegmentedRow>
         </Section>
 
-        {/* Settings Menu */}
         <Section>
-          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
-            Preferences
-          </Label>
+          <SectionLabel style={{ fontSize: 11 }}>Preferences</SectionLabel>
+          <Spacer size="sm" />
           <MenuCard>
             {menuItems.map((item, idx) => (
               <React.Fragment key={item.label}>
-                <MenuItem onPress={() => Alert.alert(item.label, 'Settings coming soon!')} activeOpacity={0.7}>
-                  <MaterialIcons name={item.icon} size={20} color={theme.colors.onSurfaceVariant} />
+                <MenuItem
+                  activeOpacity={0.6}
+                  onPress={() => Alert.alert(item.label, 'Settings coming soon!')}
+                >
+                  <MaterialIcons name={item.icon} size={18} color={theme.colors.onSurfaceVariant} />
                   <MenuLabel>{item.label}</MenuLabel>
                   {item.value ? <MenuValue>{item.value}</MenuValue> : null}
                   <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
                 </MenuItem>
-                {idx < menuItems.length - 1 && <MenuItemBorder />}
+                {idx < menuItems.length - 1 && <MenuRowDivider />}
               </React.Fragment>
             ))}
           </MenuCard>
         </Section>
 
         <Section>
-          <Label style={{ letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: Spacing.sm }}>
-            Account
-          </Label>
+          <SectionLabel style={{ fontSize: 11 }}>Account</SectionLabel>
+          <Spacer size="sm" />
           <MenuCard>
-            <MenuItem onPress={() => Alert.alert('Export', 'Data export coming soon!')} activeOpacity={0.7}>
-              <MaterialIcons name="download" size={20} color={theme.colors.onSurfaceVariant} />
-              <MenuLabel>Export Data</MenuLabel>
-              <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
+            {accountItems.map((item, idx) => (
+              <React.Fragment key={item.label}>
+                <MenuItem activeOpacity={0.6} onPress={item.onPress}>
+                  <MaterialIcons name={item.icon} size={18} color={theme.colors.onSurfaceVariant} />
+                  <MenuLabel>{item.label}</MenuLabel>
+                  <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
+                </MenuItem>
+                {idx < accountItems.length - 1 && <MenuRowDivider />}
+              </React.Fragment>
+            ))}
+          </MenuCard>
+        </Section>
+
+        <Section>
+          <SectionLabel style={{ fontSize: 11 }}>Demo data</SectionLabel>
+          <Spacer size="sm" />
+          <MenuCard>
+            <MenuItem activeOpacity={0.6} onPress={handleLoadDemoData}>
+              <MaterialIcons name="auto-awesome" size={18} color={theme.colors.primary} />
+              <MenuLabel>Load demo data</MenuLabel>
+              <MaterialIcons name="chevron-right" size={18} color={theme.colors.primary} />
             </MenuItem>
-            <MenuItemBorder />
-            <MenuItem onPress={() => Alert.alert('Help', 'Help center coming soon!')} activeOpacity={0.7}>
-              <MaterialIcons name="help-outline" size={20} color={theme.colors.onSurfaceVariant} />
-              <MenuLabel>Help & Support</MenuLabel>
-              <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
+            <MenuRowDivider />
+            <MenuItem activeOpacity={0.6} onPress={handleClearDemoData}>
+              <MaterialIcons name="delete-outline" size={18} color={theme.colors.danger} />
+              <MenuLabel destructive>Clear demo data</MenuLabel>
+              <MaterialIcons name="chevron-right" size={18} color={theme.colors.danger} />
             </MenuItem>
           </MenuCard>
         </Section>
 
-        <LogoutSection>
-          <ActionButton title="Sign Out" variant="secondary" onPress={handleLogout} />
-        </LogoutSection>
+        <LogoutWrapper>
+          <LogoutButton onPress={handleLogout} activeOpacity={0.7}>
+            <LogoutText>Sign out</LogoutText>
+          </LogoutButton>
+        </LogoutWrapper>
       </Content>
     </Screen>
   );

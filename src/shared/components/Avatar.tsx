@@ -1,9 +1,11 @@
 import React from 'react';
-import styled, { useTheme } from 'styled-components/native';
+import styled from 'styled-components/native';
 import { Typography } from '@/shared/constants/typography';
+import { Spacing } from '@/shared/constants/spacing';
 
 interface AvatarProps {
   name: string;
+  /** Pixel size. Defaults to 40 (avatarMd). Use Spacing.avatarSm/Md/Lg for the three canonical sizes. */
   size?: number;
   borderWidth?: number;
   borderColor?: string;
@@ -20,10 +22,15 @@ const AvatarContainer = styled.View<ContainerProps>`
   width: ${(props: ContainerProps) => props.size}px;
   height: ${(props: ContainerProps) => props.size}px;
   border-radius: ${(props: ContainerProps) => props.size / 2}px;
-  background-color: ${({ theme }) => theme.colors.primaryContainer};
+  background-color: ${({ theme }) => theme.colors.primaryFixedDim};
   align-items: center;
   justify-content: center;
-  ${(props: ContainerProps & { theme: any }) => props.borderWidth ? `border-width: ${props.borderWidth}px; border-color: ${props.borderColor || props.theme.colors.outlineVariant};` : ''}
+  ${(props: ContainerProps & { theme: any }) =>
+    props.borderWidth
+      ? `border-width: ${props.borderWidth}px; border-color: ${
+          props.borderColor || props.theme.colors.outlineVariant
+        };`
+      : ''}
 `;
 
 const AvatarImage = styled.Image<{ size: number }>`
@@ -33,18 +40,18 @@ const AvatarImage = styled.Image<{ size: number }>`
 `;
 
 const AvatarInitial = styled.Text<{ size: number }>`
-  color: ${({ theme }) => theme.colors.primary};
-  font-family: ${Typography.fonts.display};
+  color: ${({ theme }) => theme.colors.brandDark};
+  font-family: ${Typography.fonts.semibold};
   font-size: ${(props: { size: number }) => Math.max(props.size / 2.5, 12)}px;
-  font-weight: ${Typography.weights.bold};
+  font-weight: ${Typography.weights.semibold};
 `;
 
-export const Avatar: React.FC<AvatarProps> = ({ 
-  name, 
-  size = 40, 
-  borderWidth, 
+export const Avatar: React.FC<AvatarProps> = ({
+  name,
+  size = Spacing.avatarMd,
+  borderWidth,
   borderColor,
-  imageUrl
+  imageUrl,
 }) => {
   const initial = (name?.[0] ?? 'U').toUpperCase();
 

@@ -1,22 +1,16 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { Dimensions, View } from 'react-native';
-import { Spacing, Radius } from '@/shared/constants/spacing';
-import { 
-  Screen, 
-  Content, 
-  Row, 
-  SpaceBetweenRow, 
-  Spacer 
+import { View } from 'react-native';
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import {
+  Screen,
+  Content,
+  Row,
+  SpaceBetweenRow,
+  Spacer,
 } from '@/shared/components/Layout';
-import { 
-  Title, 
-  BodyMd, 
-  BodySm, 
-  Label,
-  Headline,
-  Display
-} from '@/shared/components/Typography';
+import { BodyMd, BodySm, SectionLabel } from '@/shared/components/Typography';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useExpenseStore } from '@/features/expenses/store';
@@ -24,32 +18,49 @@ import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 const BAR_CHART_HEIGHT = 140;
 
-const StatCard = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.xl}px;
-  margin-bottom: ${Spacing.md}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
+/**
+ * Soft white card used across Analytics. Applies the Stitch ambient-shadow
+ * elevation (0 1px 3px rgba(0,0,0,0.06)) instead of an outline border.
+ */
+const Card = styled.View`
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLowest};
+  border-radius: ${Radius.cardRadius}px;
+  padding: ${Spacing.md}px;
+  shadow-color: #000000;
+  shadow-offset: 0px 1px;
+  shadow-opacity: 0.06;
+  shadow-radius: 3px;
+  elevation: 1;
 `;
 
-const HalfCard = styled.View`
+const HalfCard = styled(Card)`
   flex: 1;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.lg}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
 `;
 
-const BarChartContainer = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.lg}px;
-  padding-bottom: ${Spacing.md}px;
-  margin-bottom: ${Spacing.md}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
+const HeaderRow = styled.View`
+  padding: ${Spacing.md}px ${Spacing.screenPadding}px;
+  margin-top: ${Spacing.md}px;
+`;
+
+const ScreenTitle = styled.Text`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 24px;
+  font-weight: ${TypographyTokens.weights.bold};
+  letter-spacing: -0.5px;
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const StatValue = styled.Text<{ tone?: 'positive' | 'negative' | 'neutral' }>`
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 24px;
+  font-weight: ${TypographyTokens.weights.bold};
+  color: ${({ theme, tone }) =>
+    tone === 'positive'
+      ? theme.colors.tertiary
+      : tone === 'negative'
+      ? theme.colors.danger
+      : theme.colors.onSurface};
+  letter-spacing: -0.3px;
 `;
 
 const BarsRow = styled.View`
@@ -71,10 +82,11 @@ interface BarProps {
 }
 
 const Bar = styled.View<BarProps>`
-  width: 24px;
+  width: 22px;
   height: ${(props: BarProps) => props.height}px;
   border-radius: 6px;
-  background-color: ${({ active, theme }: BarProps & { theme: any }) => active ? theme.colors.primary : theme.colors.surfaceContainerHigh};
+  background-color: ${({ active, theme }: BarProps & { theme: any }) =>
+    active ? theme.colors.brandAccent : theme.colors.surfaceContainerHigh};
   margin-bottom: ${Spacing.xs}px;
 `;
 
@@ -82,65 +94,64 @@ interface ActiveProps {
   active: boolean;
 }
 
-const BarLabel = styled(BodySm)<ActiveProps>`
-  color: ${({ active, theme }: ActiveProps & { theme: any }) => active ? theme.colors.primary : theme.colors.onSurfaceVariant};
+const BarLabel = styled.Text<ActiveProps>`
+  color: ${({ active, theme }: ActiveProps & { theme: any }) =>
+    active ? theme.colors.primary : theme.colors.onSurfaceVariant};
+  font-family: ${TypographyTokens.fonts.medium};
   font-size: 10px;
-  font-weight: ${({ active }: ActiveProps) => active ? '700' : '400'};
-`;
-
-const DonutContainer = styled.View`
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-radius: ${Radius.lg}px;
-  padding: ${Spacing.lg}px;
-  margin-bottom: ${Spacing.md}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.outlineVariant};
+  font-weight: ${({ active }: ActiveProps) => (active ? '700' : '500')};
 `;
 
 const DonutVisual = styled.View`
   width: 100px;
   height: 100px;
   border-radius: 50px;
-  border-width: 16px;
+  border-width: 14px;
   border-color: ${({ theme }) => theme.colors.primary};
   align-items: center;
   justify-content: center;
-  margin-right: ${Spacing.lg}px;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
+  margin-right: ${Spacing.md}px;
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
 `;
 
-interface BgColorProps {
-  bgColor: string;
-}
-
-const LegendDot = styled.View<BgColorProps>`
+const LegendDot = styled.View<{ bgColor: string }>`
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: ${(props: BgColorProps) => props.bgColor};
+  background-color: ${(props: { bgColor: string }) => props.bgColor};
   margin-right: ${Spacing.sm}px;
+`;
+
+const SectionTitle = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onSurface};
+  margin-top: ${Spacing.lg}px;
+  margin-bottom: ${Spacing.sm}px;
 `;
 
 const AnalyticsScreen = () => {
   const { userId } = useUser();
   const theme = useTheme();
   const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
-  const allExpenses = useExpenseStore(s => s.expenses);
+  const allExpenses = useExpenseStore((s) => s.expenses);
   const { formatCurrency } = useCurrencyFormatter();
 
-  const spendingByCategory = React.useMemo(() => {
-    const categoryColors: Record<string, string> = {
-      Food: '#ffb783',
-      Transport: '#c0c1ff',
-      Accommodation: '#c7c4d7',
-      Utilities: '#f59e0b',
-      Housing: '#ef4444',
-      Other: '#6b7280',
-    };
+  // Palette aligned with "Warm Minimalist Finance" tokens.
+  const categoryColors: Record<string, string> = {
+    Food: theme.colors.brandAccent,
+    Travel: theme.colors.primary,
+    Accommodation: theme.colors.primaryFixedDim,
+    Utilities: theme.colors.secondary,
+    Housing: theme.colors.danger,
+    Other: theme.colors.onSurfaceVariant,
+  };
 
+  const spendingByCategory = React.useMemo(() => {
     const totals = allExpenses.reduce<Record<string, number>>((acc, exp) => {
       const splitDetails = exp.splitDetails || [];
-      const myShare = splitDetails.find(s => s.userId === userId)?.owedAmount ?? 0;
+      const myShare = splitDetails.find((s) => s.userId === userId)?.owedAmount ?? 0;
       const cat = exp.category ?? 'Other';
       acc[cat] = (acc[cat] || 0) + myShare;
       return acc;
@@ -149,19 +160,19 @@ const AnalyticsScreen = () => {
     return Object.entries(totals).map(([category, amount]) => ({
       category,
       amount,
-      color: categoryColors[category] || categoryColors['Other'],
+      color: categoryColors[category] || categoryColors.Other,
     }));
-  }, [allExpenses, userId]);
+  }, [allExpenses, userId, categoryColors]);
 
-  const totalSpent = React.useMemo(() => 
-    allExpenses
-      .flatMap(e => e.splitDetails || [])
-      .filter(s => s.userId === userId)
-      .reduce((sum, s) => sum + s.owedAmount, 0),
+  const totalSpent = React.useMemo(
+    () =>
+      allExpenses
+        .flatMap((e) => e.splitDetails || [])
+        .filter((s) => s.userId === userId)
+        .reduce((sum, s) => sum + s.owedAmount, 0),
     [allExpenses, userId]
   );
 
-  // Mock monthly spending still used as we don't have historical data in store yet
   const MONTHLY_SPENDING_MOCK = [
     { month: 'Nov', amount: 0 },
     { month: 'Dec', amount: 0 },
@@ -171,40 +182,56 @@ const AnalyticsScreen = () => {
     { month: 'Apr', amount: totalSpent },
   ];
 
-  const maxMonthly = Math.max(...MONTHLY_SPENDING_MOCK.map(m => m.amount)) || 1;
+  const maxMonthly = Math.max(...MONTHLY_SPENDING_MOCK.map((m) => m.amount)) || 1;
   const activeIdx = MONTHLY_SPENDING_MOCK.length - 1;
+
+  const netTone: 'positive' | 'negative' | 'neutral' =
+    netBalance > 0 ? 'positive' : netBalance < 0 ? 'negative' : 'neutral';
 
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
-        <View style={{ padding: Spacing.lg }}>
-          <Headline style={{ marginBottom: Spacing.xl }}>Insights</Headline>
+        <HeaderRow>
+          <ScreenTitle>Insights</ScreenTitle>
+        </HeaderRow>
 
-          <StatCard>
-            <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Net Balance</Label>
-            <SpaceBetweenRow>
-              <Display positive={netBalance >= 0}>
+        <View style={{ paddingHorizontal: Spacing.screenPadding }}>
+          <Card>
+            <SectionLabel style={{ marginBottom: 4, fontSize: 11 }}>Net balance</SectionLabel>
+            <SpaceBetweenRow style={{ marginBottom: 0 }}>
+              <StatValue tone={netTone}>
                 {formatCurrency(Math.abs(netBalance))}
-              </Display>
-              <BodyMd style={{ color: netBalance >= 0 ? theme.colors.tertiary : theme.colors.error, fontWeight: '600' }}>
-                {netBalance >= 0 ? '▲ Owed to you' : '▼ You owe'}
-              </BodyMd>
+              </StatValue>
+              <BodySm
+                style={{
+                  color: netBalance >= 0 ? theme.colors.tertiary : theme.colors.danger,
+                  fontWeight: '600',
+                }}
+              >
+                {netBalance === 0
+                  ? 'All settled'
+                  : netBalance > 0
+                  ? 'Owed to you'
+                  : 'You owe'}
+              </BodySm>
             </SpaceBetweenRow>
-          </StatCard>
+          </Card>
 
-          <Row style={{ gap: Spacing.md, marginBottom: Spacing.md }}>
+          <Spacer size="md" />
+
+          <Row style={{ gap: Spacing.md, marginBottom: 0 }}>
             <HalfCard>
-              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>They owe you</Label>
-              <Title style={{ fontSize: 24 }}>{formatCurrency(totalOwedToYou)}</Title>
+              <SectionLabel style={{ marginBottom: 4, fontSize: 11 }}>They owe you</SectionLabel>
+              <StatValue tone="positive">{formatCurrency(totalOwedToYou)}</StatValue>
             </HalfCard>
             <HalfCard>
-              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>You owe</Label>
-              <Title style={{ fontSize: 24, color: theme.colors.error }}>{formatCurrency(totalYouOwe)}</Title>
+              <SectionLabel style={{ marginBottom: 4, fontSize: 11 }}>You owe</SectionLabel>
+              <StatValue tone="negative">{formatCurrency(totalYouOwe)}</StatValue>
             </HalfCard>
           </Row>
 
-          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Monthly Spending</Title>
-          <BarChartContainer>
+          <SectionTitle>Monthly spending</SectionTitle>
+          <Card>
             <BarsRow>
               {MONTHLY_SPENDING_MOCK.map((m, i) => {
                 const barH = Math.max(8, (m.amount / maxMonthly) * BAR_CHART_HEIGHT * 0.9);
@@ -217,35 +244,45 @@ const AnalyticsScreen = () => {
                 );
               })}
             </BarsRow>
-          </BarChartContainer>
+          </Card>
 
-          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Spending Breakdown</Title>
-          <DonutContainer>
-            <Row>
+          <SectionTitle>Spending breakdown</SectionTitle>
+          <Card>
+            <Row style={{ marginBottom: 0 }}>
               <DonutVisual>
-                <Title>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
+                <BodyMd style={{ fontWeight: '700' }}>
+                  {formatCurrency(totalSpent, { decimals: 0 })}
+                </BodyMd>
               </DonutVisual>
               <View style={{ flex: 1 }}>
-                {spendingByCategory.map(item => (
-                  <Row key={item.category} style={{ marginBottom: 4 }}>
-                    <LegendDot bgColor={item.color} />
-                    <BodySm style={{ flex: 1 }}>{item.category}</BodySm>
-                    <BodySm style={{ fontWeight: '600' }}>{formatCurrency(item.amount, { decimals: 0 })}</BodySm>
-                  </Row>
-                ))}
+                {spendingByCategory.length === 0 ? (
+                  <BodySm style={{ color: theme.colors.onSurfaceVariant }}>
+                    No spending yet.
+                  </BodySm>
+                ) : (
+                  spendingByCategory.map((item) => (
+                    <Row key={item.category} style={{ marginBottom: 4 }}>
+                      <LegendDot bgColor={item.color} />
+                      <BodySm style={{ flex: 1 }}>{item.category}</BodySm>
+                      <BodySm style={{ fontWeight: '600' }}>
+                        {formatCurrency(item.amount, { decimals: 0 })}
+                      </BodySm>
+                    </Row>
+                  ))
+                )}
               </View>
             </Row>
-          </DonutContainer>
+          </Card>
 
-          <Title style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }}>Overview</Title>
+          <SectionTitle>Overview</SectionTitle>
           <Row style={{ gap: Spacing.md }}>
             <HalfCard>
-              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Expenses</Label>
-              <Display style={{ fontSize: 28 }}>{allExpenses.length}</Display>
+              <SectionLabel style={{ marginBottom: 4, fontSize: 11 }}>Expenses</SectionLabel>
+              <StatValue tone="positive">{allExpenses.length}</StatValue>
             </HalfCard>
             <HalfCard>
-              <Label style={{ textTransform: 'uppercase', marginBottom: 4 }}>Total spent</Label>
-              <Title style={{ fontSize: 24 }}>{formatCurrency(totalSpent, { decimals: 0 })}</Title>
+              <SectionLabel style={{ marginBottom: 4, fontSize: 11 }}>Total spent</SectionLabel>
+              <StatValue>{formatCurrency(totalSpent, { decimals: 0 })}</StatValue>
             </HalfCard>
           </Row>
 

@@ -4,19 +4,16 @@ import styled, { useTheme } from 'styled-components/native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spacing, Radius } from '@/shared/constants/spacing';
-import { 
-  SafeScreen, 
-  Spacer,
-  Row,
-  SpaceBetweenRow
-} from '@/shared/components/Layout';
-import { 
-  Title, 
-  BodyMd, 
-  Label,
-  Display,
+import { Radius, Spacing } from '@/shared/constants/spacing';
+import { Typography as TypographyTokens } from '@/shared/constants/typography';
+import { SafeScreen, SpaceBetweenRow, Spacer, SurfaceCard } from '@/shared/components/Layout';
+import {
+  BodyMd,
+  SectionLabel,
+  RowTitle,
+  RowSubtitle,
 } from '@/shared/components/Typography';
+import { Avatar } from '@/shared/components/Avatar';
 import { useAddExpenseForm } from '@/features/expenses/hooks/useAddExpenseForm';
 import { ParticipantSelector } from '@/features/expenses/components/ParticipantSelector';
 import { PaidBySelector } from '@/features/expenses/components/PaidBySelector';
@@ -28,138 +25,211 @@ import { PercentageSplitEditor } from '@/features/expenses/components/split/Perc
 import { SharesSplitEditor } from '@/features/expenses/components/split/SharesSplitEditor';
 import { SplitPreviewCard } from '@/features/expenses/components/SplitPreviewCard';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { useCurrencyStore } from '@/shared/hooks/useCurrencyStore';
-import { MOCK_GROUPS, MOCK_MEMBERS } from '@/shared/data/mockData';
 import { useGroupStore } from '@/features/groups/store';
+import { useFriendStore } from '@/features/friends/store';
+import { useUser } from '@/shared/hooks/useUser';
+import { User } from '@/shared/types';
 
-const HeaderSection = styled.View`
-  background-color: ${({ theme }) => theme.colors.surface};
-  padding-bottom: ${Spacing.lg}px;
-`;
-
-const LuxeNavBar = styled(SpaceBetweenRow)`
-  padding: ${Spacing.md}px ${Spacing.lg}px;
-  height: 64px;
-`;
-
-const NavIconButton = styled.TouchableOpacity`
+const Grabber = styled.View`
   width: 40px;
-  height: 40px;
-  border-radius: ${Radius.full}px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  align-self: center;
+  margin-top: ${Spacing.sm}px;
+  margin-bottom: ${Spacing.sm}px;
+`;
+
+const SheetHeader = styled(SpaceBetweenRow)`
+  padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
+  margin-bottom: 0;
+`;
+
+const HeaderButton = styled.TouchableOpacity`
+  padding: ${Spacing.xs}px ${Spacing.sm}px;
+`;
+
+const CancelText = styled.Text`
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 15px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const SaveText = styled.Text<{ disabled?: boolean }>`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 15px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme, disabled }) =>
+    disabled ? theme.colors.onSurfaceVariant : theme.colors.primary};
+`;
+
+const SheetTitle = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 17px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const AmountHero = styled.View`
   align-items: center;
-  justify-content: center;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHigh};
-`;
-
-const SaveButton = styled.TouchableOpacity<{ disabled?: boolean }>`
-  background-color: ${({ theme, disabled }) => 
-    disabled ? theme.colors.surfaceContainerHighest : theme.colors.primary};
-  padding: ${Spacing.sm}px ${Spacing.lg}px;
-  border-radius: ${Radius.full}px;
-  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
-`;
-
-const SaveButtonText = styled(Label)`
-  color: ${({ theme }) => theme.colors.onPrimary};
-  font-weight: 700;
-  letter-spacing: 0.5px;
-`;
-
-const AmountInputContainer = styled.View`
-  align-items: center;
-  padding: ${Spacing.xl}px ${Spacing.lg}px;
+  padding: ${Spacing.xl}px ${Spacing.screenPadding}px ${Spacing.md}px;
 `;
 
 const AmountRow = styled.View`
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 `;
 
-const CurrencySymbol = styled(Display)`
+const CurrencySymbol = styled.Text`
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 26px;
   color: ${({ theme }) => theme.colors.onSurfaceVariant};
-  font-size: 32px;
-  margin-right: ${Spacing.sm}px;
-  opacity: 0.6;
+  margin-right: ${Spacing.xs}px;
+  margin-top: 6px;
 `;
 
 const AmountInput = styled.TextInput`
-  color: ${({ theme }) => theme.colors.onSurface};
-  font-size: 72px;
-  font-weight: 700;
+  font-family: ${TypographyTokens.fonts.bold};
+  font-size: 52px;
+  font-weight: ${TypographyTokens.weights.bold};
   letter-spacing: -2px;
   text-align: center;
-  min-width: 150px;
+  min-width: 120px;
+  color: ${({ theme }) => theme.colors.onSurface};
 `;
 
-const FormBody = styled.View`
-  flex: 1;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerLow};
-  border-top-left-radius: ${Radius.xl * 2}px;
-  border-top-right-radius: ${Radius.xl * 2}px;
-  padding-top: ${Spacing.xl}px;
-`;
-
-const SectionLabel = styled(Label)`
-  margin-horizontal: ${Spacing.xl}px;
-  margin-bottom: ${Spacing.sm}px;
-  color: ${({ theme }) => theme.colors.onSurfaceVariant};
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  font-size: 10px;
-  opacity: 0.7;
+const AmountUnderline = styled.View`
+  height: 1px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin: 0 ${Spacing.screenPadding}px;
 `;
 
 const TitleInput = styled.TextInput`
-  margin-horizontal: ${Spacing.lg}px;
-  background-color: ${({ theme }) => theme.colors.surfaceContainerHighest};
-  border-radius: ${Radius.full}px;
-  padding: ${Spacing.md}px ${Spacing.xl}px;
+  padding: 14px ${Spacing.screenPadding}px;
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 15px;
   color: ${({ theme }) => theme.colors.onSurface};
-  font-size: 16px;
 `;
 
-const SplitGrid = styled.View`
+const TitleUnderline = styled.View`
+  height: 0.5px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin: 0 ${Spacing.screenPadding}px;
+`;
+
+const OptionRow = styled.TouchableOpacity`
   flex-direction: row;
-  flex-wrap: wrap;
-  padding-horizontal: ${Spacing.lg}px;
-  gap: ${Spacing.sm}px;
-  margin-bottom: ${Spacing.lg}px;
-`;
-
-const SplitCard = styled.TouchableOpacity<{ selected: boolean }>`
-  width: 23%;
-  aspect-ratio: 1;
-  background-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primaryContainer : theme.colors.surfaceContainerHigh};
-  border-radius: ${Radius.md}px;
   align-items: center;
-  justify-content: center;
-  border-width: 1px;
-  border-color: ${({ selected, theme }) => 
-    selected ? theme.colors.primary : 'transparent'};
+  justify-content: space-between;
+  padding: 14px ${Spacing.screenPadding}px;
 `;
 
-const SPLIT_METHODS: { key: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES'; label: string; icon: string }[] = [
-  { key: 'EQUAL', label: 'EQUAL', icon: 'equalizer' },
-  { key: 'EXACT', label: 'EXACT', icon: 'pin' },
-  { key: 'PERCENTAGE', label: 'PERCENT', icon: 'pie-chart' },
-  { key: 'SHARES', label: 'SHARES', icon: 'reorder' },
+const OptionRowDivider = styled.View`
+  height: 0.5px;
+  background-color: ${({ theme }) => theme.colors.divider};
+  margin-left: ${Spacing.screenPadding}px;
+`;
+
+const OptionLabel = styled.Text`
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const OptionValueText = styled.Text`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 14px;
+  font-weight: ${TypographyTokens.weights.medium};
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
+const OptionValueRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const TealBadge = styled.View`
+  background-color: ${({ theme }) => theme.colors.primaryFixedDim};
+  padding: 4px 10px;
+  border-radius: ${Radius.full}px;
+`;
+
+const TealBadgeText = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 12px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.brandDark};
+`;
+
+const AvatarStackMini = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-right: ${Spacing.xs}px;
+`;
+
+const StackAvatar = styled.View<{ index: number }>`
+  margin-left: ${(props: { index: number }) => (props.index === 0 ? 0 : -8)}px;
+  border-width: 2px;
+  border-color: ${({ theme }) => theme.colors.background};
+  border-radius: 12px;
+`;
+
+const MoreOptionsButton = styled.TouchableOpacity`
+  align-items: center;
+  padding: ${Spacing.md}px;
+`;
+
+const MoreOptionsText = styled.Text`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 13px;
+  font-weight: ${TypographyTokens.weights.medium};
+  color: ${({ theme }) => theme.colors.onSurfaceVariant};
+`;
+
+const SPLIT_LABELS: Record<'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES', string> = {
+  EQUAL: 'Equal',
+  EXACT: 'Exact',
+  PERCENTAGE: 'Percent',
+  SHARES: 'Shares',
+};
+
+const SPLIT_METHODS: { key: 'EQUAL' | 'EXACT' | 'PERCENTAGE' | 'SHARES'; label: string }[] = [
+  { key: 'EQUAL', label: 'Equal' },
+  { key: 'EXACT', label: 'Exact' },
+  { key: 'PERCENTAGE', label: 'Percent' },
+  { key: 'SHARES', label: 'Shares' },
 ];
 
 const AddExpenseScreen = () => {
   const router = useRouter();
   const theme = useTheme();
   const { currencySymbol } = useCurrencyFormatter();
-  const { groupId = 'group_1' } = useLocalSearchParams<{ groupId: string }>();
-  
-  // Try to find the group in store
-  const groups = useGroupStore(state => state.groups);
+  const { userId, user } = useUser();
+  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+
+  const groups = useGroupStore((state) => state.groups);
+  const friendsList = useFriendStore((state) => state.friends);
+
   const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
-  const currentGroup = groups.find(g => g.id === currentGroupId);
-  
-  // Get all members for selection
-  const groupMembers = currentGroup ? currentGroup.members : [];
+  const currentGroup = groups.find((g) => g.id === currentGroupId);
+
+  /**
+   * Resolve UserId[] (from the group) into User[] so child selectors that
+   * expect full User objects (PaidBy / Participant / Split editors) receive
+   * the correct shape. Any id with no matching friend/self becomes a
+   * placeholder User with the id as name — prevents runtime crashes during
+   * dev when mock data is sparse.
+   */
+  const groupMembers: User[] = React.useMemo(() => {
+    if (!currentGroup) return [];
+    return currentGroup.members.map<User>((memberId) => {
+      if (memberId === userId && user) return user;
+      const match = friendsList.find((f) => f.id === memberId);
+      if (match) return match;
+      return { id: memberId, name: memberId, email: '' };
+    });
+  }, [currentGroup, friendsList, user, userId]);
 
   const {
     form,
@@ -171,40 +241,57 @@ const AddExpenseScreen = () => {
     updateSplitValues,
   } = useAddExpenseForm(currentGroupId);
 
-  const { control, watch, setValue, formState: { errors } } = form;
+  const { control, watch, setValue } = form;
   const amountStr = watch('amount');
+  const category = watch('category') ?? 'Other';
+  const paidBy = watch('paidBy');
   const amount = parseFloat(amountStr) || 0;
+  const saveDisabled = amount <= 0;
+
+  const [showMore, setShowMore] = React.useState(false);
+  const [activeOption, setActiveOption] = React.useState<
+    null | 'paidBy' | 'participants' | 'splitType' | 'category'
+  >(null);
 
   const toggleParticipant = (id: string) => {
     const current = [...participants];
     if (current.includes(id)) {
-      if (current.length > 1) {
-        setValue('participants', current.filter(pid => pid !== id));
-      }
+      if (current.length > 1) setValue('participants', current.filter((pid) => pid !== id));
     } else {
       setValue('participants', [...current, id]);
     }
   };
 
+  const paidByName = React.useMemo(() => {
+    const m = groupMembers.find((mm) => mm.id === paidBy);
+    return m?.id === userId ? 'You' : m?.name ?? 'You';
+  }, [groupMembers, paidBy, userId]);
+
+  const participantAvatars = React.useMemo(
+    () => groupMembers.filter((m) => participants.includes(m.id)).slice(0, 3),
+    [groupMembers, participants]
+  );
+
   return (
-    <SafeScreen>
+    <SafeScreen edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <HeaderSection>
-          <LuxeNavBar>
-            <NavIconButton onPress={() => router.back()}>
-              <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
-            </NavIconButton>
-            <Title style={{ letterSpacing: -0.5 }}>New Expense</Title>
-            <SaveButton onPress={handleSubmit}>
-              <SaveButtonText>Save</SaveButtonText>
-            </SaveButton>
-          </LuxeNavBar>
+        <Grabber />
 
-          <AmountInputContainer>
-            <SectionLabel style={{ marginHorizontal: 0, marginBottom: 0 }}>Amount</SectionLabel>
+        <SheetHeader>
+          <HeaderButton onPress={() => router.back()}>
+            <CancelText>Cancel</CancelText>
+          </HeaderButton>
+          <SheetTitle>New expense</SheetTitle>
+          <HeaderButton onPress={handleSubmit} disabled={saveDisabled}>
+            <SaveText disabled={saveDisabled}>Save</SaveText>
+          </HeaderButton>
+        </SheetHeader>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <AmountHero>
             <Controller
               control={control}
               name="amount"
@@ -212,8 +299,8 @@ const AddExpenseScreen = () => {
                 <AmountRow>
                   <CurrencySymbol>{currencySymbol}</CurrencySymbol>
                   <AmountInput
-                    placeholder="0.00"
-                    placeholderTextColor={`${theme.colors.onSurfaceVariant}44`}
+                    placeholder="0"
+                    placeholderTextColor={theme.colors.onSurfaceVariant + '66'}
                     keyboardType="decimal-pad"
                     autoFocus
                     value={value}
@@ -222,149 +309,236 @@ const AddExpenseScreen = () => {
                 </AmountRow>
               )}
             />
-          </AmountInputContainer>
+          </AmountHero>
+          <AmountUnderline />
 
           <Controller
             control={control}
             name="title"
             render={({ field: { onChange, value } }) => (
               <TitleInput
-                placeholder="What was this for?"
-                placeholderTextColor={`${theme.colors.onSurfaceVariant}77`}
+                placeholder="What was it for?"
+                placeholderTextColor={theme.colors.onSurfaceVariant + '99'}
                 value={value}
                 onChangeText={onChange}
               />
             )}
           />
-        </HeaderSection>
+          <TitleUnderline />
 
-        <FormBody>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <SectionLabel>Paid By</SectionLabel>
+          <Spacer size="sm" />
+
+          {/* Option rows */}
+          <OptionRow
+            activeOpacity={0.6}
+            onPress={() => setActiveOption((a) => (a === 'paidBy' ? null : 'paidBy'))}
+          >
+            <OptionLabel>Paid by</OptionLabel>
+            <OptionValueRow>
+              <OptionValueText>{paidByName}</OptionValueText>
+              <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+                style={{ marginLeft: 4 }}
+              />
+            </OptionValueRow>
+          </OptionRow>
+          {activeOption === 'paidBy' && (
             <Controller
               control={control}
               name="paidBy"
               render={({ field: { value, onChange } }) => (
-                <PaidBySelector 
-                  members={groupMembers} 
-                  selectedId={value} 
-                  onSelect={onChange} 
-                />
+                <PaidBySelector members={groupMembers} selectedId={value} onSelect={onChange} />
               )}
             />
+          )}
+          <OptionRowDivider />
 
-            <Spacer size="lg" />
-
-            <SectionLabel>Split With</SectionLabel>
-            <ParticipantSelector 
-              members={groupMembers} 
-              selectedIds={participants} 
-              onToggle={toggleParticipant} 
+          <OptionRow
+            activeOpacity={0.6}
+            onPress={() =>
+              setActiveOption((a) => (a === 'participants' ? null : 'participants'))
+            }
+          >
+            <OptionLabel>Split with</OptionLabel>
+            <OptionValueRow>
+              <AvatarStackMini>
+                {participantAvatars.map((m, i) => (
+                  <StackAvatar key={m.id} index={i}>
+                    <Avatar name={m.name} size={20} />
+                  </StackAvatar>
+                ))}
+              </AvatarStackMini>
+              <OptionValueText>{participants.length}</OptionValueText>
+              <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+                style={{ marginLeft: 4 }}
+              />
+            </OptionValueRow>
+          </OptionRow>
+          {activeOption === 'participants' && (
+            <ParticipantSelector
+              members={groupMembers}
+              selectedIds={participants}
+              onToggle={toggleParticipant}
             />
+          )}
+          <OptionRowDivider />
 
-            <Spacer size="lg" />
-
-            <SectionLabel>Split Method</SectionLabel>
-            <SplitGrid>
-              {SPLIT_METHODS.map(method => (
-                <SplitCard 
-                  key={method.key} 
-                  selected={splitType === method.key}
-                  onPress={() => setSplitType(method.key)}
-                >
-                  <MaterialIcons 
-                    name={method.icon as any} 
-                    size={20} 
-                    color={splitType === method.key ? theme.colors.primary : theme.colors.onSurfaceVariant} 
-                  />
-                  <Label style={{ 
-                    marginTop: 4, 
-                    fontSize: 8, 
-                    color: splitType === method.key ? theme.colors.primary : theme.colors.onSurfaceVariant 
-                  }}>
-                    {method.label}
-                  </Label>
-                </SplitCard>
-              ))}
-            </SplitGrid>
-
-            {/* Split Editors */}
-            <View style={{ marginBottom: Spacing.xl }}>
+          <OptionRow
+            activeOpacity={0.6}
+            onPress={() => setActiveOption((a) => (a === 'splitType' ? null : 'splitType'))}
+          >
+            <OptionLabel>Split type</OptionLabel>
+            <OptionValueRow>
+              <TealBadge>
+                <TealBadgeText>{SPLIT_LABELS[splitType]}</TealBadgeText>
+              </TealBadge>
+              <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+                style={{ marginLeft: 4 }}
+              />
+            </OptionValueRow>
+          </OptionRow>
+          {activeOption === 'splitType' && (
+            <View style={{ paddingHorizontal: Spacing.screenPadding, paddingVertical: Spacing.sm }}>
+              <View style={{ flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' }}>
+                {SPLIT_METHODS.map((m) => {
+                  const active = splitType === m.key;
+                  return (
+                    <View
+                      key={m.key}
+                      style={{
+                        backgroundColor: active
+                          ? theme.colors.primary
+                          : theme.colors.surfaceContainerLow,
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: Radius.full,
+                      }}
+                    >
+                      <BodyMd
+                        onPress={() => setSplitType(m.key)}
+                        style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: active ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
+                        }}
+                      >
+                        {m.label}
+                      </BodyMd>
+                    </View>
+                  );
+                })}
+              </View>
+              <Spacer size="sm" />
               {splitType === 'EQUAL' && (
-                <EqualSplitEditor 
-                  participants={participants} 
-                  allMembers={groupMembers} 
-                  onToggle={toggleParticipant} 
+                <EqualSplitEditor
+                  participants={participants}
+                  allMembers={groupMembers}
+                  onToggle={toggleParticipant}
                   totalAmount={amount}
                 />
               )}
               {splitType === 'EXACT' && (
-                <ExactSplitEditor 
-                  participants={participants} 
-                  allMembers={groupMembers} 
+                <ExactSplitEditor
+                  participants={participants}
+                  allMembers={groupMembers}
                   splitDetails={splitDetails}
                   onUpdate={updateSplitValues}
                   totalAmount={amount}
                 />
               )}
               {splitType === 'PERCENTAGE' && (
-                <PercentageSplitEditor 
-                  participants={participants} 
-                  allMembers={groupMembers} 
+                <PercentageSplitEditor
+                  participants={participants}
+                  allMembers={groupMembers}
                   splitDetails={splitDetails}
                   onUpdate={updateSplitValues}
                   totalAmount={amount}
                 />
               )}
               {splitType === 'SHARES' && (
-                <SharesSplitEditor 
-                  participants={participants} 
-                  allMembers={groupMembers} 
+                <SharesSplitEditor
+                  participants={participants}
+                  allMembers={groupMembers}
                   splitDetails={splitDetails}
                   onUpdate={updateSplitValues}
                   totalAmount={amount}
                 />
               )}
             </View>
+          )}
+          <OptionRowDivider />
 
-            <SectionLabel>Preview</SectionLabel>
-            <SplitPreviewCard 
-              paidBy={watch('paidBy')}
-              splitDetails={splitDetails}
-              allMembers={groupMembers}
-            />
+          <OptionRow
+            activeOpacity={0.6}
+            onPress={() => setActiveOption((a) => (a === 'category' ? null : 'category'))}
+          >
+            <OptionLabel>Category</OptionLabel>
+            <OptionValueRow>
+              <OptionValueText>{category}</OptionValueText>
+              <MaterialIcons
+                name="chevron-right"
+                size={20}
+                color={theme.colors.onSurfaceVariant}
+                style={{ marginLeft: 4 }}
+              />
+            </OptionValueRow>
+          </OptionRow>
+          {activeOption === 'category' && (
+            <View style={{ paddingTop: Spacing.sm, paddingBottom: Spacing.md }}>
+              <Controller
+                control={control}
+                name="category"
+                render={({ field: { value, onChange } }) => (
+                  <CategorySelector selectedCategory={value || 'Other'} onSelect={onChange} />
+                )}
+              />
+            </View>
+          )}
+          <OptionRowDivider />
 
-            <Spacer size="xl" />
+          <Spacer size="md" />
 
-            <SectionLabel>Category</SectionLabel>
-            <Controller
-              control={control}
-              name="category"
-              render={({ field: { value, onChange } }) => (
-                <CategorySelector 
-                  selectedCategory={value || 'Other'} 
-                  onSelect={onChange} 
+          <MoreOptionsButton onPress={() => setShowMore((s) => !s)} activeOpacity={0.7}>
+            <MoreOptionsText>{showMore ? 'Hide options' : 'More options'}</MoreOptionsText>
+          </MoreOptionsButton>
+
+          {showMore && (
+            <View style={{ padding: Spacing.screenPadding }}>
+              <SectionLabel>Receipt</SectionLabel>
+              <Spacer size="sm" />
+              <Controller
+                control={control}
+                name="receiptUri"
+                render={({ field: { value, onChange } }) => (
+                  <ReceiptUploader imageUri={value} onImageSelected={onChange} />
+                )}
+              />
+
+              <Spacer size="xl" />
+
+              <SectionLabel>Preview</SectionLabel>
+              <Spacer size="sm" />
+              <SurfaceCard>
+                <SplitPreviewCard
+                  paidBy={paidBy}
+                  splitDetails={splitDetails}
+                  allMembers={groupMembers}
                 />
-              )}
-            />
+              </SurfaceCard>
+            </View>
+          )}
 
-            <Spacer size="xl" />
-
-            <SectionLabel>Media</SectionLabel>
-            <Controller
-              control={control}
-              name="receiptUri"
-              render={({ field: { value, onChange } }) => (
-                <ReceiptUploader 
-                  imageUri={value} 
-                  onImageSelected={onChange} 
-                />
-              )}
-            />
-
-            <Spacer size="xxxl" />
-          </ScrollView>
-        </FormBody>
+          <Spacer size="xxl" />
+          <Spacer size="xxl" />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeScreen>
   );

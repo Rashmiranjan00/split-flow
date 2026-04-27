@@ -25,8 +25,8 @@ import { PercentageSplitEditor } from '@/features/expenses/components/split/Perc
 import { SharesSplitEditor } from '@/features/expenses/components/split/SharesSplitEditor';
 import { SplitPreviewCard } from '@/features/expenses/components/SplitPreviewCard';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { useGroupStore } from '@/features/groups/store';
-import { useFriendStore } from '@/features/friends/store';
+import { useGroups } from '@/features/groups/hooks/useGroups';
+import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useUser } from '@/shared/hooks/useUser';
 import { User } from '@/shared/types';
 
@@ -208,8 +208,8 @@ const AddExpenseScreen = () => {
   const { userId, user } = useUser();
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
 
-  const groups = useGroupStore((state) => state.groups);
-  const friendsList = useFriendStore((state) => state.friends);
+  const { groups } = useGroups();
+  const { friends: friendsList } = useFriends();
 
   const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
   const currentGroup = groups.find((g) => g.id === currentGroupId);

@@ -1,8 +1,11 @@
 import { useMemo } from 'react';
-import { useExpenseStore } from '@/features/expenses/store';
-import { useSettlementStore } from '@/features/settlements/store';
-import { useGroupStore } from '@/features/groups/store';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/services/supabase/queryKeys';
+import { listMyGroups } from '@/services/supabase/groups';
+import { listExpensesByGroup } from '@/services/supabase/expenses';
+import { listSettlementsByGroup } from '@/services/supabase/settlements';
 import { useUser } from '@/shared/hooks/useUser';
+import type { Expense, Settlement } from '@/shared/types';
 
 export type ActivityItemType = 'EXPENSE' | 'SETTLEMENT';
 
@@ -21,17 +24,40 @@ export interface ActivityItemData {
  */
 export const useActivity = () => {
   const { userId } = useUser();
-  const expenses = useExpenseStore((state) => state.expenses);
-  const settlements = useSettlementStore((state) => state.settlements);
-  const groups = useGroupStore((state) => state.groups);
+
+  const { data: groups = [] } = useQuery({
+    queryKey: queryKeys.groups,
+    queryFn: listMyGroups,
+  });
+
+  const groupIds = useMemo(() => groups.map((g) => g.id), [groups]);
+
+  const { data: allExpenses = [], isLoading: loadingExp } = useQuery({
+    queryKey: ['all-expenses', groupIds],
+    queryFn: async () => {
+      const results = await Promise.all(
+        groupIds.map((gid) => listExpensesByGroup(gid))
+      );
+      return results.flat();
+    },
+    enabled: groupIds.length > 0,
+  });
+
+  const { data: allSettlements = [], isLoading: loadingSett } = useQuery({
+    queryKey: ['all-settlements', groupIds],
+    queryFn: async () => {
+      const results = await Promise.all(
+        groupIds.map((gid) => listSettlementsByGroup(gid))
+      );
+      return results.flat();
+    },
+    enabled: groupIds.length > 0,
+  });
 
   return useMemo(() => {
-    // Transform Expenses
-    const expenseActivities: ActivityItemData[] = expenses.map((exp) => {
+    const expenseActivities: ActivityItemData[] = allExpenses.map((exp: Expense) => {
       const group = groups.find((g) => g.id === exp.groupId);
       const groupName = group?.name ?? 'Group';
-      
-      // Defensive check for splitDetails
       const splitDetails = exp.splitDetails || [];
       const mySplit = splitDetails.find((s) => s.userId === userId);
       const myOwed = mySplit?.owedAmount ?? 0;
@@ -41,16 +67,15 @@ export const useActivity = () => {
 
       if (exp.paidBy === userId) {
         title = `You paid for "${exp.title}"`;
-        amount = exp.amount - myOwed; // Net positive (others owe you)
+        amount = exp.amount - myOwed;
       } else {
-        const payer = group?.members?.includes(exp.paidBy) ? 'Someone' : 'Someone'; 
-        title = `${payer} paid for "${exp.title}"`;
-        amount = -myOwed; // Net negative (you owe)
+        title = `Someone paid for "${exp.title}"`;
+        amount = -myOwed;
       }
 
       return {
         id: exp.id,
-        type: 'EXPENSE',
+        type: 'EXPENSE' as const,
         title,
         subtitle: `In ${groupName}`,
         amount,
@@ -59,34 +84,34 @@ export const useActivity = () => {
       };
     });
 
-    // Transform Settlements
-    const settlementActivities: ActivityItemData[] = settlements.map((set) => {
-      const group = groups.find((g) => g.id === set.groupId);
-      const groupName = group?.name ?? 'Group';
-      
-      let title = '';
-      let amount = 0;
+    const settlementActivities: ActivityItemData[] = allSettlements.map(
+      (set: Settlement) => {
+        const group = groups.find((g) => g.id === set.groupId);
+        const groupName = group?.name ?? 'Group';
 
-      if (set.from === userId) {
-        title = `You paid someone`;
-        amount = set.amount; // Reducing what you owe
-      } else {
-        title = `Someone paid you`;
-        amount = -set.amount; // Reducing what they owe you
+        let title = '';
+        let amount = 0;
+
+        if (set.from === userId) {
+          title = 'You paid someone';
+          amount = set.amount;
+        } else {
+          title = 'Someone paid you';
+          amount = -set.amount;
+        }
+
+        return {
+          id: set.id,
+          type: 'SETTLEMENT' as const,
+          title,
+          subtitle: `In ${groupName}`,
+          amount,
+          date: set.createdAt,
+          groupId: set.groupId,
+        };
       }
+    );
 
-      return {
-        id: set.id,
-        type: 'SETTLEMENT',
-        title,
-        subtitle: `In ${groupName}`,
-        amount,
-        date: set.createdAt,
-        groupId: set.groupId,
-      };
-    });
-
-    // Merge and sort
     const allActivity = [...expenseActivities, ...settlementActivities].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
@@ -95,6 +120,7 @@ export const useActivity = () => {
       activity: allActivity,
       recent: allActivity.slice(0, 10),
       isEmpty: allActivity.length === 0,
+      isLoading: loadingExp || loadingSett,
     };
-  }, [expenses, settlements, groups, userId]);
+  }, [allExpenses, allSettlements, groups, userId, loadingExp, loadingSett]);
 };

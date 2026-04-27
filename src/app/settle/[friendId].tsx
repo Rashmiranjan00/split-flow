@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
@@ -10,6 +10,8 @@ import { Avatar } from '@/shared/components/Avatar';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useUser } from '@/shared/hooks/useUser';
+import { useCreateSettlementMutation } from '@/features/settlements/hooks/useSettlementMutations';
+import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 type PaymentMethod = 'UPI' | 'Cash' | 'Bank';
 
@@ -110,15 +112,41 @@ const BottomCTA = styled.View`
 `;
 
 const SettleScreen = () => {
-  const { friendId } = useLocalSearchParams<{ friendId: string }>();
+  const { friendId, groupId, amount } = useLocalSearchParams<{
+    friendId: string;
+    groupId?: string;
+    amount?: string;
+  }>();
   const { friends } = useFriends();
-  const { user } = useUser();
+  const { user, userId } = useUser();
   const router = useRouter();
   const theme = useTheme();
+  const { formatCurrency } = useCurrencyFormatter();
+  const settleMutation = useCreateSettlementMutation();
 
   const friend = friends.find((m) => m.id === friendId);
   const [method, setMethod] = React.useState<PaymentMethod>('UPI');
-  const owedAmount = 0;
+  const owedAmount = parseFloat(amount ?? '0') || 0;
+
+  const handleSettle = async () => {
+    if (!groupId || owedAmount <= 0) {
+      Alert.alert('Cannot settle', 'No outstanding balance to settle.');
+      return;
+    }
+
+    try {
+      await settleMutation.mutateAsync({
+        groupId,
+        fromUser: userId,
+        toUser: friendId ?? '',
+        amount: owedAmount,
+      });
+      router.back();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Settlement failed';
+      Alert.alert('Error', message);
+    }
+  };
 
   return (
     <SafeScreen>
@@ -141,7 +169,7 @@ const SettleScreen = () => {
 
         <FriendName>{friend?.name ?? 'Friend'}</FriendName>
         <OweLine>You owe {friend?.name ?? 'them'}</OweLine>
-        <Amount>${Math.abs(owedAmount).toFixed(2)}</Amount>
+        <Amount>{formatCurrency(owedAmount)}</Amount>
 
         <PaymentMethods>
           {(['UPI', 'Cash', 'Bank'] as PaymentMethod[]).map((m) => {
@@ -163,7 +191,11 @@ const SettleScreen = () => {
       </Body>
 
       <BottomCTA>
-        <ActionButton title="Mark as Settled" onPress={() => router.back()} />
+        <ActionButton
+          title={settleMutation.isPending ? 'Settling...' : 'Mark as Settled'}
+          onPress={handleSettle}
+          disabled={settleMutation.isPending || owedAmount <= 0}
+        />
       </BottomCTA>
     </SafeScreen>
   );

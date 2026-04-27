@@ -11,9 +11,11 @@ import {
   Spacer,
 } from '@/shared/components/Layout';
 import { BodyMd, BodySm, SectionLabel } from '@/shared/components/Typography';
+import { useQuery } from '@tanstack/react-query';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
-import { useExpenseStore } from '@/features/expenses/store';
+import { useGroups } from '@/features/groups/hooks/useGroups';
+import { listExpensesByGroup } from '@/services/supabase/expenses';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 const BAR_CHART_HEIGHT = 140;
@@ -135,7 +137,16 @@ const AnalyticsScreen = () => {
   const { userId } = useUser();
   const theme = useTheme();
   const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
-  const allExpenses = useExpenseStore((s) => s.expenses);
+  const { groups } = useGroups();
+  const groupIds = React.useMemo(() => groups.map((g) => g.id), [groups]);
+  const { data: allExpenses = [] } = useQuery({
+    queryKey: ['all-expenses', groupIds],
+    queryFn: async () => {
+      const results = await Promise.all(groupIds.map((gid) => listExpensesByGroup(gid)));
+      return results.flat();
+    },
+    enabled: groupIds.length > 0,
+  });
   const { formatCurrency } = useCurrencyFormatter();
 
   // Palette aligned with "Warm Minimalist Finance" tokens.

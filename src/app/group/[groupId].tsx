@@ -3,6 +3,7 @@ import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Alert, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -27,8 +28,9 @@ import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 import { useGroup } from '@/features/groups/hooks/useGroups';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
-import { useExpenseStore } from '@/features/expenses/store';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { queryKeys } from '@/services/supabase/queryKeys';
+import { listExpensesByGroup } from '@/services/supabase/expenses';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -131,19 +133,19 @@ const GroupDetailScreen = () => {
   const { userId, user } = useUser();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
-  const allExpenses = useExpenseStore((s) => s.expenses);
   const { netPositions, simplifiedDebts } = useGroupBalances(groupId ?? '');
   const router = useRouter();
   const theme = useTheme();
 
-  const groupExpenses = React.useMemo(() => {
-    if (!groupId) return [];
-    return allExpenses
-      .filter((e) => e.groupId === groupId)
-      .sort(
+  const { data: groupExpenses = [] } = useQuery({
+    queryKey: queryKeys.expenses(groupId ?? ''),
+    queryFn: () => listExpensesByGroup(groupId ?? ''),
+    enabled: !!groupId,
+    select: (data) =>
+      [...data].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-  }, [allExpenses, groupId]);
+      ),
+  });
 
   if (!group) return null;
 
@@ -188,10 +190,18 @@ const GroupDetailScreen = () => {
               <SettleUpPill
                 activeOpacity={0.7}
                 onPress={() => {
-                  const friend = simplifiedDebts.find((d) => d.from === userId || d.to === userId);
+                  const debt = simplifiedDebts.find(
+                    (d) => d.from === userId || d.to === userId
+                  );
                   const targetId =
-                    friend?.from === userId ? friend?.to : friend?.from;
-                  if (targetId) router.push(`/settle/${targetId}` as any);
+                    debt?.from === userId ? debt?.to : debt?.from;
+                  if (targetId) {
+                    router.push(
+                      `/settle/${targetId}?groupId=${groupId}&amount=${Math.abs(
+                        debt?.amount ?? 0
+                      )}` as any
+                    );
+                  }
                 }}
               >
                 <SettleUpText>Settle up</SettleUpText>
@@ -206,7 +216,7 @@ const GroupDetailScreen = () => {
         {simplifiedDebts.length === 0 ? (
           <View style={{ paddingHorizontal: Spacing.screenPadding, paddingVertical: Spacing.md }}>
             <RowSubtitle style={{ color: theme.colors.primary, fontWeight: '600' }}>
-              ✓ All settled up!
+              All settled up!
             </RowSubtitle>
           </View>
         ) : (

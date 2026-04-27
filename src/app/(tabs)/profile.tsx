@@ -20,6 +20,7 @@ import { useExpenseStore } from '@/features/expenses/store';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
 import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { seedDemoData, clearDemoData } from '@/shared/data/seedDemoData';
 
 const HeaderPadding = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.sm}px;
@@ -231,6 +232,29 @@ const ProfileScreen = () => {
     },
   ];
 
+  const handleLoadDemoData = () => {
+    seedDemoData();
+    Alert.alert(
+      'Demo data loaded',
+      'Groups, friends, and expenses have been populated.'
+    );
+  };
+
+  const handleClearDemoData = () => {
+    Alert.alert(
+      'Clear demo data?',
+      'This removes all groups, friends, expenses, and settlements. Your account stays signed in.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => clearDemoData(),
+        },
+      ]
+    );
+  };
+
   const netTone: 'positive' | 'negative' | undefined =
     netBalance > 0 ? 'positive' : netBalance < 0 ? 'negative' : undefined;
 
@@ -344,6 +368,24 @@ const ProfileScreen = () => {
                 {idx < accountItems.length - 1 && <MenuRowDivider />}
               </React.Fragment>
             ))}
+          </MenuCard>
+        </Section>
+
+        <Section>
+          <SectionLabel style={{ fontSize: 11 }}>Demo data</SectionLabel>
+          <Spacer size="sm" />
+          <MenuCard>
+            <MenuItem activeOpacity={0.6} onPress={handleLoadDemoData}>
+              <MaterialIcons name="auto-awesome" size={18} color={theme.colors.primary} />
+              <MenuLabel>Load demo data</MenuLabel>
+              <MaterialIcons name="chevron-right" size={18} color={theme.colors.primary} />
+            </MenuItem>
+            <MenuRowDivider />
+            <MenuItem activeOpacity={0.6} onPress={handleClearDemoData}>
+              <MaterialIcons name="delete-outline" size={18} color={theme.colors.danger} />
+              <MenuLabel destructive>Clear demo data</MenuLabel>
+              <MaterialIcons name="chevron-right" size={18} color={theme.colors.danger} />
+            </MenuItem>
           </MenuCard>
         </Section>
 

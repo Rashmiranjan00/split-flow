@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Feather } from '@expo/vector-icons';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -135,6 +136,25 @@ const FieldSpacer = styled.View`
   height: ${Spacing.md}px;
 `;
 
+const PasswordWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  height: 48px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.outlineVariant};
+  border-radius: ${Radius.inputRadius}px;
+  background-color: ${({ theme }) => theme.colors.surfaceContainerLowest};
+`;
+
+const PasswordInput = styled.TextInput`
+  flex: 1;
+  height: 48px;
+  padding: 0 ${Spacing.md}px;
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 16px;
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
 const RemoteError = styled.Text`
   font-family: ${TypographyTokens.fonts.medium};
   font-size: 13px;
@@ -149,6 +169,7 @@ const AuthScreen = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [remoteError, setRemoteError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const isSignUp = mode === 'signup';
 
@@ -171,6 +192,7 @@ const AuthScreen = () => {
   const switchMode = (next: AuthMode) => {
     setMode(next);
     setRemoteError('');
+    setShowPassword(false);
     reset();
   };
 
@@ -279,15 +301,28 @@ const AuthScreen = () => {
             control={control}
             name="password"
             render={({ field: { onChange, onBlur, value } }) => (
-              <StyledInput
-                placeholder="Min 8 characters"
-                placeholderTextColor="#999"
-                secureTextEntry
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                value={value}
-              />
+              <PasswordWrapper>
+                <PasswordInput
+                  placeholder="Min 8 characters"
+                  placeholderTextColor="#999"
+                  secureTextEntry={!showPassword}
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  value={value}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(v => !v)}
+                  style={{ paddingHorizontal: Spacing.md }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={20}
+                    color="#999"
+                  />
+                </TouchableOpacity>
+              </PasswordWrapper>
             )}
           />
           {errors.password ? (

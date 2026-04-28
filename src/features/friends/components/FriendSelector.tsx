@@ -81,7 +81,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = ({
 }) => {
   const theme = useTheme();
   const [query, setQuery] = useState('');
-  const { friends, isLoading } = useFriends();
+  const { friends, isLoading, error } = useFriends();
 
   const filtered = useMemo(() => {
     const excluded = new Set(excludeIds);
@@ -132,6 +132,12 @@ export const FriendSelector: React.FC<FriendSelectorProps> = ({
         <LoadingWrap>
           <ActivityIndicator color={theme.colors.primary} />
         </LoadingWrap>
+      ) : error ? (
+        <EmptyState>
+          <BodyMd style={{ color: theme.colors.danger, textAlign: 'center' }}>
+            Something went wrong loading friends.
+          </BodyMd>
+        </EmptyState>
       ) : filtered.length === 0 ? (
         <EmptyState>
           <BodyMd style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>

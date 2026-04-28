@@ -156,7 +156,7 @@ const FriendsScreen = () => {
   const theme = useTheme();
   const [query, setQuery] = useState('');
 
-  const { friends, isLoading: friendsLoading } = useFriends();
+  const { friends, isLoading: friendsLoading, error: friendsError } = useFriends();
   const { incomingCount } = useFriendRequests();
   const { getBalance, totalNet } = useFriendBalances();
   const removeFriendMutation = useRemoveFriendMutation();
@@ -238,6 +238,12 @@ const FriendsScreen = () => {
           <LoadingWrap>
             <ActivityIndicator color={theme.colors.primary} />
           </LoadingWrap>
+        ) : friendsError ? (
+          <EmptyState>
+            <BodyMd style={{ color: theme.colors.danger, textAlign: 'center' }}>
+              Something went wrong loading your friends.
+            </BodyMd>
+          </EmptyState>
         ) : friends.length === 0 ? (
           <EmptyState>
             <EmptyEmoji>👥</EmptyEmoji>

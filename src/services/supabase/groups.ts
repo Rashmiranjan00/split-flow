@@ -64,36 +64,40 @@ export async function getGroup(groupId: string): Promise<Group> {
   return toGroup(row, (members ?? []).map((m) => m.user_id));
 }
 
-/** Create a new group and auto-add the creator as a member. */
+/**
+ * Create a new group atomically via the `create_group` RPC.
+ *
+ * Direct `insert into groups` fails RLS after `.select()` because the SELECT
+ * policy requires membership, which can't exist until after the insert.
+ * The RPC runs as SECURITY DEFINER and inserts the group + creator + any
+ * pre-selected friend members in one transaction.
+ */
 export async function createGroup(params: {
   name: string;
   description?: string;
+  coverImage?: string;
+  memberIds?: string[];
 }): Promise<Group> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const { data: row, error } = await supabase
-    .from('groups')
-    .insert({
-      name: params.name,
-      description: params.description ?? null,
-      created_by: user.id,
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('create_group', {
+    p_name: params.name,
+    p_description: params.description ?? null,
+    p_cover_image: params.coverImage ?? null,
+    p_member_ids: params.memberIds ?? [],
+  });
 
   if (error) throw error;
 
-  const { error: memErr } = await supabase.from('group_members').insert({
-    group_id: row.id,
-    user_id: user.id,
-  });
+  const row = data as Parameters<typeof toGroup>[0];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (memErr) throw memErr;
+  const memberIds = [
+    ...(user?.id ? [user.id] : []),
+    ...(params.memberIds ?? []).filter((id) => id !== user?.id),
+  ];
 
-  return toGroup(row, [user.id]);
+  return toGroup(row, memberIds);
 }
 
 /** Add a user to a group. */

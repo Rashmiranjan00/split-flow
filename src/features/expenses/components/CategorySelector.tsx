@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { UtensilsCrossed, Plane, ShoppingBag, Home, Ticket, MoreHorizontal, type LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 
@@ -34,13 +34,13 @@ const CategoryText = styled.Text<{ selected: boolean }>`
     selected ? TypographyTokens.weights.semibold : TypographyTokens.weights.medium};
 `;
 
-const CATEGORIES = [
-  { id: 'Food', icon: 'restaurant' as const },
-  { id: 'Travel', icon: 'flight' as const },
-  { id: 'Shopping', icon: 'shopping-bag' as const },
-  { id: 'Utilities', icon: 'home' as const },
-  { id: 'Entertainment', icon: 'confirmation-number' as const },
-  { id: 'Other', icon: 'more-horiz' as const },
+const CATEGORIES: { id: string; icon: LucideIcon }[] = [
+  { id: 'Food', icon: UtensilsCrossed },
+  { id: 'Travel', icon: Plane },
+  { id: 'Shopping', icon: ShoppingBag },
+  { id: 'Utilities', icon: Home },
+  { id: 'Entertainment', icon: Ticket },
+  { id: 'Other', icon: MoreHorizontal },
 ];
 
 interface CategorySelectorProps {
@@ -56,6 +56,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     <Container>
       {CATEGORIES.map((cat) => {
         const selected = selectedCategory === cat.id;
+        const Icon = cat.icon;
         return (
           <CategoryCard
             key={cat.id}
@@ -63,8 +64,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
             activeOpacity={0.7}
             onPress={() => onSelect(cat.id)}
           >
-            <MaterialIcons
-              name={cat.icon}
+            <Icon
               size={22}
               color={selected ? '#004D38' : '#6C7A72'}
             />

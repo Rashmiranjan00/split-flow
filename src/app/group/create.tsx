@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { X } from 'lucide-react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
-import { SafeScreen, Row } from '@/shared/components/Layout';
+import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { useCreateGroupMutation } from '@/features/groups/hooks/useGroupMutations';
+import { FriendSelector } from '@/features/friends/components/FriendSelector';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -31,7 +32,6 @@ const HeaderTitle = styled.Text`
 `;
 
 const Body = styled.View`
-  flex: 1;
   padding: ${Spacing.xl}px ${Spacing.screenPadding}px;
 `;
 
@@ -57,6 +57,7 @@ const StyledInput = styled.TextInput`
 
 const BottomCTA = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.xl}px;
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 const CreateGroupScreen = () => {
@@ -65,6 +66,7 @@ const CreateGroupScreen = () => {
   const createMutation = useCreateGroupMutation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [memberIds, setMemberIds] = useState<string[]>([]);
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -76,6 +78,7 @@ const CreateGroupScreen = () => {
       await createMutation.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
+        memberIds,
       });
       router.back();
     } catch (err: unknown) {
@@ -88,11 +91,11 @@ const CreateGroupScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitle>New Group</HeaderTitle>
         <IconButton style={{ opacity: 0 }} disabled>
-          <MaterialIcons name="close" size={22} color="transparent" />
+          <X size={22} color="transparent" />
         </IconButton>
       </HeaderBar>
 
@@ -100,28 +103,48 @@ const CreateGroupScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <Body>
-          <InputLabel>Group Name</InputLabel>
-          <StyledInput
-            placeholder="e.g. Summer Trip"
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
-            autoFocus
-          />
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Body>
+            <InputLabel>Group Name</InputLabel>
+            <StyledInput
+              placeholder="e.g. Summer Trip"
+              placeholderTextColor="#999"
+              value={name}
+              onChangeText={setName}
+              autoFocus
+            />
 
-          <InputLabel>Description (optional)</InputLabel>
-          <StyledInput
-            placeholder="What's this group for?"
-            placeholderTextColor="#999"
-            value={description}
-            onChangeText={setDescription}
-          />
-        </Body>
+            <InputLabel>Description (optional)</InputLabel>
+            <StyledInput
+              placeholder="What's this group for?"
+              placeholderTextColor="#999"
+              value={description}
+              onChangeText={setDescription}
+            />
+
+            <Spacer size="md" />
+
+            <FriendSelector
+              label="Invite friends"
+              selectedIds={memberIds}
+              onChange={setMemberIds}
+              emptyHint="Add friends first to invite them to this group."
+            />
+          </Body>
+        </ScrollView>
 
         <BottomCTA>
           <ActionButton
-            title={createMutation.isPending ? 'Creating...' : 'Create Group'}
+            title={
+              createMutation.isPending
+                ? 'Creating…'
+                : memberIds.length > 0
+                ? `Create Group · ${memberIds.length + 1} members`
+                : 'Create Group'
+            }
             onPress={handleCreate}
             disabled={createMutation.isPending || !name.trim()}
           />

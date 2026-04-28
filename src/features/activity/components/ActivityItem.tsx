@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Receipt, CheckCircle2, Bell, type LucideIcon } from 'lucide-react-native';
 import { TxnRow } from '@/shared/components/Layout';
 import {
   Amount,
@@ -44,25 +44,25 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
 }) => {
   const theme = useTheme();
 
-  const { icon, bg, iconColor, positive } = (() => {
+  const { Icon, bg, iconColor, positive } = (() => {
     switch (type) {
       case 'EXPENSE':
         return {
-          icon: 'receipt-long' as const,
+          Icon: Receipt as LucideIcon,
           bg: theme.colors.primaryFixedDim,
           iconColor: theme.colors.brandDark,
           positive: undefined as boolean | undefined,
         };
       case 'SETTLEMENT':
         return {
-          icon: 'check-circle' as const,
+          Icon: CheckCircle2 as LucideIcon,
           bg: theme.colors.tertiaryContainer,
           iconColor: theme.colors.secondary,
           positive: true,
         };
       default:
         return {
-          icon: 'notifications' as const,
+          Icon: Bell as LucideIcon,
           bg: theme.colors.surfaceContainerHigh,
           iconColor: theme.colors.onSurfaceVariant,
           positive: undefined as boolean | undefined,
@@ -76,7 +76,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
       isLast={isLast}
       leading={
         <IconCircle bgColor={bg}>
-          <MaterialIcons name={icon} size={18} color={iconColor} />
+          <Icon size={18} color={iconColor} />
         </IconCircle>
       }
       title={<RowTitle numberOfLines={1}>{title}</RowTitle>}

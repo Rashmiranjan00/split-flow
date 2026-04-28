@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from 'styled-components/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Home, Users, Contact, Bell, TrendingUp, User } from 'lucide-react-native';
 import { Typography } from '@/shared/constants/typography';
 import { SafeScreen } from '@/shared/components/Layout';
 
@@ -38,35 +38,42 @@ const TabsLayout = () => {
           name="index"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color }) => <MaterialIcons name="home" size={22} color={color} />,
+            tabBarIcon: ({ color }) => <Home size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="groups"
           options={{
             title: 'Groups',
-            tabBarIcon: ({ color }) => <MaterialIcons name="group" size={22} color={color} />,
+            tabBarIcon: ({ color }) => <Users size={22} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="friends"
+          options={{
+            title: 'Friends',
+            tabBarIcon: ({ color }) => <Contact size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="activity"
           options={{
             title: 'Activity',
-            tabBarIcon: ({ color }) => <MaterialIcons name="notifications" size={22} color={color} />,
+            tabBarIcon: ({ color }) => <Bell size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="analytics"
           options={{
             title: 'Analytics',
-            tabBarIcon: ({ color }) => <MaterialIcons name="insights" size={22} color={color} />,
+            tabBarIcon: ({ color }) => <TrendingUp size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color }) => <MaterialIcons name="person" size={22} color={color} />,
+            tabBarIcon: ({ color }) => <User size={22} color={color} />,
           }}
         />
       </Tabs>

@@ -1,6 +1,6 @@
 import React from 'react';
-import styled from 'styled-components/native';
-import { Typography } from '@/shared/constants/typography';
+import styled, { useTheme } from 'styled-components/native';
+import { Receipt, type LucideIcon } from 'lucide-react-native';
 import { TxnRow } from '@/shared/components/Layout';
 import { Amount, RowTitle, RowSubtitle, Timestamp } from '@/shared/components/Typography';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
@@ -14,11 +14,6 @@ const IconCircle = styled.View`
   justify-content: center;
 `;
 
-const IconEmoji = styled.Text`
-  font-family: ${Typography.fonts.regular};
-  font-size: 18px;
-`;
-
 const TrailingColumn = styled.View`
   align-items: flex-end;
 `;
@@ -28,8 +23,8 @@ interface ExpenseCardProps {
   subtitle: string;
   amount: number;
   date: string;
-  /** Emoji shown in the leading icon circle. Defaults to 💸. */
-  icon?: string;
+  /** Lucide icon component shown in the leading circle. Defaults to Receipt. */
+  icon?: LucideIcon;
   /** true = teal (owed to you), false = coral, undefined = neutral. */
   highlighted?: boolean;
   isLast?: boolean;
@@ -41,12 +36,13 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   subtitle,
   amount,
   date,
-  icon = '💸',
+  icon: Icon = Receipt,
   highlighted,
   isLast,
   onPress,
 }) => {
   const { formatCurrency } = useCurrencyFormatter();
+  const theme = useTheme();
   const positive = highlighted === undefined ? undefined : highlighted;
 
   return (
@@ -55,7 +51,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
       isLast={isLast}
       leading={
         <IconCircle>
-          <IconEmoji>{icon}</IconEmoji>
+          <Icon size={18} color={theme.colors.onSurfaceVariant} />
         </IconCircle>
       }
       title={<RowTitle numberOfLines={1}>{title}</RowTitle>}

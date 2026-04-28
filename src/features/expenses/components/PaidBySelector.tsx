@@ -5,7 +5,7 @@ import { Avatar } from '@/shared/components/Avatar';
 import { RowTitle } from '@/shared/components/Typography';
 import { Spacing } from '@/shared/constants/spacing';
 import { User, UserId } from '@/shared/types';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Check } from 'lucide-react-native';
 
 const Container = styled.View`
   background-color: ${({ theme }) => theme.colors.surfaceContainerLowest};
@@ -52,7 +52,7 @@ export const PaidBySelector: React.FC<PaidBySelectorProps> = ({
               <RowTitle>{member.name}</RowTitle>
             </View>
             {member.id === selectedId && (
-              <MaterialIcons name="check" size={20} color={theme.colors.primary} />
+              <Check size={20} color={theme.colors.primary} />
             )}
           </MemberItem>
           {idx < members.length - 1 && <RowDivider />}

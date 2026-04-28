@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Alert } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Radius, Spacing } from '@/shared/constants/spacing';
@@ -110,12 +110,12 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
         <PreviewContainer>
           <PreviewImage source={{ uri: imageUri }} />
           <RemoveButton onPress={() => onImageSelected(undefined)}>
-            <MaterialIcons name="close" size={14} color="white" />
+            <X size={14} color="white" />
           </RemoveButton>
         </PreviewContainer>
       ) : (
         <UploadBox onPress={pickImage} activeOpacity={0.7}>
-          <MaterialIcons name="add-a-photo" size={22} color={theme.colors.onSurfaceVariant} />
+          <Camera size={22} color={theme.colors.onSurfaceVariant} />
           <UploadLabel>Add</UploadLabel>
         </UploadBox>
       )}

@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Plus, Users as UsersIcon } from 'lucide-react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Screen, Content, SpaceBetweenRow, Spacer } from '@/shared/components/Layout';
@@ -43,9 +43,7 @@ const EmptyState = styled.View`
   padding: ${Spacing.xxxl}px ${Spacing.screenPadding}px;
 `;
 
-const EmptyEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.regular};
-  font-size: 40px;
+const EmptyIconWrap = styled.View`
   margin-bottom: ${Spacing.md}px;
 `;
 
@@ -92,13 +90,15 @@ const GroupsScreen = () => {
             onPress={() => router.push('/group/create' as any)}
             activeOpacity={0.7}
           >
-            <MaterialIcons name="add" size={20} color={theme.colors.primary} />
+            <Plus size={20} color={theme.colors.primary} />
           </AddButton>
         </HeaderRow>
 
         {groups.length === 0 ? (
           <EmptyState>
-            <EmptyEmoji>👥</EmptyEmoji>
+            <EmptyIconWrap>
+              <UsersIcon size={40} color={theme.colors.onSurfaceVariant} />
+            </EmptyIconWrap>
             <Title>No groups yet</Title>
             <Spacer size="sm" />
             <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>

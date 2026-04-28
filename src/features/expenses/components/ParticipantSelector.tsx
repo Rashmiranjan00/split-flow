@@ -5,7 +5,7 @@ import { Avatar } from '@/shared/components/Avatar';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { User } from '@/shared/types';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Check } from 'lucide-react-native';
 
 const Container = styled.View`
   padding-vertical: ${Spacing.md}px;
@@ -67,7 +67,7 @@ export const ParticipantSelector: React.FC<ParticipantSelectorProps> = ({
                 <Avatar name={item.name} size={Spacing.avatarMd} />
                 {isSelected && (
                   <SelectedBadge>
-                    <MaterialIcons name="check" size={12} color="white" />
+                    <Check size={12} color="white" />
                   </SelectedBadge>
                 )}
               </View>

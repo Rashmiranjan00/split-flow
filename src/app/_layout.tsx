@@ -106,9 +106,12 @@ const RootLayout = () => {
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
               <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
               <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
               <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
               <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="friend-requests/search" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="friend-requests/requests" options={{ presentation: 'modal' }} />
             </Stack>
           </AuthGate>
         </ThemeProvider>

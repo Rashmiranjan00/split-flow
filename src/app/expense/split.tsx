@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { ArrowLeft, Check } from 'lucide-react-native';
 import { View } from 'react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -116,7 +116,7 @@ const SplitExpenseScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={22} color={theme.colors.onSurface} />
+          <ArrowLeft size={22} color={theme.colors.onSurface} />
         </BackBtn>
         <HeaderTitle>Split breakdown</HeaderTitle>
       </HeaderBar>
@@ -163,7 +163,7 @@ const SplitExpenseScreen = () => {
               color: totalMatches ? theme.colors.tertiary : theme.colors.danger,
             }}
           >
-            ${totalMembersShare.toFixed(2)} {totalMatches ? '✓' : ''}
+            ${totalMembersShare.toFixed(2)} {totalMatches ? <Check size={14} color={theme.colors.tertiary} /> : null}
           </RowTitle>
         </TotalCheckRow>
 

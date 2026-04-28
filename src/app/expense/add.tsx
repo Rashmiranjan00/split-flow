@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Controller } from 'react-hook-form';
-import { MaterialIcons } from '@expo/vector-icons';
+import { ChevronRight } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, SpaceBetweenRow, Spacer, SurfaceCard } from '@/shared/components/Layout';
@@ -336,8 +336,7 @@ const AddExpenseScreen = () => {
             <OptionLabel>Paid by</OptionLabel>
             <OptionValueRow>
               <OptionValueText>{paidByName}</OptionValueText>
-              <MaterialIcons
-                name="chevron-right"
+              <ChevronRight
                 size={20}
                 color={theme.colors.onSurfaceVariant}
                 style={{ marginLeft: 4 }}
@@ -371,8 +370,7 @@ const AddExpenseScreen = () => {
                 ))}
               </AvatarStackMini>
               <OptionValueText>{participants.length}</OptionValueText>
-              <MaterialIcons
-                name="chevron-right"
+              <ChevronRight
                 size={20}
                 color={theme.colors.onSurfaceVariant}
                 style={{ marginLeft: 4 }}
@@ -397,8 +395,7 @@ const AddExpenseScreen = () => {
               <TealBadge>
                 <TealBadgeText>{SPLIT_LABELS[splitType]}</TealBadgeText>
               </TealBadge>
-              <MaterialIcons
-                name="chevron-right"
+              <ChevronRight
                 size={20}
                 color={theme.colors.onSurfaceVariant}
                 style={{ marginLeft: 4 }}
@@ -483,8 +480,7 @@ const AddExpenseScreen = () => {
             <OptionLabel>Category</OptionLabel>
             <OptionValueRow>
               <OptionValueText>{category}</OptionValueText>
-              <MaterialIcons
-                name="chevron-right"
+              <ChevronRight
                 size={20}
                 color={theme.colors.onSurfaceVariant}
                 style={{ marginLeft: 4 }}

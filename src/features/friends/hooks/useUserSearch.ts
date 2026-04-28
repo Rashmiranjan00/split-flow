@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/services/supabase/queryKeys';
 import { searchUsersByEmail } from '@/services/supabase/friends';
 import { useFriendRequests } from './useFriendRequests';
+import { useAuthStore } from '@/features/auth/store';
 
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 3;
@@ -14,6 +15,7 @@ export type UserSearchRowState = 'add' | 'pending-out' | 'pending-in' | 'already
  * the UI can render the right CTA (Add / Pending / Accept).
  */
 export const useUserSearch = (rawQuery: string) => {
+  const userId = useAuthStore((s) => s.user?.id);
   const [debounced, setDebounced] = useState(rawQuery.trim());
 
   useEffect(() => {
@@ -21,11 +23,11 @@ export const useUserSearch = (rawQuery: string) => {
     return () => clearTimeout(handle);
   }, [rawQuery]);
 
-  const enabled = debounced.length >= MIN_QUERY_LENGTH;
+  const enabled = debounced.length >= MIN_QUERY_LENGTH && !!userId;
 
   const query = useQuery({
     queryKey: queryKeys.userSearch(debounced),
-    queryFn: () => searchUsersByEmail(debounced),
+    queryFn: () => searchUsersByEmail(debounced, userId!),
     enabled,
   });
 

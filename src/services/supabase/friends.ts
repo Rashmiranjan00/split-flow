@@ -34,20 +34,15 @@ export async function listFriends(): Promise<User[]> {
 }
 
 /** Search users by email substring (ILIKE). Excludes self + existing friends. */
-export async function searchUsersByEmail(query: string): Promise<User[]> {
+export async function searchUsersByEmail(query: string, currentUserId: string): Promise<User[]> {
   const trimmed = query.trim();
   if (trimmed.length < 3) return [];
-
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-  if (!authUser) throw new Error('Not authenticated');
 
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select('*')
     .ilike('email', `%${trimmed}%`)
-    .neq('id', authUser.id)
+    .neq('id', currentUserId)
     .limit(20);
 
   if (error) throw error;
@@ -56,7 +51,7 @@ export async function searchUsersByEmail(query: string): Promise<User[]> {
   const { data: friendships } = await supabase
     .from('friendships')
     .select('friend_id')
-    .eq('owner_id', authUser.id);
+    .eq('owner_id', currentUserId);
 
   const friendIds = new Set((friendships ?? []).map((r) => r.friend_id));
 

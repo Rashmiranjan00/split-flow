@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from 'styled-components/native';
-import { Home, Users, Contact, Bell, TrendingUp, User } from 'lucide-react-native';
+import { Home, Users, Contact, Bell, User } from 'lucide-react-native';
 import { Typography } from '@/shared/constants/typography';
 import { SafeScreen } from '@/shared/components/Layout';
 
@@ -60,13 +60,6 @@ const TabsLayout = () => {
           options={{
             title: 'Activity',
             tabBarIcon: ({ color }) => <Bell size={22} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="analytics"
-          options={{
-            title: 'Analytics',
-            tabBarIcon: ({ color }) => <TrendingUp size={22} color={color} />,
           }}
         />
         <Tabs.Screen

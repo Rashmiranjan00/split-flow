@@ -107,6 +107,7 @@ const RootLayout = () => {
               <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
               <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
               <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="friend/[friendId]" options={{ presentation: 'card' }} />
               <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
               <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
               <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />

@@ -188,6 +188,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      friend_requests: {
+        Row: {
+          id: string;
+          from_user: string;
+          to_user: string;
+          status: 'pending' | 'accepted' | 'rejected';
+          created_at: string;
+          responded_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          from_user: string;
+          to_user: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          from_user?: string;
+          to_user?: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -207,6 +234,31 @@ export interface Database {
           p_splits: Record<string, unknown>[];
         };
         Returns: string;
+      };
+      create_group: {
+        Args: {
+          p_name: string;
+          p_description?: string | null;
+          p_cover_image?: string | null;
+          p_member_ids?: string[];
+        };
+        Returns: Database['public']['Tables']['groups']['Row'];
+      };
+      send_friend_request: {
+        Args: { p_to_user: string };
+        Returns: Database['public']['Tables']['friend_requests']['Row'];
+      };
+      accept_friend_request: {
+        Args: { p_request_id: string };
+        Returns: void;
+      };
+      reject_friend_request: {
+        Args: { p_request_id: string };
+        Returns: void;
+      };
+      remove_friend: {
+        Args: { p_friend_id: string };
+        Returns: void;
       };
     };
     Enums: Record<string, never>;

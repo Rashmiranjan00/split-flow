@@ -8,13 +8,21 @@
 import { fromCents, toCents } from '@/shared/utils/money';
 
 import type { Database } from './database.types';
-import type { Expense, Group, Settlement, SplitDetail, User } from '@/shared/types';
+import type {
+  Expense,
+  FriendRequest,
+  Group,
+  Settlement,
+  SplitDetail,
+  User,
+} from '@/shared/types';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type GroupRow = Database['public']['Tables']['groups']['Row'];
 type ExpenseRow = Database['public']['Tables']['expenses']['Row'];
 type ExpenseSplitRow = Database['public']['Tables']['expense_splits']['Row'];
 type SettlementRow = Database['public']['Tables']['settlements']['Row'];
+type FriendRequestRow = Database['public']['Tables']['friend_requests']['Row'];
 
 /** Map a `profiles` row to the canonical `User` type. */
 export function toUser(row: ProfileRow): User {
@@ -75,6 +83,18 @@ export function toSettlement(row: SettlementRow): Settlement {
     to: row.to_user,
     amount: fromCents(row.amount_minor),
     createdAt: row.created_at,
+  };
+}
+
+/** Map a `friend_requests` row to the canonical `FriendRequest` type. */
+export function toFriendRequest(row: FriendRequestRow): FriendRequest {
+  return {
+    id: row.id,
+    fromUser: row.from_user,
+    toUser: row.to_user,
+    status: row.status,
+    createdAt: row.created_at,
+    respondedAt: row.responded_at ?? undefined,
   };
 }
 

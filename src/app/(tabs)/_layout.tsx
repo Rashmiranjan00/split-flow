@@ -49,6 +49,13 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
+          name="friends"
+          options={{
+            title: 'Friends',
+            tabBarIcon: ({ color }) => <MaterialIcons name="people" size={22} color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="activity"
           options={{
             title: 'Activity',

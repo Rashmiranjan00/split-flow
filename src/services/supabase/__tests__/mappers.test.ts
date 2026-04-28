@@ -4,6 +4,7 @@ import {
   toExpense,
   toSplitDetail,
   toSettlement,
+  toFriendRequest,
   toCreateExpensePayload,
   toCreateSettlementPayload,
 } from '../mappers';
@@ -177,6 +178,40 @@ describe('Supabase DTO mappers', () => {
         to_user: 'u1',
         amount_minor: 6025,
       });
+    });
+  });
+
+  describe('toFriendRequest', () => {
+    it('maps a pending request row without responded_at', () => {
+      const row = {
+        id: 'fr1',
+        from_user: 'u1',
+        to_user: 'u2',
+        status: 'pending' as const,
+        created_at: '2025-06-01T00:00:00Z',
+        responded_at: null,
+      };
+      expect(toFriendRequest(row)).toEqual({
+        id: 'fr1',
+        fromUser: 'u1',
+        toUser: 'u2',
+        status: 'pending',
+        createdAt: '2025-06-01T00:00:00Z',
+        respondedAt: undefined,
+      });
+    });
+
+    it('maps an accepted request preserving responded_at', () => {
+      const row = {
+        id: 'fr2',
+        from_user: 'u1',
+        to_user: 'u2',
+        status: 'accepted' as const,
+        created_at: '2025-06-01T00:00:00Z',
+        responded_at: '2025-06-02T00:00:00Z',
+      };
+      expect(toFriendRequest(row).status).toBe('accepted');
+      expect(toFriendRequest(row).respondedAt).toBe('2025-06-02T00:00:00Z');
     });
   });
 });

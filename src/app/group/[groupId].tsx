@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -162,8 +162,14 @@ const GroupDetailScreen = () => {
         <HeaderTitleRow>
           <HeaderTitle numberOfLines={1}>{displayName}</HeaderTitle>
         </HeaderTitleRow>
-        <IconButton onPress={() => Alert.alert('Menu', 'Group options coming soon!')}>
-          <MaterialIcons name="more-horiz" size={22} color={theme.colors.onSurface} />
+        <IconButton
+          onPress={() =>
+            router.push(`/group/add-members?groupId=${groupId}` as any)
+          }
+          accessibilityRole="button"
+          accessibilityLabel="Add members"
+        >
+          <MaterialIcons name="person-add-alt" size={22} color={theme.colors.onSurface} />
         </IconButton>
       </HeaderBar>
 

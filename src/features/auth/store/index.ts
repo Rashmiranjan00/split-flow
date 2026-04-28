@@ -34,10 +34,16 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (loading) => set({ isLoading: loading }),
 
       hydrate: async () => {
+        const TIMEOUT_MS = 5000;
         try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
+          const sessionResult = await Promise.race([
+            supabase.auth.getSession(),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('getSession timed out')), TIMEOUT_MS)
+            ),
+          ]);
+
+          const { data: { session } } = sessionResult;
 
           if (session?.user) {
             const { data: profile } = await supabase

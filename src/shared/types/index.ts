@@ -55,3 +55,19 @@ export interface Friend {
   friendId: string;
   addedAt: string;
 }
+
+export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface FriendRequest {
+  id: string;
+  fromUser: UserId;
+  toUser: UserId;
+  status: FriendRequestStatus;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+/** A friend request joined with the counterparty's profile. */
+export interface FriendRequestWithProfile extends FriendRequest {
+  profile: User;
+}

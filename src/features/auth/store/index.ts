@@ -82,19 +82,20 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-supabase.auth.onAuthStateChange(async (event, session) => {
+supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT' || !session) {
     useAuthStore.getState().logout();
     return;
   }
 
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    useAuthStore.getState().login(profile ? toUser(profile) : null as unknown as User, session);
+    const { user: authUser } = session;
+    const user: User = {
+      id: authUser.id,
+      email: authUser.email ?? '',
+      name: (authUser.user_metadata?.name as string | undefined) ?? authUser.email ?? '',
+      avatarUrl: (authUser.user_metadata?.avatar_url as string | undefined) ?? undefined,
+    };
+    useAuthStore.getState().login(user, session);
   }
 });

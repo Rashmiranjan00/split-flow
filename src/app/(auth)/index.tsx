@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -177,7 +177,7 @@ const AuthScreen = () => {
     (...args: Parameters<ReturnType<typeof zodResolver>>) =>
       zodResolver(isSignUp ? signUpSchema : signInSchema)(...args),
     [isSignUp]
-  );
+  ) as unknown as Resolver<SignUpValues>;
 
   const {
     control,

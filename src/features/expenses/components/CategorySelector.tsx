@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { UtensilsCrossed, Plane, ShoppingBag, Home, Ticket, MoreHorizontal, type LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -52,6 +52,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   selectedCategory,
   onSelect,
 }) => {
+  const theme = useTheme();
   return (
     <Container>
       {CATEGORIES.map((cat) => {
@@ -66,7 +67,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
           >
             <Icon
               size={22}
-              color={selected ? '#004D38' : '#6C7A72'}
+              color={selected ? theme.colors.brandDark : theme.colors.onSurfaceVariant}
             />
             <CategoryText selected={selected}>{cat.id}</CategoryText>
           </CategoryCard>

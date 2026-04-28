@@ -111,7 +111,7 @@ const CreateGroupScreen = () => {
             <InputLabel>Group Name</InputLabel>
             <StyledInput
               placeholder="e.g. Summer Trip"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               value={name}
               onChangeText={setName}
               autoFocus
@@ -120,7 +120,7 @@ const CreateGroupScreen = () => {
             <InputLabel>Description (optional)</InputLabel>
             <StyledInput
               placeholder="What's this group for?"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               value={description}
               onChangeText={setDescription}
             />

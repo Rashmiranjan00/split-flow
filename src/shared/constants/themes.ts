@@ -46,7 +46,7 @@ export interface ThemeColors {
   outlineVariant: string;
 }
 
-/** SplitFlow Clear / Warm Minimalist Finance */
+/** SplitFlow Clear / Warm Minimalist Finance — light */
 export const ClearLight: ThemeColors = {
   background: '#FCF9F8',
   surface: '#FCF9F8',
@@ -77,4 +77,42 @@ export const ClearLight: ThemeColors = {
 
   divider: '#F0F0F0',
   outlineVariant: '#F0F0F0',
+};
+
+/** SplitFlow Clear / Warm Minimalist Finance — dark
+ *
+ * Palette sourced from Stitch project 16404945722807422720, dark-mode screens.
+ * Primary teal lightens to #42E5B0 for legibility on near-black surfaces.
+ * Error/danger softens to #FFB4AB (muted pink) per Material dark-scheme rules.
+ */
+export const ClearDark: ThemeColors = {
+  background: '#131313',
+  surface: '#131313',
+
+  surfaceContainerLowest: '#0E0E0E',
+  surfaceContainerLow: '#1C1B1B',
+  surfaceContainer: '#201F1F',
+  surfaceContainerHigh: '#2A2A2A',
+  surfaceContainerHighest: '#353534',
+
+  primary: '#42E5B0',
+  onPrimary: '#003828',
+  primaryFixedDim: '#3ADFAB',
+  brandAccent: '#42E5B0',
+  brandDark: '#003828',
+
+  tertiary: '#42E5B0',
+  tertiaryContainer: '#901822',
+
+  error: '#FFB4AB',
+  danger: '#FFB4AB',
+  dangerLight: '#93000A',
+
+  secondary: '#FFB4AB',
+
+  onSurface: '#E5E2E1',
+  onSurfaceVariant: '#BBCAC1',
+
+  divider: '#2A2A2A',
+  outlineVariant: '#3C4A43',
 };

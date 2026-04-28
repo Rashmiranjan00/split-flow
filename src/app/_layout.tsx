@@ -1,12 +1,13 @@
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'styled-components/native';
+import { ThemeProvider, useTheme } from 'styled-components/native';
 import { useAuthStore } from '@/features/auth/store';
-import { ClearLight } from '@/shared/constants/themes';
+import { ClearLight, ClearDark } from '@/shared/constants/themes';
+import { useThemeStore } from '@/shared/hooks/useThemeStore';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -31,19 +32,13 @@ const queryClient = new QueryClient({
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/**
- * The "Warm Minimalist Finance" revamp is light-mode-only. We keep the
- * theme toggle UI functional inside Profile, but the app always renders
- * with the ClearLight palette. Dark mode is intentionally out of scope
- * for this revamp.
- */
-
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const { colors } = useTheme();
 
   useEffect(() => {
     hydrate();
@@ -63,8 +58,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: ClearLight.background }}>
-        <ActivityIndicator size="large" color={ClearLight.primary} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -80,13 +75,18 @@ const RootLayout = () => {
     Inter_700Bold,
   });
 
+  const themeMode = useThemeStore((s) => s.mode);
+  const systemScheme = useColorScheme();
+  const isDark =
+    themeMode === 'dark' || (themeMode === 'system' && systemScheme === 'dark');
+  const themeColors = isDark ? ClearDark : ClearLight;
+  const theme = { colors: themeColors, isDark };
+
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
-
-  const theme = { colors: ClearLight, isDark: false };
 
   if (!fontsLoaded && !fontError) return null;
 
@@ -94,12 +94,12 @@ const RootLayout = () => {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <StatusBar style="dark" />
+          <StatusBar style={isDark ? 'light' : 'dark'} />
           <AuthGate>
             <Stack
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: ClearLight.background },
+                contentStyle: { backgroundColor: themeColors.background },
               }}
             >
               <Stack.Screen name="(tabs)" />

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -166,6 +166,7 @@ const RemoteError = styled.Text`
 // ---- Screen ----
 
 const AuthScreen = () => {
+  const theme = useTheme();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [remoteError, setRemoteError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -257,7 +258,7 @@ const AuthScreen = () => {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <StyledInput
                     placeholder="John Doe"
-                    placeholderTextColor="#999"
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
                     autoCapitalize="words"
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -280,7 +281,7 @@ const AuthScreen = () => {
             render={({ field: { onChange, onBlur, value } }) => (
               <StyledInput
                 placeholder="you@example.com"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.onSurfaceVariant}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -304,7 +305,7 @@ const AuthScreen = () => {
               <PasswordWrapper>
                 <PasswordInput
                   placeholder="Min 8 characters"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.colors.onSurfaceVariant}
                   secureTextEntry={!showPassword}
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   onChangeText={onChange}
@@ -317,9 +318,9 @@ const AuthScreen = () => {
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color="#999" />
+                    <EyeOff size={20} color={theme.colors.onSurfaceVariant} />
                   ) : (
-                    <Eye size={20} color="#999" />
+                    <Eye size={20} color={theme.colors.onSurfaceVariant} />
                   )}
                 </TouchableOpacity>
               </PasswordWrapper>

@@ -1,20 +1,37 @@
 import { useMemo } from 'react';
-import { useExpenseStore } from '@/features/expenses/store';
-import { useSettlementStore } from '@/features/settlements/store';
-import { calculateGroupBalances, GroupBalancesResult } from '@/shared/utils/balanceEngine';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/services/supabase/queryKeys';
+import { listExpensesByGroup } from '@/services/supabase/expenses';
+import { listSettlementsByGroup } from '@/services/supabase/settlements';
+import {
+  calculateGroupBalances,
+  GroupBalancesResult,
+} from '@/shared/utils/balanceEngine';
 
 /**
  * Hook to fetch and calculate balances for a specific group.
- * Automatically recalculates when expenses or settlements change.
+ * Feeds the balance engine with server data via React Query.
  */
-export const useGroupBalances = (groupId: string): GroupBalancesResult => {
-  const expenses = useExpenseStore((state) => state.expenses);
-  const settlements = useSettlementStore((state) => state.settlements);
+export const useGroupBalances = (groupId: string): GroupBalancesResult & { isLoading: boolean } => {
+  const { data: expenses = [], isLoading: loadingExp } = useQuery({
+    queryKey: queryKeys.expenses(groupId),
+    queryFn: () => listExpensesByGroup(groupId),
+    enabled: !!groupId,
+  });
 
-  return useMemo(() => {
-    const groupExpenses = expenses.filter((e) => e.groupId === groupId);
-    const groupSettlements = settlements.filter((s) => s.groupId === groupId);
+  const { data: settlements = [], isLoading: loadingSett } = useQuery({
+    queryKey: queryKeys.settlements(groupId),
+    queryFn: () => listSettlementsByGroup(groupId),
+    enabled: !!groupId,
+  });
 
-    return calculateGroupBalances(groupExpenses, groupSettlements);
-  }, [expenses, settlements, groupId]);
+  const result = useMemo(
+    () => calculateGroupBalances(expenses, settlements),
+    [expenses, settlements]
+  );
+
+  return {
+    ...result,
+    isLoading: loadingExp || loadingSett,
+  };
 };

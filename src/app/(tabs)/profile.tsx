@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { Alert, View } from 'react-native';
+import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Radius, Spacing } from '@/shared/constants/spacing';
@@ -12,15 +12,14 @@ import {
   Spacer,
   SurfaceCard,
 } from '@/shared/components/Layout';
-import { BodyMd, BodySm, SectionLabel } from '@/shared/components/Typography';
+import { SectionLabel } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
-import { useExpenseStore } from '@/features/expenses/store';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
 import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { seedDemoData, clearDemoData } from '@/shared/data/seedDemoData';
+import { signOut } from '@/services/supabase/auth';
 
 const HeaderPadding = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.sm}px;
@@ -172,7 +171,7 @@ const THEME_OPTIONS: { key: ThemeMode; label: string }[] = [
 ];
 
 const ProfileScreen = () => {
-  const { user, userId, logout } = useUser();
+  const { user, logout } = useUser();
   const { netBalance } = useBalances();
   const router = useRouter();
   const theme = useTheme();
@@ -180,25 +179,7 @@ const ProfileScreen = () => {
   const setThemeMode = useThemeStore((state) => state.setMode);
   const selectedCurrency = useCurrencyStore((state) => state.currency);
   const setCurrency = useCurrencyStore((state) => state.setCurrency);
-  const allExpenses = useExpenseStore((s) => s.expenses);
   const { formatCurrency } = useCurrencyFormatter();
-
-  const expenseCount = React.useMemo(
-    () =>
-      allExpenses.filter((e) =>
-        (e.splitDetails || []).some((s) => s.userId === userId)
-      ).length,
-    [allExpenses, userId]
-  );
-
-  const totalSpent = React.useMemo(
-    () =>
-      allExpenses
-        .flatMap((e) => e.splitDetails || [])
-        .filter((s) => s.userId === userId)
-        .reduce((sum, s) => sum + s.owedAmount, 0),
-    [allExpenses, userId]
-  );
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -206,9 +187,13 @@ const ProfileScreen = () => {
       {
         text: 'Sign Out',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch {
+            // signOut may fail if session already expired; logout locally anyway
+          }
           logout();
-          router.replace('/(auth)' as any);
         },
       },
     ]);
@@ -232,29 +217,6 @@ const ProfileScreen = () => {
     },
   ];
 
-  const handleLoadDemoData = () => {
-    seedDemoData();
-    Alert.alert(
-      'Demo data loaded',
-      'Groups, friends, and expenses have been populated.'
-    );
-  };
-
-  const handleClearDemoData = () => {
-    Alert.alert(
-      'Clear demo data?',
-      'This removes all groups, friends, expenses, and settlements. Your account stays signed in.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => clearDemoData(),
-        },
-      ]
-    );
-  };
-
   const netTone: 'positive' | 'negative' | undefined =
     netBalance > 0 ? 'positive' : netBalance < 0 ? 'negative' : undefined;
 
@@ -274,20 +236,10 @@ const ProfileScreen = () => {
 
             <StatsRow>
               <StatItem>
-                <StatValue>{expenseCount}</StatValue>
-                <StatLabel>Expenses</StatLabel>
-              </StatItem>
-              <StatDivider />
-              <StatItem>
                 <StatValue tone={netTone}>
                   {formatCurrency(netBalance, { sign: netBalance > 0, decimals: 0 })}
                 </StatValue>
                 <StatLabel>Balance</StatLabel>
-              </StatItem>
-              <StatDivider />
-              <StatItem>
-                <StatValue>{formatCurrency(totalSpent, { decimals: 0 })}</StatValue>
-                <StatLabel>Total spent</StatLabel>
               </StatItem>
             </StatsRow>
           </HeroCard>
@@ -368,24 +320,6 @@ const ProfileScreen = () => {
                 {idx < accountItems.length - 1 && <MenuRowDivider />}
               </React.Fragment>
             ))}
-          </MenuCard>
-        </Section>
-
-        <Section>
-          <SectionLabel style={{ fontSize: 11 }}>Demo data</SectionLabel>
-          <Spacer size="sm" />
-          <MenuCard>
-            <MenuItem activeOpacity={0.6} onPress={handleLoadDemoData}>
-              <MaterialIcons name="auto-awesome" size={18} color={theme.colors.primary} />
-              <MenuLabel>Load demo data</MenuLabel>
-              <MaterialIcons name="chevron-right" size={18} color={theme.colors.primary} />
-            </MenuItem>
-            <MenuRowDivider />
-            <MenuItem activeOpacity={0.6} onPress={handleClearDemoData}>
-              <MaterialIcons name="delete-outline" size={18} color={theme.colors.danger} />
-              <MenuLabel destructive>Clear demo data</MenuLabel>
-              <MaterialIcons name="chevron-right" size={18} color={theme.colors.danger} />
-            </MenuItem>
           </MenuCard>
         </Section>
 

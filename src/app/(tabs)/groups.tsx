@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spacing } from '@/shared/constants/spacing';
@@ -11,9 +11,7 @@ import { GroupCard } from '@/features/groups/components/GroupCard';
 import { useUser } from '@/shared/hooks/useUser';
 import { useGroups } from '@/features/groups/hooks/useGroups';
 import { useFriends } from '@/features/friends/hooks/useFriends';
-import { useExpenseStore } from '@/features/expenses/store';
-import { useSettlementStore } from '@/features/settlements/store';
-import { calculateGroupBalances } from '@/shared/utils/balanceEngine';
+import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
 
 const HeaderRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px;
@@ -51,12 +49,37 @@ const EmptyEmoji = styled.Text`
   margin-bottom: ${Spacing.md}px;
 `;
 
+/** Renders a single group card with its balance. Extracted so each card
+ *  can independently subscribe to its group's expense/settlement queries. */
+const GroupCardWithBalance: React.FC<{
+  group: ReturnType<typeof useGroups>['groups'][number];
+  friends: ReturnType<typeof useFriends>['friends'];
+  userId: string;
+  isLast: boolean;
+  onPress: () => void;
+}> = ({ group, friends, userId, isLast, onPress }) => {
+  const { netPositions } = useGroupBalances(group.id);
+  const balance = netPositions[userId] || 0;
+
+  const groupMembers = group.members.map(
+    (mid) => friends.find((f) => f.id === mid) || { id: mid, name: 'User' }
+  );
+
+  return (
+    <GroupCard
+      group={group}
+      balance={balance}
+      members={groupMembers}
+      isLast={isLast}
+      onPress={onPress}
+    />
+  );
+};
+
 const GroupsScreen = () => {
   const { userId } = useUser();
   const { groups } = useGroups();
   const { friends } = useFriends();
-  const expenses = useExpenseStore((s) => s.expenses);
-  const settlements = useSettlementStore((s) => s.settlements);
   const router = useRouter();
   const theme = useTheme();
 
@@ -66,7 +89,7 @@ const GroupsScreen = () => {
         <HeaderRow>
           <ScreenTitle>Groups</ScreenTitle>
           <AddButton
-            onPress={() => Alert.alert('New Group', 'Create group coming soon!')}
+            onPress={() => router.push('/group/create' as any)}
             activeOpacity={0.7}
           >
             <MaterialIcons name="add" size={20} color={theme.colors.primary} />
@@ -83,28 +106,16 @@ const GroupsScreen = () => {
             </BodyMd>
           </EmptyState>
         ) : (
-          groups.map((group, idx) => {
-            const groupExpenses = expenses.filter((e) => e.groupId === group.id);
-            const groupSettlements = settlements.filter((s) => s.groupId === group.id);
-            const { netPositions } = calculateGroupBalances(groupExpenses, groupSettlements);
-            const balance = netPositions[userId] || 0;
-
-            const groupMembers = group.members.map(
-              (mid) => friends.find((f) => f.id === mid) || { id: mid, name: 'User' }
-            );
-
-            return (
-              <GroupCard
-                key={group.id}
-                group={group}
-                balance={balance}
-                members={groupMembers}
-                expenseCount={groupExpenses.length}
-                isLast={idx === groups.length - 1}
-                onPress={() => router.push(`/group/${group.id}` as any)}
-              />
-            );
-          })
+          groups.map((group, idx) => (
+            <GroupCardWithBalance
+              key={group.id}
+              group={group}
+              friends={friends}
+              userId={userId}
+              isLast={idx === groups.length - 1}
+              onPress={() => router.push(`/group/${group.id}` as any)}
+            />
+          ))
         )}
 
         <View style={{ height: Spacing.xxxl }} />

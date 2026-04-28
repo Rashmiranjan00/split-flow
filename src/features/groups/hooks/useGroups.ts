@@ -1,15 +1,22 @@
-import { useGroupStore } from '../store';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/services/supabase/queryKeys';
+import { listMyGroups, getGroup } from '@/services/supabase/groups';
 
 /**
  * Hook to access groups and related loading/empty states.
  */
 export const useGroups = () => {
-  const groups = useGroupStore((state) => state.groups);
-  
+  const { data: groups = [], isLoading, error } = useQuery({
+    queryKey: queryKeys.groups,
+    queryFn: listMyGroups,
+  });
+
   return {
     groups,
     isEmpty: groups.length === 0,
     totalGroups: groups.length,
+    isLoading,
+    error,
   };
 };
 
@@ -17,12 +24,16 @@ export const useGroups = () => {
  * Hook to access a single group by ID.
  */
 export const useGroup = (groupId: string) => {
-  const group = useGroupStore((state) => 
-    state.groups.find((g) => g.id === groupId)
-  );
+  const { data: group, isLoading, error } = useQuery({
+    queryKey: queryKeys.group(groupId),
+    queryFn: () => getGroup(groupId),
+    enabled: !!groupId,
+  });
 
   return {
     group,
     exists: !!group,
+    isLoading,
+    error,
   };
 };

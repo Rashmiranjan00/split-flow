@@ -1,7 +1,8 @@
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'styled-components/native';
 import { useAuthStore } from '@/features/auth/store';
@@ -15,14 +16,20 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-
-const queryClient = new QueryClient();
-
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Splash may already be hidden in dev fast-refresh; swallow the warning.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+  },
 });
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /**
  * The "Warm Minimalist Finance" revamp is light-mode-only. We keep the
@@ -30,9 +37,42 @@ SplashScreen.preventAutoHideAsync().catch(() => {
  * with the ClearLight palette. Dark mode is intentionally out of scope
  * for this revamp.
  */
-const RootLayout = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const segments = useSegments();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace('/(auth)');
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading, segments, router]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: ClearLight.background }}>
+        <ActivityIndicator size="large" color={ClearLight.primary} />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+const RootLayout = () => {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -55,22 +95,22 @@ const RootLayout = () => {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: ClearLight.background },
-            }}
-          >
-            {isAuthenticated ? (
+          <AuthGate>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: ClearLight.background },
+              }}
+            >
               <Stack.Screen name="(tabs)" />
-            ) : (
               <Stack.Screen name="(auth)" />
-            )}
-            <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
-            <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
-          </Stack>
+              <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
+              <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
+            </Stack>
+          </AuthGate>
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

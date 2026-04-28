@@ -7,8 +7,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
-    "build:dev:android": "eas build --platform android --profile development",
-    "build:dev:ios": "eas build --platform ios --profile development",
+    "build:android": "eas build --platform android --profile preview",
+    "build:android:local": "eas build --local --platform android --profile preview",
+    "build:ios": "eas build --platform ios --profile preview",
+    "build:ios:local": "eas build --local --platform ios --profile preview",
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch"

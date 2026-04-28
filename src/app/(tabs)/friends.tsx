@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Search, UserPlus, Inbox, Users as UsersIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Screen, Content, Spacer, SurfaceCard, TxnRow } from '@/shared/components/Layout';
@@ -129,9 +129,7 @@ const EmptyState = styled.View`
   padding: ${Spacing.xxxl}px ${Spacing.screenPadding}px;
 `;
 
-const EmptyEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.regular};
-  font-size: 40px;
+const EmptyIconWrap = styled.View`
   margin-bottom: ${Spacing.md}px;
 `;
 
@@ -191,7 +189,7 @@ const FriendsScreen = () => {
 
         <SearchRow>
           <SearchField>
-            <MaterialIcons name="search" size={18} color={theme.colors.onSurfaceVariant} />
+            <Search size={18} color={theme.colors.onSurfaceVariant} />
             <SearchInput
               placeholder="Search friends"
               placeholderTextColor={theme.colors.onSurfaceVariant}
@@ -207,7 +205,7 @@ const FriendsScreen = () => {
             accessibilityRole="button"
             accessibilityLabel="Add friend"
           >
-            <MaterialIcons name="person-add-alt" size={20} color={theme.colors.primary} />
+            <UserPlus size={20} color={theme.colors.primary} />
           </IconSquare>
           <IconSquare
             activeOpacity={0.7}
@@ -215,7 +213,7 @@ const FriendsScreen = () => {
             accessibilityRole="button"
             accessibilityLabel="View friend requests"
           >
-            <MaterialIcons name="inbox" size={20} color={theme.colors.primary} />
+            <Inbox size={20} color={theme.colors.primary} />
             {incomingCount > 0 ? (
               <IconBadge>
                 <IconBadgeText>{incomingCount > 9 ? '9+' : String(incomingCount)}</IconBadgeText>
@@ -246,17 +244,13 @@ const FriendsScreen = () => {
           </EmptyState>
         ) : friends.length === 0 ? (
           <EmptyState>
-            <EmptyEmoji>👥</EmptyEmoji>
+            <EmptyIconWrap>
+              <UsersIcon size={40} color={theme.colors.onSurfaceVariant} />
+            </EmptyIconWrap>
             <Title>No friends yet</Title>
             <Spacer size="sm" />
             <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
-              Tap the{' '}
-              <MaterialIcons
-                name="person-add-alt"
-                size={14}
-                color={theme.colors.primary}
-              />
-              {'  '}button to search for someone by email.
+              Tap the + button to search for someone by email.
             </BodyMd>
           </EmptyState>
         ) : filtered.length === 0 ? (

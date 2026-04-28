@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X, ArrowRight } from 'lucide-react-native';
 import { Alert, View } from 'react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -152,7 +152,7 @@ const SettleScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <BackBtn onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </BackBtn>
         <HeaderTitle>Settle up</HeaderTitle>
         <View style={{ width: 36 }} />
@@ -162,7 +162,7 @@ const SettleScreen = () => {
         <AvatarRow>
           <Avatar name={user?.name ?? 'You'} size={Spacing.avatarLg} />
           <ArrowCircle>
-            <MaterialIcons name="arrow-forward" size={18} color={theme.colors.brandDark} />
+            <ArrowRight size={18} color={theme.colors.brandDark} />
           </ArrowCircle>
           <Avatar name={friend?.name ?? 'Friend'} size={Spacing.avatarLg} />
         </AvatarRow>

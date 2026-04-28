@@ -1,9 +1,8 @@
 import React from 'react';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
+import { Plane, Home, UtensilsCrossed, Briefcase, type LucideIcon } from 'lucide-react-native';
 import { TxnRow } from '@/shared/components/Layout';
 import { Amount, RowSubtitle, RowTitle } from '@/shared/components/Typography';
-import { Spacing } from '@/shared/constants/spacing';
-import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 
 interface Group {
@@ -38,18 +37,12 @@ const GroupIcon = styled.View`
   justify-content: center;
 `;
 
-const GroupEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.regular};
-  font-size: 20px;
-`;
-
-const getGroupEmoji = (name: string): string => {
-  const match = name.match(/[\u{1F300}-\u{1FAFF}]/u);
-  if (match) return match[0];
-  if (name.toLowerCase().includes('trip')) return '✈️';
-  if (name.toLowerCase().includes('home') || name.toLowerCase().includes('house')) return '🏠';
-  if (name.toLowerCase().includes('food') || name.toLowerCase().includes('dinner')) return '🍽';
-  return '💼';
+const getGroupIcon = (name: string): LucideIcon => {
+  const lower = name.toLowerCase();
+  if (lower.includes('trip')) return Plane;
+  if (lower.includes('home') || lower.includes('house')) return Home;
+  if (lower.includes('food') || lower.includes('dinner')) return UtensilsCrossed;
+  return Briefcase;
 };
 
 export const GroupCard: React.FC<GroupCardProps> = ({
@@ -60,6 +53,8 @@ export const GroupCard: React.FC<GroupCardProps> = ({
   isLast,
 }) => {
   const { formatCurrency } = useCurrencyFormatter();
+  const theme = useTheme();
+  const Icon = getGroupIcon(group.name);
 
   const displayName = group.name.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
   const subtitleParts: string[] = [`${group.members.length} member${group.members.length === 1 ? '' : 's'}`];
@@ -75,7 +70,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
       isLast={isLast}
       leading={
         <GroupIcon>
-          <GroupEmoji>{getGroupEmoji(group.name)}</GroupEmoji>
+          <Icon size={20} color={theme.colors.brandDark} />
         </GroupIcon>
       }
       title={<RowTitle numberOfLines={1}>{displayName}</RowTitle>}

@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Bell, ShieldCheck, Download, HelpCircle, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -199,19 +199,19 @@ const ProfileScreen = () => {
     ]);
   };
 
-  const menuItems: { icon: any; label: string; value?: string }[] = [
-    { icon: 'notifications-none', label: 'Notifications', value: 'On' },
-    { icon: 'privacy-tip', label: 'Privacy' },
+  const menuItems: { icon: LucideIcon; label: string; value?: string }[] = [
+    { icon: Bell, label: 'Notifications', value: 'On' },
+    { icon: ShieldCheck, label: 'Privacy' },
   ];
 
-  const accountItems: { icon: any; label: string; onPress: () => void }[] = [
+  const accountItems: { icon: LucideIcon; label: string; onPress: () => void }[] = [
     {
-      icon: 'download',
+      icon: Download,
       label: 'Export data',
       onPress: () => Alert.alert('Export', 'Data export coming soon!'),
     },
     {
-      icon: 'help-outline',
+      icon: HelpCircle,
       label: 'Help & support',
       onPress: () => Alert.alert('Help', 'Help center coming soon!'),
     },
@@ -289,20 +289,23 @@ const ProfileScreen = () => {
           <SectionLabel style={{ fontSize: 11 }}>Preferences</SectionLabel>
           <Spacer size="sm" />
           <MenuCard>
-            {menuItems.map((item, idx) => (
-              <React.Fragment key={item.label}>
-                <MenuItem
-                  activeOpacity={0.6}
-                  onPress={() => Alert.alert(item.label, 'Settings coming soon!')}
-                >
-                  <MaterialIcons name={item.icon} size={18} color={theme.colors.onSurfaceVariant} />
-                  <MenuLabel>{item.label}</MenuLabel>
-                  {item.value ? <MenuValue>{item.value}</MenuValue> : null}
-                  <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
-                </MenuItem>
-                {idx < menuItems.length - 1 && <MenuRowDivider />}
-              </React.Fragment>
-            ))}
+            {menuItems.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <React.Fragment key={item.label}>
+                  <MenuItem
+                    activeOpacity={0.6}
+                    onPress={() => Alert.alert(item.label, 'Settings coming soon!')}
+                  >
+                    <Icon size={18} color={theme.colors.onSurfaceVariant} />
+                    <MenuLabel>{item.label}</MenuLabel>
+                    {item.value ? <MenuValue>{item.value}</MenuValue> : null}
+                    <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
+                  </MenuItem>
+                  {idx < menuItems.length - 1 && <MenuRowDivider />}
+                </React.Fragment>
+              );
+            })}
           </MenuCard>
         </Section>
 
@@ -310,16 +313,19 @@ const ProfileScreen = () => {
           <SectionLabel style={{ fontSize: 11 }}>Account</SectionLabel>
           <Spacer size="sm" />
           <MenuCard>
-            {accountItems.map((item, idx) => (
-              <React.Fragment key={item.label}>
-                <MenuItem activeOpacity={0.6} onPress={item.onPress}>
-                  <MaterialIcons name={item.icon} size={18} color={theme.colors.onSurfaceVariant} />
-                  <MenuLabel>{item.label}</MenuLabel>
-                  <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
-                </MenuItem>
-                {idx < accountItems.length - 1 && <MenuRowDivider />}
-              </React.Fragment>
-            ))}
+            {accountItems.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <React.Fragment key={item.label}>
+                  <MenuItem activeOpacity={0.6} onPress={item.onPress}>
+                    <Icon size={18} color={theme.colors.onSurfaceVariant} />
+                    <MenuLabel>{item.label}</MenuLabel>
+                    <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
+                  </MenuItem>
+                  {idx < accountItems.length - 1 && <MenuRowDivider />}
+                </React.Fragment>
+              );
+            })}
           </MenuCard>
         </Section>
 

@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
-    "@expo/vector-icons": "^15.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@shopify/react-native-skia": "2.2.12",
@@ -35,6 +34,7 @@
     "expo-splash-screen": "^55.0.19",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
+    "lucide-react-native": "^1.11.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.72.1",

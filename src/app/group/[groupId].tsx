@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { ArrowLeft, UserPlus, Plane, Home as HomeIcon, UtensilsCrossed, Briefcase, type LucideIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Radius, Spacing } from '@/shared/constants/spacing';
@@ -61,9 +61,7 @@ const HeroSection = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.lg}px;
 `;
 
-const GroupEmoji = styled.Text`
-  font-family: ${TypographyTokens.fonts.regular};
-  font-size: 32px;
+const GroupIconWrap = styled.View`
   margin-bottom: ${Spacing.sm}px;
 `;
 
@@ -121,9 +119,12 @@ const BottomCTA = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.xl}px;
 `;
 
-const getGroupEmoji = (name: string): string => {
-  const match = name.match(/[\u{1F300}-\u{1FAFF}]/u);
-  return match ? match[0] : '💼';
+const getGroupIcon = (name: string): LucideIcon => {
+  const lower = name.toLowerCase();
+  if (lower.includes('trip')) return Plane;
+  if (lower.includes('home') || lower.includes('house')) return HomeIcon;
+  if (lower.includes('food') || lower.includes('dinner')) return UtensilsCrossed;
+  return Briefcase;
 };
 
 const GroupDetailScreen = () => {
@@ -157,7 +158,7 @@ const GroupDetailScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="arrow-back" size={22} color={theme.colors.onSurface} />
+          <ArrowLeft size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitleRow>
           <HeaderTitle numberOfLines={1}>{displayName}</HeaderTitle>
@@ -169,13 +170,15 @@ const GroupDetailScreen = () => {
           accessibilityRole="button"
           accessibilityLabel="Add members"
         >
-          <MaterialIcons name="person-add-alt" size={22} color={theme.colors.onSurface} />
+          <UserPlus size={22} color={theme.colors.onSurface} />
         </IconButton>
       </HeaderBar>
 
       <Content showsVerticalScrollIndicator={false}>
         <HeroSection>
-          <GroupEmoji>{getGroupEmoji(group.name)}</GroupEmoji>
+          <GroupIconWrap>
+            {React.createElement(getGroupIcon(group.name), { size: 32, color: theme.colors.onSurfaceVariant })}
+          </GroupIconWrap>
           <GroupName>{displayName}</GroupName>
           {group.description ? (
             <GroupDescription>{group.description}</GroupDescription>

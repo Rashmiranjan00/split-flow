@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X } from 'lucide-react-native';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -75,11 +75,11 @@ const AddMembersScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitle>Add Members</HeaderTitle>
         <IconButton style={{ opacity: 0 }} disabled>
-          <MaterialIcons name="close" size={22} color="transparent" />
+          <X size={22} color="transparent" />
         </IconButton>
       </HeaderBar>
 

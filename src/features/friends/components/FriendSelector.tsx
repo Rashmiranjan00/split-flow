@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { ActivityIndicator, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Search, Check } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SpaceBetweenRow, Spacer, TxnRow } from '@/shared/components/Layout';
@@ -115,7 +115,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = ({
       </SpaceBetweenRow>
 
       <SearchField>
-        <MaterialIcons name="search" size={18} color={theme.colors.onSurfaceVariant} />
+        <Search size={18} color={theme.colors.onSurfaceVariant} />
         <SearchInput
           placeholder={searchPlaceholder}
           placeholderTextColor={theme.colors.onSurfaceVariant}
@@ -162,7 +162,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = ({
               trailing={
                 <Checkbox checked={checked}>
                   {checked ? (
-                    <MaterialIcons name="check" size={16} color={theme.colors.onPrimary} />
+                    <Check size={16} color={theme.colors.onPrimary} />
                   ) : null}
                 </Checkbox>
               }

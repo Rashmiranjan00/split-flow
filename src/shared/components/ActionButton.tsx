@@ -1,7 +1,7 @@
 import React from 'react';
 import { ViewStyle } from 'react-native';
 import styled from 'styled-components/native';
-import { MaterialIcons } from '@expo/vector-icons';
+import type { LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 
@@ -51,7 +51,7 @@ interface ActionButtonProps {
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
-  icon?: string;
+  icon?: LucideIcon;
   style?: ViewStyle;
 }
 
@@ -60,7 +60,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   onPress,
   variant = 'primary',
   disabled = false,
-  icon,
+  icon: Icon,
   style,
 }) => {
   return (
@@ -71,9 +71,8 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
       activeOpacity={0.85}
       style={style}
     >
-      {icon && (
-        <MaterialIcons
-          name={icon as any}
+      {Icon && (
+        <Icon
           size={18}
           color={disabled ? '#BBBBBB' : variant === 'primary' ? '#FFFFFF' : '#006C4F'}
           style={{ marginRight: Spacing.sm }}

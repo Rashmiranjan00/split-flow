@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X, Inbox } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -179,11 +179,11 @@ const FriendRequestsScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitle>Friend Requests</HeaderTitle>
         <IconButton style={{ opacity: 0 }} disabled>
-          <MaterialIcons name="close" size={22} color="transparent" />
+          <X size={22} color="transparent" />
         </IconButton>
       </HeaderBar>
 
@@ -200,8 +200,7 @@ const FriendRequestsScreen = () => {
           </EmptySection>
         ) : totalCount === 0 ? (
           <EmptySection>
-            <MaterialIcons
-              name="inbox"
+            <Inbox
               size={40}
               color={theme.colors.onSurfaceVariant}
             />

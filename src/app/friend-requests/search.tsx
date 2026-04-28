@@ -8,7 +8,7 @@ import {
   Platform,
   View,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X, Search, XCircle, AtSign, SearchX } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer, TxnRow } from '@/shared/components/Layout';
@@ -140,11 +140,11 @@ const FriendSearchScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitle>Add Friend</HeaderTitle>
         <IconButton style={{ opacity: 0 }} disabled>
-          <MaterialIcons name="close" size={22} color="transparent" />
+          <X size={22} color="transparent" />
         </IconButton>
       </HeaderBar>
 
@@ -154,7 +154,7 @@ const FriendSearchScreen = () => {
       >
         <Body>
           <SearchField>
-            <MaterialIcons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+            <Search size={20} color={theme.colors.onSurfaceVariant} />
             <SearchInput
               placeholder="Search by email"
               placeholderTextColor={theme.colors.onSurfaceVariant}
@@ -167,8 +167,7 @@ const FriendSearchScreen = () => {
             />
             {input.length > 0 ? (
               <IconButton onPress={() => setInput('')}>
-                <MaterialIcons
-                  name="cancel"
+                <XCircle
                   size={18}
                   color={theme.colors.onSurfaceVariant}
                 />
@@ -186,8 +185,7 @@ const FriendSearchScreen = () => {
 
           {isEmpty ? (
             <StateMessage>
-              <MaterialIcons
-                name="alternate-email"
+              <AtSign
                 size={40}
                 color={theme.colors.onSurfaceVariant}
               />
@@ -208,8 +206,7 @@ const FriendSearchScreen = () => {
             </StateMessage>
           ) : !hasResults ? (
             <StateMessage>
-              <MaterialIcons
-                name="search-off"
+              <SearchX
                 size={40}
                 color={theme.colors.onSurfaceVariant}
               />

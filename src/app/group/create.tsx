@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import { X } from 'lucide-react-native';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -91,11 +91,11 @@ const CreateGroupScreen = () => {
     <SafeScreen>
       <HeaderBar>
         <IconButton onPress={() => router.back()}>
-          <MaterialIcons name="close" size={22} color={theme.colors.onSurface} />
+          <X size={22} color={theme.colors.onSurface} />
         </IconButton>
         <HeaderTitle>New Group</HeaderTitle>
         <IconButton style={{ opacity: 0 }} disabled>
-          <MaterialIcons name="close" size={22} color="transparent" />
+          <X size={22} color="transparent" />
         </IconButton>
       </HeaderBar>
 

@@ -4,7 +4,7 @@ import styled from 'styled-components/native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Feather } from '@expo/vector-icons';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -316,11 +316,11 @@ const AuthScreen = () => {
                   style={{ paddingHorizontal: Spacing.md }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Feather
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={20}
-                    color="#999"
-                  />
+                  {showPassword ? (
+                    <EyeOff size={20} color="#999" />
+                  ) : (
+                    <Eye size={20} color="#999" />
+                  )}
                 </TouchableOpacity>
               </PasswordWrapper>
             )}

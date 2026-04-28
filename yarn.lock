@@ -1835,7 +1835,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/vector-icons@npm:^15.0.3, @expo/vector-icons@npm:^15.1.1":
+"@expo/vector-icons@npm:^15.0.3":
   version: 15.1.1
   resolution: "@expo/vector-icons@npm:15.1.1"
   peerDependencies:
@@ -9305,6 +9305,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react-native@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "lucide-react-native@npm:1.11.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-native: "*"
+    react-native-svg: ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0
+  checksum: 10c0/49caddf8b8a54a8200dea4517e2f858a5fbc293b7a06e0f5488c912dd9f913abc415507f24fca5e8572504535811e8a1d69204b6b3f1f55b00357d98f1b34459
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^4.0.0":
   version: 4.0.0
   resolution: "make-dir@npm:4.0.0"
@@ -11908,7 +11919,6 @@ __metadata:
   resolution: "split-flow@workspace:."
   dependencies:
     "@expo-google-fonts/inter": "npm:^0.4.2"
-    "@expo/vector-icons": "npm:^15.1.1"
     "@hookform/resolvers": "npm:^5.2.2"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
     "@shopify/react-native-skia": "npm:2.2.12"
@@ -11941,6 +11951,7 @@ __metadata:
     expo-status-bar: "npm:~3.0.9"
     jest: "npm:^30.3.0"
     jest-expo: "npm:^55.0.15"
+    lucide-react-native: "npm:^1.11.0"
     prettier: "npm:^3.8.1"
     react: "npm:19.1.0"
     react-dom: "npm:19.1.0"

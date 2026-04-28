@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Plus, CheckCircle2, Receipt } from 'lucide-react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -21,7 +21,7 @@ import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useActivity } from '@/features/activity/hooks/useActivity';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
 
-const ICON_FOR_ACTIVITY = (type: string) => (type === 'SETTLEMENT' ? '✓' : '💸');
+const ICON_FOR_ACTIVITY = (type: string) => (type === 'SETTLEMENT' ? CheckCircle2 : Receipt);
 
 const TopBar = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px;
@@ -133,7 +133,7 @@ const HomeScreen = () => {
 
       <FABWrapper>
         <FABButton onPress={() => router.push('/expense/add')} activeOpacity={0.85}>
-          <MaterialIcons name="add" size={26} color={theme.colors.onPrimary} />
+          <Plus size={26} color={theme.colors.onPrimary} />
         </FABButton>
       </FABWrapper>
     </Screen>

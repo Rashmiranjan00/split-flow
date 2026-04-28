@@ -39,9 +39,10 @@ export async function signIn({ email, password }: SignInParams) {
   return data;
 }
 
-/** End the current session. */
+/** End the current session locally. scope:'local' skips the server round-trip
+ *  so the auth lock is released immediately, letting a subsequent signIn proceed. */
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) throw error;
 }
 

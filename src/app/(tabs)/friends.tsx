@@ -268,7 +268,7 @@ const FriendsScreen = () => {
                 <TxnRow
                   key={friend.id}
                   isLast={isLast}
-                  onPress={() => router.push(`/settle/${friend.id}` as any)}
+                  onPress={() => router.push(`/friend/${friend.id}` as any)}
                   onLongPress={() => handleRemove(friend)}
                   leading={<Avatar name={friend.name} imageUrl={friend.avatarUrl} />}
                   title={<RowTitle numberOfLines={1}>{friend.name}</RowTitle>}

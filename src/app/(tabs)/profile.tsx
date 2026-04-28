@@ -187,13 +187,10 @@ const ProfileScreen = () => {
       {
         text: 'Sign Out',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch {
-            // signOut may fail if session already expired; logout locally anyway
-          }
+        onPress: () => {
+          signOut().catch(() => {});
           logout();
+          router.replace('/(auth)');
         },
       },
     ]);

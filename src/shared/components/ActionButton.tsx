@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewStyle } from 'react-native';
-import styled from 'styled-components/native';
+import styled, { useTheme } from 'styled-components/native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -63,6 +63,13 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   icon: Icon,
   style,
 }) => {
+  const theme = useTheme();
+  const iconColor = disabled
+    ? theme.colors.onSurfaceVariant
+    : variant === 'primary'
+    ? theme.colors.onPrimary
+    : theme.colors.primary;
+
   return (
     <ButtonContainer
       variant={variant}
@@ -74,7 +81,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
       {Icon && (
         <Icon
           size={18}
-          color={disabled ? '#BBBBBB' : variant === 'primary' ? '#FFFFFF' : '#006C4F'}
+          color={iconColor}
           style={{ marginRight: Spacing.sm }}
         />
       )}

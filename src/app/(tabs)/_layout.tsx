@@ -13,7 +13,7 @@ const TabsLayout = () => {
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: theme.colors.surfaceContainerLowest,
             borderTopWidth: 0.5,
             borderTopColor: theme.colors.divider,
             height: 68,

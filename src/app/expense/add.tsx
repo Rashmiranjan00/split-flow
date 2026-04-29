@@ -10,6 +10,7 @@ import { SafeScreen, SpaceBetweenRow, Spacer, SurfaceCard } from '@/shared/compo
 import { BodyMd, SectionLabel, RowTitle, RowSubtitle } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { useAddExpenseForm } from '@/features/expenses/hooks/useAddExpenseForm';
+import { useWebKeyboardShortcuts } from '@/shared/hooks/useWebKeyboardShortcuts';
 import { ParticipantSelector } from '@/features/expenses/components/ParticipantSelector';
 import { PaidBySelector } from '@/features/expenses/components/PaidBySelector';
 import { CategorySelector } from '@/features/expenses/components/CategorySelector';
@@ -268,6 +269,17 @@ const AddExpenseScreen = () => {
   const paidBy = watch('paidBy');
   const amount = parseFloat(amountStr) || 0;
   const saveDisabled = amount <= 0 || isSubmitting;
+
+  useWebKeyboardShortcuts([
+    { key: 'Escape', handler: () => router.back() },
+    {
+      key: 'Enter',
+      meta: true,
+      handler: () => {
+        if (!saveDisabled) handleSubmit();
+      },
+    },
+  ]);
 
   // Pre-fill participants when friendId is provided
   React.useEffect(() => {

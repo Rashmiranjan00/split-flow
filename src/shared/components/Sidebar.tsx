@@ -1,5 +1,5 @@
-import React from 'react';
-import { Platform, useWindowDimensions } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { Platform, Pressable, useWindowDimensions } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { usePathname, useRouter } from 'expo-router';
 import { Home, Users, Contact, Bell, User } from 'lucide-react-native';
@@ -29,7 +29,7 @@ export function useSidebarVisible() {
   return Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
 }
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC = React.memo(() => {
   const theme = useTheme();
   const pathname = usePathname();
   const router = useRouter();
@@ -41,6 +41,13 @@ export const Sidebar: React.FC = () => {
     return pathname.startsWith(item.matchPath);
   };
 
+  const handleNav = useCallback(
+    (route: string) => {
+      router.push(route as any);
+    },
+    [router]
+  );
+
   return (
     <Container>
       <LogoArea>
@@ -50,21 +57,54 @@ export const Sidebar: React.FC = () => {
       <NavList>
         {NAV_ITEMS.map((item) => {
           const active = isActive(item);
-          const Icon = item.icon;
-          const color = active ? theme.colors.primary : theme.colors.onSurfaceVariant;
-
           return (
-            <NavItemButton
-              key={item.label}
-              onPress={() => router.push(item.route as any)}
-              $active={active}>
-              <Icon size={20} color={color} />
-              <NavLabel $active={active}>{item.label}</NavLabel>
-            </NavItemButton>
+            <NavItemWithHover key={item.label} item={item} active={active} onPress={handleNav} />
           );
         })}
       </NavList>
     </Container>
+  );
+});
+
+Sidebar.displayName = 'Sidebar';
+
+// --- Nav Item with Hover ---
+
+interface NavItemWithHoverProps {
+  item: NavItem;
+  active: boolean;
+  onPress: (route: string) => void;
+}
+
+const NavItemWithHover: React.FC<NavItemWithHoverProps> = ({ item, active, onPress }) => {
+  const theme = useTheme();
+  const [hovered, setHovered] = useState(false);
+  const Icon = item.icon;
+  const color = active ? theme.colors.primary : theme.colors.onSurfaceVariant;
+
+  const bgColor = active
+    ? theme.colors.surfaceContainerHigh
+    : hovered
+      ? theme.colors.surfaceContainer
+      : 'transparent';
+
+  return (
+    <Pressable
+      onPress={() => onPress(item.route)}
+      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: Spacing.rowVertical,
+        paddingHorizontal: Spacing.md,
+        borderRadius: Spacing.sm,
+        marginBottom: Spacing.xs,
+        backgroundColor: bgColor,
+      }}>
+      <Icon size={20} color={color} />
+      <NavLabel $active={active}>{item.label}</NavLabel>
+    </Pressable>
   );
 };
 
@@ -92,17 +132,6 @@ const AppName = styled.Text`
 
 const NavList = styled.View`
   padding-horizontal: ${Spacing.sm}px;
-`;
-
-const NavItemButton = styled.TouchableOpacity<{ $active: boolean }>`
-  flex-direction: row;
-  align-items: center;
-  padding-vertical: ${Spacing.rowVertical}px;
-  padding-horizontal: ${Spacing.md}px;
-  border-radius: ${Spacing.sm}px;
-  margin-bottom: ${Spacing.xs}px;
-  background-color: ${({ theme, $active }) =>
-    $active ? theme.colors.surfaceContainerHigh : 'transparent'};
 `;
 
 const NavLabel = styled.Text<{ $active: boolean }>`

@@ -3,15 +3,11 @@ import styled, { useTheme } from 'styled-components/native';
 import { View } from 'react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
-import {
-  Screen,
-  Content,
-  SectionHeader,
-  Spacer,
-} from '@/shared/components/Layout';
+import { Screen, Content, SectionHeader, Spacer } from '@/shared/components/Layout';
 import { BodyMd } from '@/shared/components/Typography';
 import { ActivityItem } from '@/features/activity/components/ActivityItem';
 import { useActivity } from '@/features/activity/hooks/useActivity';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderRow = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px;
@@ -29,7 +25,7 @@ const ScreenTitle = styled.Text`
 
 const ActivityScreen = () => {
   const theme = useTheme();
-  const { activity } = useActivity();
+  const { activity, isLoading } = useActivity();
 
   const groupedActivity = React.useMemo(() => {
     const groups: { [date: string]: typeof activity } = {};
@@ -46,6 +42,14 @@ const ActivityScreen = () => {
     return Object.entries(groups).map(([date, data]) => ({ date, data }));
   }, [activity]);
 
+  if (isLoading) {
+    return (
+      <Screen>
+        <LoadingView message="Loading activity..." />
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
@@ -54,7 +58,12 @@ const ActivityScreen = () => {
         </HeaderRow>
 
         {groupedActivity.length === 0 ? (
-          <View style={{ alignItems: 'center', marginTop: 80, paddingHorizontal: Spacing.screenPadding }}>
+          <View
+            style={{
+              alignItems: 'center',
+              marginTop: 80,
+              paddingHorizontal: Spacing.screenPadding,
+            }}>
             <BodyMd style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
               No activity yet.{'\n'}Add an expense to see it here.
             </BodyMd>

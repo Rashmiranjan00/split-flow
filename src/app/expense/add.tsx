@@ -7,12 +7,7 @@ import { ChevronRight } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, SpaceBetweenRow, Spacer, SurfaceCard } from '@/shared/components/Layout';
-import {
-  BodyMd,
-  SectionLabel,
-  RowTitle,
-  RowSubtitle,
-} from '@/shared/components/Typography';
+import { BodyMd, SectionLabel, RowTitle, RowSubtitle } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { useAddExpenseForm } from '@/features/expenses/hooks/useAddExpenseForm';
 import { ParticipantSelector } from '@/features/expenses/components/ParticipantSelector';
@@ -206,12 +201,26 @@ const AddExpenseScreen = () => {
   const theme = useTheme();
   const { currencySymbol } = useCurrencyFormatter();
   const { userId, user } = useUser();
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { groupId, friendId } = useLocalSearchParams<{ groupId?: string; friendId?: string }>();
 
   const { groups } = useGroups();
   const { friends: friendsList } = useFriends();
 
-  const currentGroupId = groupId || (groups.length > 0 ? groups[0].id : '');
+  // Determine the active group:
+  // 1. Explicit groupId param → use it
+  // 2. friendId param → find a shared group, or fall back to first group
+  // 3. Default → first group
+  const currentGroupId = React.useMemo(() => {
+    if (groupId) return groupId;
+    if (friendId && groups.length > 0) {
+      const sharedGroup = groups.find(
+        (g) => g.members.includes(friendId) && g.members.includes(userId)
+      );
+      if (sharedGroup) return sharedGroup.id;
+    }
+    return groups.length > 0 ? groups[0].id : '';
+  }, [groupId, friendId, groups, userId]);
+
   const currentGroup = groups.find((g) => g.id === currentGroupId);
 
   /**
@@ -222,14 +231,25 @@ const AddExpenseScreen = () => {
    * dev when mock data is sparse.
    */
   const groupMembers: User[] = React.useMemo(() => {
-    if (!currentGroup) return [];
+    if (!currentGroup) {
+      // No group resolved — if friendId is provided, create a minimal member list
+      if (friendId) {
+        const members: User[] = [];
+        if (user) members.push(user);
+        const friend = friendsList.find((f) => f.id === friendId);
+        if (friend) members.push(friend);
+        else members.push({ id: friendId, name: friendId, email: '' });
+        return members;
+      }
+      return [];
+    }
     return currentGroup.members.map<User>((memberId) => {
       if (memberId === userId && user) return user;
       const match = friendsList.find((f) => f.id === memberId);
       if (match) return match;
       return { id: memberId, name: memberId, email: '' };
     });
-  }, [currentGroup, friendsList, user, userId]);
+  }, [currentGroup, friendsList, user, userId, friendId]);
 
   const {
     form,
@@ -239,6 +259,7 @@ const AddExpenseScreen = () => {
     splitDetails,
     setSplitType,
     updateSplitValues,
+    isSubmitting,
   } = useAddExpenseForm(currentGroupId);
 
   const { control, watch, setValue } = form;
@@ -246,7 +267,15 @@ const AddExpenseScreen = () => {
   const category = watch('category') ?? 'Other';
   const paidBy = watch('paidBy');
   const amount = parseFloat(amountStr) || 0;
-  const saveDisabled = amount <= 0;
+  const saveDisabled = amount <= 0 || isSubmitting;
+
+  // Pre-fill participants when friendId is provided
+  React.useEffect(() => {
+    if (friendId && userId) {
+      const ids = [userId, friendId];
+      setValue('participants', ids);
+    }
+  }, [friendId, userId, setValue]);
 
   const [showMore, setShowMore] = React.useState(false);
   const [activeOption, setActiveOption] = React.useState<
@@ -256,7 +285,11 @@ const AddExpenseScreen = () => {
   const toggleParticipant = (id: string) => {
     const current = [...participants];
     if (current.includes(id)) {
-      if (current.length > 1) setValue('participants', current.filter((pid) => pid !== id));
+      if (current.length > 1)
+        setValue(
+          'participants',
+          current.filter((pid) => pid !== id)
+        );
     } else {
       setValue('participants', [...current, id]);
     }
@@ -264,7 +297,7 @@ const AddExpenseScreen = () => {
 
   const paidByName = React.useMemo(() => {
     const m = groupMembers.find((mm) => mm.id === paidBy);
-    return m?.id === userId ? 'You' : m?.name ?? 'You';
+    return m?.id === userId ? 'You' : (m?.name ?? 'You');
   }, [groupMembers, paidBy, userId]);
 
   const participantAvatars = React.useMemo(
@@ -276,8 +309,7 @@ const AddExpenseScreen = () => {
     <SafeScreen edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
+        style={{ flex: 1 }}>
         <Grabber />
 
         <SheetHeader>
@@ -286,7 +318,7 @@ const AddExpenseScreen = () => {
           </HeaderButton>
           <SheetTitle>New expense</SheetTitle>
           <HeaderButton onPress={handleSubmit} disabled={saveDisabled}>
-            <SaveText disabled={saveDisabled}>Save</SaveText>
+            <SaveText disabled={saveDisabled}>{isSubmitting ? 'Saving…' : 'Save'}</SaveText>
           </HeaderButton>
         </SheetHeader>
 
@@ -331,8 +363,7 @@ const AddExpenseScreen = () => {
           {/* Option rows */}
           <OptionRow
             activeOpacity={0.6}
-            onPress={() => setActiveOption((a) => (a === 'paidBy' ? null : 'paidBy'))}
-          >
+            onPress={() => setActiveOption((a) => (a === 'paidBy' ? null : 'paidBy'))}>
             <OptionLabel>Paid by</OptionLabel>
             <OptionValueRow>
               <OptionValueText>{paidByName}</OptionValueText>
@@ -356,10 +387,7 @@ const AddExpenseScreen = () => {
 
           <OptionRow
             activeOpacity={0.6}
-            onPress={() =>
-              setActiveOption((a) => (a === 'participants' ? null : 'participants'))
-            }
-          >
+            onPress={() => setActiveOption((a) => (a === 'participants' ? null : 'participants'))}>
             <OptionLabel>Split with</OptionLabel>
             <OptionValueRow>
               <AvatarStackMini>
@@ -388,8 +416,7 @@ const AddExpenseScreen = () => {
 
           <OptionRow
             activeOpacity={0.6}
-            onPress={() => setActiveOption((a) => (a === 'splitType' ? null : 'splitType'))}
-          >
+            onPress={() => setActiveOption((a) => (a === 'splitType' ? null : 'splitType'))}>
             <OptionLabel>Split type</OptionLabel>
             <OptionValueRow>
               <TealBadge>
@@ -417,16 +444,14 @@ const AddExpenseScreen = () => {
                         paddingHorizontal: 14,
                         paddingVertical: 8,
                         borderRadius: Radius.full,
-                      }}
-                    >
+                      }}>
                       <BodyMd
                         onPress={() => setSplitType(m.key)}
                         style={{
                           fontSize: 13,
                           fontWeight: '600',
                           color: active ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
-                        }}
-                      >
+                        }}>
                         {m.label}
                       </BodyMd>
                     </View>
@@ -475,8 +500,7 @@ const AddExpenseScreen = () => {
 
           <OptionRow
             activeOpacity={0.6}
-            onPress={() => setActiveOption((a) => (a === 'category' ? null : 'category'))}
-          >
+            onPress={() => setActiveOption((a) => (a === 'category' ? null : 'category'))}>
             <OptionLabel>Category</OptionLabel>
             <OptionValueRow>
               <OptionValueText>{category}</OptionValueText>

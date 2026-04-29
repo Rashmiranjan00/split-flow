@@ -1,9 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/services/supabase/queryKeys';
-import {
-  listIncomingRequests,
-  listOutgoingRequests,
-} from '@/services/supabase/friends';
+import { listIncomingRequests, listOutgoingRequests } from '@/services/supabase/friends';
 import { useUser } from '@/shared/hooks/useUser';
 
 /**
@@ -37,7 +34,7 @@ export const useFriendRequests = () => {
     outgoing: outgoingQuery.data ?? [],
     incomingCount: incomingQuery.data?.length ?? 0,
     outgoingCount: outgoingQuery.data?.length ?? 0,
-    isLoading: false,
+    isLoading: incomingQuery.isLoading || outgoingQuery.isLoading,
     error: incomingQuery.error ?? outgoingQuery.error,
   };
 };

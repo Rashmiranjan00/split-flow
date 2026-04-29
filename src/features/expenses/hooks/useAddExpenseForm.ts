@@ -14,7 +14,9 @@ const splitDetailSchema = z.object({
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
-  amount: z.string().refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Enter valid amount'),
+  amount: z
+    .string()
+    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Enter valid amount'),
   paidBy: z.string().min(1, 'Select who paid'),
   groupId: z.string().min(1, 'Select a group'),
   participants: z.array(z.string()).min(1, 'Select at least one participant'),
@@ -51,6 +53,13 @@ export const useAddExpenseForm = (groupId: string) => {
   const participants = useWatch({ control, name: 'participants' });
   const splitType = useWatch({ control, name: 'splitType' });
   const splitDetails = useWatch({ control, name: 'splitDetails' });
+
+  // Keep form groupId in sync when the prop changes (e.g. groups load async)
+  useEffect(() => {
+    if (groupId) {
+      setValue('groupId', groupId);
+    }
+  }, [groupId, setValue]);
 
   const recalculateSplits = useCallback(() => {
     const totalAmount = parseFloat(amountStr) || 0;

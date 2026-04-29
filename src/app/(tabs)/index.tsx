@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { Plus, CheckCircle2, Receipt } from 'lucide-react-native';
+import { CheckCircle2, Receipt } from 'lucide-react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -20,6 +20,7 @@ import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useActivity } from '@/features/activity/hooks/useActivity';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const ICON_FOR_ACTIVITY = (type: string) => (type === 'SETTLEMENT' ? CheckCircle2 : Receipt);
 
@@ -51,33 +52,21 @@ const EmptyState = styled.View`
   padding: ${Spacing.xxl}px ${Spacing.screenPadding}px;
 `;
 
-const FABWrapper = styled.View`
-  position: absolute;
-  bottom: ${Spacing.fabBottom}px;
-  right: ${Spacing.fabRight}px;
-`;
-
-const FABButton = styled.TouchableOpacity`
-  width: ${Spacing.fabSize}px;
-  height: ${Spacing.fabSize}px;
-  border-radius: ${Spacing.fabSize / 2}px;
-  background-color: ${({ theme }) => theme.colors.brandAccent};
-  align-items: center;
-  justify-content: center;
-  shadow-color: ${({ theme }) => theme.colors.brandAccent};
-  shadow-offset: 0px 2px;
-  shadow-opacity: 0.3;
-  shadow-radius: 8px;
-  elevation: 4;
-`;
-
 const HomeScreen = () => {
   const { user } = useUser();
-  const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
-  const { recent: recentActivities } = useActivity();
+  const { netBalance, totalOwedToYou, totalYouOwe, isLoading: balancesLoading } = useBalances();
+  const { recent: recentActivities, isLoading: activityLoading } = useActivity();
   const { formatDate } = useDateFormatter();
   const router = useRouter();
   const theme = useTheme();
+
+  if (balancesLoading || activityLoading) {
+    return (
+      <Screen>
+        <LoadingView message="Loading your balances..." />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -130,12 +119,6 @@ const HomeScreen = () => {
 
         <View style={{ height: Spacing.fabBottom }} />
       </Content>
-
-      <FABWrapper>
-        <FABButton onPress={() => router.push('/expense/add')} activeOpacity={0.85}>
-          <Plus size={26} color={theme.colors.onPrimary} />
-        </FABButton>
-      </FABWrapper>
     </Screen>
   );
 };

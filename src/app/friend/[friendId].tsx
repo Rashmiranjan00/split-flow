@@ -5,12 +5,7 @@ import { ArrowLeft, MoreVertical } from 'lucide-react-native';
 import { Alert, View } from 'react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
-import {
-  SafeScreen,
-  Content,
-  Row,
-  Spacer,
-} from '@/shared/components/Layout';
+import { SafeScreen, Content, Row, Spacer } from '@/shared/components/Layout';
 import { RowSubtitle } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { ActionButton } from '@/shared/components/ActionButton';
@@ -30,6 +25,7 @@ import {
 } from '@/features/analytics/components/ContributionBarChart';
 import { SpendOverTimeChart } from '@/features/analytics/components/SpendOverTimeChart';
 import { InsightsEmptyState } from '@/features/analytics/components/InsightsEmptyState';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -116,12 +112,20 @@ const FriendDetailScreen = () => {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState<FriendTabId>('transactions');
 
-  const { friends } = useFriends();
+  const { friends, isLoading: friendsLoading } = useFriends();
   const friend = friends.find((f) => f.id === fid);
   const analytics = useFriendAnalytics(fid);
   const removeFriendMutation = useRemoveFriendMutation();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
+
+  if (friendsLoading || analytics.isLoading) {
+    return (
+      <SafeScreen>
+        <LoadingView message="Loading friend details..." />
+      </SafeScreen>
+    );
+  }
 
   if (!friend) {
     return (
@@ -169,22 +173,18 @@ const FriendDetailScreen = () => {
         : friend.name;
 
   const handleRemove = () => {
-    Alert.alert(
-      'Remove friend',
-      `Remove ${friend.name} from your friends list?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            removeFriendMutation.mutate(friend.id, {
-              onSuccess: () => router.back(),
-            });
-          },
+    Alert.alert('Remove friend', `Remove ${friend.name} from your friends list?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          removeFriendMutation.mutate(friend.id, {
+            onSuccess: () => router.back(),
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const renderTransactionsTab = () => {
@@ -236,20 +236,12 @@ const FriendDetailScreen = () => {
           <StatCard
             label="You paid"
             value={formatCurrency(analytics.whoPaidMore.me, { decimals: 0 })}
-            tone={
-              analytics.whoPaidMore.me >= analytics.whoPaidMore.friend
-                ? 'positive'
-                : 'neutral'
-            }
+            tone={analytics.whoPaidMore.me >= analytics.whoPaidMore.friend ? 'positive' : 'neutral'}
           />
           <StatCard
             label={`${friend.name.split(' ')[0]} paid`}
             value={formatCurrency(analytics.whoPaidMore.friend, { decimals: 0 })}
-            tone={
-              analytics.whoPaidMore.friend > analytics.whoPaidMore.me
-                ? 'positive'
-                : 'neutral'
-            }
+            tone={analytics.whoPaidMore.friend > analytics.whoPaidMore.me ? 'positive' : 'neutral'}
           />
         </Row>
 
@@ -299,19 +291,14 @@ const FriendDetailScreen = () => {
         <IconButton
           onPress={handleRemove}
           accessibilityRole="button"
-          accessibilityLabel="Remove friend"
-        >
+          accessibilityLabel="Remove friend">
           <MoreVertical size={22} color={theme.colors.onSurface} />
         </IconButton>
       </HeaderBar>
 
       <Content showsVerticalScrollIndicator={false}>
         <HeroSection>
-          <Avatar
-            name={friend.name}
-            imageUrl={friend.avatarUrl}
-            size={Spacing.avatarLg}
-          />
+          <Avatar name={friend.name} imageUrl={friend.avatarUrl} size={Spacing.avatarLg} />
           <FriendName>{friend.name}</FriendName>
           <FriendEmail>{friend.email}</FriendEmail>
         </HeroSection>

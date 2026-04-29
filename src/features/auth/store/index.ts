@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandStorage } from '@/shared/services/storage';
 import { supabase } from '@/services/supabase/supabase';
 import { toUser } from '@/services/supabase/mappers';
+import { queryClient } from '@/shared/services/queryClient';
 import type { User } from '@/shared/types';
 import type { Session } from '@supabase/supabase-js';
 
@@ -25,11 +26,9 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: true,
 
-      login: (user, session) =>
-        set({ user, session, isAuthenticated: true, isLoading: false }),
+      login: (user, session) => set({ user, session, isAuthenticated: true, isLoading: false }),
 
-      logout: () =>
-        set({ user: null, session: null, isAuthenticated: false, isLoading: false }),
+      logout: () => set({ user: null, session: null, isAuthenticated: false, isLoading: false }),
 
       setLoading: (loading) => set({ isLoading: loading }),
 
@@ -43,7 +42,9 @@ export const useAuthStore = create<AuthState>()(
             ),
           ]);
 
-          const { data: { session } } = sessionResult;
+          const {
+            data: { session },
+          } = sessionResult;
 
           if (session?.user) {
             const { data: profile } = await supabase
@@ -85,6 +86,7 @@ export const useAuthStore = create<AuthState>()(
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT' || !session) {
     useAuthStore.getState().logout();
+    queryClient.clear();
     return;
   }
 

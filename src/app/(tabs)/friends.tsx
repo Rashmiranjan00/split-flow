@@ -1,24 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Search, UserPlus, Inbox, Users as UsersIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Screen, Content, Spacer, SurfaceCard, TxnRow } from '@/shared/components/Layout';
-import {
-  BodyMd,
-  RowSubtitle,
-  RowTitle,
-  SectionLabel,
-  Title,
-} from '@/shared/components/Typography';
+import { BodyMd, RowSubtitle, RowTitle, SectionLabel, Title } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useFriendRequests } from '@/features/friends/hooks/useFriendRequests';
 import { useFriendBalances } from '@/features/friends/hooks/useFriendBalances';
 import { useRemoveFriendMutation } from '@/features/friends/hooks/useFriendMutations';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { LoadingView } from '@/shared/components/LoadingView';
 import type { User } from '@/shared/types';
 
 const HeaderPadding = styled.View`
@@ -111,8 +106,8 @@ const BalanceText = styled.Text<{ tone: 'positive' | 'negative' | 'settled' }>`
     tone === 'positive'
       ? theme.colors.tertiary
       : tone === 'negative'
-      ? theme.colors.danger
-      : theme.colors.onSurfaceVariant};
+        ? theme.colors.danger
+        : theme.colors.onSurfaceVariant};
   text-align: right;
 `;
 
@@ -131,11 +126,6 @@ const EmptyState = styled.View`
 
 const EmptyIconWrap = styled.View`
   margin-bottom: ${Spacing.md}px;
-`;
-
-const LoadingWrap = styled.View`
-  padding: ${Spacing.xl}px;
-  align-items: center;
 `;
 
 /**
@@ -203,16 +193,14 @@ const FriendsScreen = () => {
             activeOpacity={0.7}
             onPress={() => router.push('/friend-requests/search' as any)}
             accessibilityRole="button"
-            accessibilityLabel="Add friend"
-          >
+            accessibilityLabel="Add friend">
             <UserPlus size={20} color={theme.colors.primary} />
           </IconSquare>
           <IconSquare
             activeOpacity={0.7}
             onPress={() => router.push('/friend-requests/requests' as any)}
             accessibilityRole="button"
-            accessibilityLabel="View friend requests"
-          >
+            accessibilityLabel="View friend requests">
             <Inbox size={20} color={theme.colors.primary} />
             {incomingCount > 0 ? (
               <IconBadge>
@@ -233,9 +221,7 @@ const FriendsScreen = () => {
         </SectionBar>
 
         {friendsLoading ? (
-          <LoadingWrap>
-            <ActivityIndicator color={theme.colors.primary} />
-          </LoadingWrap>
+          <LoadingView message="Loading friends..." />
         ) : friendsError ? (
           <EmptyState>
             <BodyMd style={{ color: theme.colors.danger, textAlign: 'center' }}>
@@ -272,17 +258,15 @@ const FriendsScreen = () => {
                   onLongPress={() => handleRemove(friend)}
                   leading={<Avatar name={friend.name} imageUrl={friend.avatarUrl} />}
                   title={<RowTitle numberOfLines={1}>{friend.name}</RowTitle>}
-                  subtitle={
-                    <RowSubtitle numberOfLines={1}>{friend.email}</RowSubtitle>
-                  }
+                  subtitle={<RowSubtitle numberOfLines={1}>{friend.email}</RowSubtitle>}
                   trailing={
                     <>
                       <StatusLabel tone={balance.tone}>
                         {balance.tone === 'positive'
                           ? 'owes you'
                           : balance.tone === 'negative'
-                          ? 'you owe'
-                          : 'settled up'}
+                            ? 'you owe'
+                            : 'settled up'}
                       </StatusLabel>
                       <BalanceText tone={balance.tone}>
                         {formatCurrency(Math.abs(balance.net), { decimals: 0 })}

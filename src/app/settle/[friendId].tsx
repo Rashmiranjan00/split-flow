@@ -190,9 +190,10 @@ const SettleScreen = () => {
 
       <BottomCTA>
         <ActionButton
-          title={settleMutation.isPending ? 'Settling...' : 'Mark as Settled'}
+          title="Mark as Settled"
           onPress={handleSettle}
-          disabled={settleMutation.isPending || owedAmount <= 0}
+          isLoading={settleMutation.isPending}
+          disabled={owedAmount <= 0}
         />
       </BottomCTA>
     </SafeScreen>

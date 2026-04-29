@@ -1,5 +1,5 @@
 import React from 'react';
-import { ViewStyle } from 'react-native';
+import { ActivityIndicator, ViewStyle } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
@@ -51,6 +51,7 @@ interface ActionButtonProps {
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
+  isLoading?: boolean;
   icon?: LucideIcon;
   style?: ViewStyle;
 }
@@ -60,11 +61,13 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   onPress,
   variant = 'primary',
   disabled = false,
+  isLoading = false,
   icon: Icon,
   style,
 }) => {
   const theme = useTheme();
-  const iconColor = disabled
+  const isDisabled = disabled || isLoading;
+  const contentColor = isDisabled
     ? theme.colors.onSurfaceVariant
     : variant === 'primary'
     ? theme.colors.onPrimary
@@ -74,20 +77,26 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
     <ButtonContainer
       variant={variant}
       onPress={onPress}
-      disabled={disabled}
+      disabled={isDisabled}
       activeOpacity={0.85}
       style={style}
     >
-      {Icon && (
-        <Icon
-          size={18}
-          color={iconColor}
-          style={{ marginRight: Spacing.sm }}
-        />
+      {isLoading ? (
+        <ActivityIndicator size="small" color={contentColor} />
+      ) : (
+        <>
+          {Icon && (
+            <Icon
+              size={18}
+              color={contentColor}
+              style={{ marginRight: Spacing.sm }}
+            />
+          )}
+          <ButtonText variant={variant} disabled={isDisabled}>
+            {title}
+          </ButtonText>
+        </>
       )}
-      <ButtonText variant={variant} disabled={disabled}>
-        {title}
-      </ButtonText>
     </ButtonContainer>
   );
 };

@@ -96,9 +96,11 @@ const GroupsScreen = () => {
       <Content showsVerticalScrollIndicator={false}>
         <HeaderRow>
           <ScreenTitle>Groups</ScreenTitle>
-          <AddButton onPress={() => router.push('/group/create' as any)} activeOpacity={0.7}>
-            <Plus size={20} color={theme.colors.primary} />
-          </AddButton>
+          {friends.length > 0 && (
+            <AddButton onPress={() => router.push('/group/create' as any)} activeOpacity={0.7}>
+              <Plus size={20} color={theme.colors.primary} />
+            </AddButton>
+          )}
         </HeaderRow>
 
         {groups.length === 0 ? (
@@ -127,12 +129,6 @@ const GroupsScreen = () => {
                 <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
                   Create a group to start splitting expenses with friends.
                 </BodyMd>
-                <Spacer size="md" />
-                <ActionButton
-                  title="Create Group"
-                  icon={Plus}
-                  onPress={() => router.push('/group/create' as any)}
-                />
               </>
             )}
           </EmptyState>

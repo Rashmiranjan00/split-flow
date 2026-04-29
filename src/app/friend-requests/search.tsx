@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { X, Search, XCircle, AtSign, SearchX } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -118,10 +118,18 @@ const FriendSearchScreen = () => {
 
   const sendMutation = useSendFriendRequestMutation();
   const acceptMutation = useAcceptFriendRequestMutation();
+  const [optimisticPendingIds, setOptimisticPendingIds] = useState<Set<string>>(new Set());
+  const [optimisticAcceptedIds, setOptimisticAcceptedIds] = useState<Set<string>>(new Set());
 
   const handleSend = (userId: string) => {
+    setOptimisticPendingIds((prev) => new Set(prev).add(userId));
     sendMutation.mutate(userId, {
       onError: (err: unknown) => {
+        setOptimisticPendingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
         const message = err instanceof Error ? err.message : 'Failed to send request';
         Alert.alert('Could not send request', message);
       },
@@ -129,8 +137,14 @@ const FriendSearchScreen = () => {
   };
 
   const handleAccept = (requestId: string) => {
+    setOptimisticAcceptedIds((prev) => new Set(prev).add(requestId));
     acceptMutation.mutate(requestId, {
       onError: (err: unknown) => {
+        setOptimisticAcceptedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(requestId);
+          return next;
+        });
         const message = err instanceof Error ? err.message : 'Failed to accept request';
         Alert.alert('Could not accept request', message);
       },
@@ -212,13 +226,18 @@ const FriendSearchScreen = () => {
                 const isLast = idx === results.length - 1;
                 const isSending = sendMutation.isPending && sendMutation.variables === row.user.id;
                 const isAccepting =
-                  acceptMutation.isPending && acceptMutation.variables === row.requestId;
+                  (acceptMutation.isPending && acceptMutation.variables === row.requestId) ||
+                  (row.requestId ? optimisticAcceptedIds.has(row.requestId) : false);
 
                 let action: React.ReactNode;
-                if (row.state === 'pending-out' || isSending) {
+                if (row.state === 'pending-out' || isSending || optimisticPendingIds.has(row.user.id)) {
                   action = (
                     <PillBase variant="muted" disabled activeOpacity={0.7}>
-                      <PillText variant="muted">{isSending ? 'Sending…' : 'Pending'}</PillText>
+                      {isSending ? (
+                        <ActivityIndicator size="small" color={theme.colors.onSurfaceVariant} />
+                      ) : (
+                        <PillText variant="muted">Pending</PillText>
+                      )}
                     </PillBase>
                   );
                 } else if (row.state === 'pending-in') {
@@ -228,7 +247,11 @@ const FriendSearchScreen = () => {
                       disabled={isAccepting}
                       activeOpacity={0.7}
                       onPress={() => row.requestId && handleAccept(row.requestId)}>
-                      <PillText variant="accept">{isAccepting ? 'Accepting…' : 'Accept'}</PillText>
+                      {isAccepting ? (
+                        <ActivityIndicator size="small" color={theme.colors.brandDark} />
+                      ) : (
+                        <PillText variant="accept">Accept</PillText>
+                      )}
                     </PillBase>
                   );
                 } else {

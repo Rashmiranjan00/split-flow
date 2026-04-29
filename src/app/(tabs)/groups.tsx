@@ -12,6 +12,7 @@ import { useUser } from '@/shared/hooks/useUser';
 import { useGroups } from '@/features/groups/hooks/useGroups';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px;
@@ -76,20 +77,25 @@ const GroupCardWithBalance: React.FC<{
 
 const GroupsScreen = () => {
   const { userId } = useUser();
-  const { groups } = useGroups();
+  const { groups, isLoading } = useGroups();
   const { friends } = useFriends();
   const router = useRouter();
   const theme = useTheme();
+
+  if (isLoading) {
+    return (
+      <Screen>
+        <LoadingView message="Loading groups..." />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
       <Content showsVerticalScrollIndicator={false}>
         <HeaderRow>
           <ScreenTitle>Groups</ScreenTitle>
-          <AddButton
-            onPress={() => router.push('/group/create' as any)}
-            activeOpacity={0.7}
-          >
+          <AddButton onPress={() => router.push('/group/create' as any)} activeOpacity={0.7}>
             <Plus size={20} color={theme.colors.primary} />
           </AddButton>
         </HeaderRow>

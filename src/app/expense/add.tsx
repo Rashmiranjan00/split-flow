@@ -259,6 +259,7 @@ const AddExpenseScreen = () => {
     splitDetails,
     setSplitType,
     updateSplitValues,
+    isSubmitting,
   } = useAddExpenseForm(currentGroupId);
 
   const { control, watch, setValue } = form;
@@ -266,7 +267,7 @@ const AddExpenseScreen = () => {
   const category = watch('category') ?? 'Other';
   const paidBy = watch('paidBy');
   const amount = parseFloat(amountStr) || 0;
-  const saveDisabled = amount <= 0;
+  const saveDisabled = amount <= 0 || isSubmitting;
 
   // Pre-fill participants when friendId is provided
   React.useEffect(() => {
@@ -317,7 +318,7 @@ const AddExpenseScreen = () => {
           </HeaderButton>
           <SheetTitle>New expense</SheetTitle>
           <HeaderButton onPress={handleSubmit} disabled={saveDisabled}>
-            <SaveText disabled={saveDisabled}>Save</SaveText>
+            <SaveText disabled={saveDisabled}>{isSubmitting ? 'Saving…' : 'Save'}</SaveText>
           </HeaderButton>
         </SheetHeader>
 

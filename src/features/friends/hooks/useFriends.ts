@@ -13,7 +13,11 @@ import { useUser } from '@/shared/hooks/useUser';
 export const useFriends = () => {
   const { userId } = useUser();
 
-  const { data: friends = [], error } = useQuery({
+  const {
+    data: friends = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: queryKeys.friends,
     queryFn: listFriends,
     enabled: !!userId,
@@ -24,7 +28,7 @@ export const useFriends = () => {
     friends,
     isEmpty: friends.length === 0,
     totalFriends: friends.length,
-    isLoading: false,
+    isLoading,
     error,
   };
 };

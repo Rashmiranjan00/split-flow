@@ -3,11 +3,12 @@ import 'react-native-reanimated';
 import { useEffect } from 'react';
 import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, useTheme } from 'styled-components/native';
 import { useAuthStore } from '@/features/auth/store';
 import { ClearLight, ClearDark } from '@/shared/constants/themes';
 import { useThemeStore } from '@/shared/hooks/useThemeStore';
+import { queryClient } from '@/shared/services/queryClient';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -18,17 +19,6 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 2,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-    },
-  },
-});
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -58,7 +48,13 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -77,8 +73,7 @@ const RootLayout = () => {
 
   const themeMode = useThemeStore((s) => s.mode);
   const systemScheme = useColorScheme();
-  const isDark =
-    themeMode === 'dark' || (themeMode === 'system' && systemScheme === 'dark');
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && systemScheme === 'dark');
   const themeColors = isDark ? ClearDark : ClearLight;
   const theme = { colors: themeColors, isDark };
 
@@ -100,8 +95,7 @@ const RootLayout = () => {
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: themeColors.background },
-              }}
-            >
+              }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />

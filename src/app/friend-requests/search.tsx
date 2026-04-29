@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  View,
-} from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { X, Search, XCircle, AtSign, SearchX } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -19,6 +13,7 @@ import {
   useAcceptFriendRequestMutation,
   useSendFriendRequestMutation,
 } from '@/features/friends/hooks/useFriendMutations';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -71,7 +66,13 @@ const PillBase = styled.TouchableOpacity<{ variant: 'primary' | 'muted' | 'accep
   border-width: ${({ variant }: { variant: 'primary' | 'muted' | 'accept' }) =>
     variant === 'muted' ? 1 : 0}px;
   border-color: ${({ theme }) => theme.colors.outlineVariant};
-  background-color: ${({ theme, variant }: { theme: any; variant: 'primary' | 'muted' | 'accept' }) => {
+  background-color: ${({
+    theme,
+    variant,
+  }: {
+    theme: any;
+    variant: 'primary' | 'muted' | 'accept';
+  }) => {
     if (variant === 'muted') return theme.colors.surfaceContainerLow;
     if (variant === 'accept') return theme.colors.primaryFixedDim;
     return theme.colors.primary;
@@ -150,8 +151,7 @@ const FriendSearchScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+        style={{ flex: 1 }}>
         <Body>
           <SearchField>
             <Search size={20} color={theme.colors.onSurfaceVariant} />
@@ -167,10 +167,7 @@ const FriendSearchScreen = () => {
             />
             {input.length > 0 ? (
               <IconButton onPress={() => setInput('')}>
-                <XCircle
-                  size={18}
-                  color={theme.colors.onSurfaceVariant}
-                />
+                <XCircle size={18} color={theme.colors.onSurfaceVariant} />
               </IconButton>
             ) : null}
           </SearchField>
@@ -185,10 +182,7 @@ const FriendSearchScreen = () => {
 
           {isEmpty ? (
             <StateMessage>
-              <AtSign
-                size={40}
-                color={theme.colors.onSurfaceVariant}
-              />
+              <AtSign size={40} color={theme.colors.onSurfaceVariant} />
               <Spacer size="sm" />
               <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
                 Search for someone by their email address to send a friend request.
@@ -202,14 +196,11 @@ const FriendSearchScreen = () => {
             </StateMessage>
           ) : isLoading ? (
             <StateMessage>
-              <ActivityIndicator color={theme.colors.primary} />
+              <LoadingView />
             </StateMessage>
           ) : !hasResults ? (
             <StateMessage>
-              <SearchX
-                size={40}
-                color={theme.colors.onSurfaceVariant}
-              />
+              <SearchX size={40} color={theme.colors.onSurfaceVariant} />
               <Spacer size="sm" />
               <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
                 No one matched &quot;{query}&quot;. Double-check the email spelling.
@@ -219,8 +210,7 @@ const FriendSearchScreen = () => {
             <View>
               {results.map((row, idx) => {
                 const isLast = idx === results.length - 1;
-                const isSending =
-                  sendMutation.isPending && sendMutation.variables === row.user.id;
+                const isSending = sendMutation.isPending && sendMutation.variables === row.user.id;
                 const isAccepting =
                   acceptMutation.isPending && acceptMutation.variables === row.requestId;
 
@@ -228,9 +218,7 @@ const FriendSearchScreen = () => {
                 if (row.state === 'pending-out' || isSending) {
                   action = (
                     <PillBase variant="muted" disabled activeOpacity={0.7}>
-                      <PillText variant="muted">
-                        {isSending ? 'Sending…' : 'Pending'}
-                      </PillText>
+                      <PillText variant="muted">{isSending ? 'Sending…' : 'Pending'}</PillText>
                     </PillBase>
                   );
                 } else if (row.state === 'pending-in') {
@@ -239,11 +227,8 @@ const FriendSearchScreen = () => {
                       variant="accept"
                       disabled={isAccepting}
                       activeOpacity={0.7}
-                      onPress={() => row.requestId && handleAccept(row.requestId)}
-                    >
-                      <PillText variant="accept">
-                        {isAccepting ? 'Accepting…' : 'Accept'}
-                      </PillText>
+                      onPress={() => row.requestId && handleAccept(row.requestId)}>
+                      <PillText variant="accept">{isAccepting ? 'Accepting…' : 'Accept'}</PillText>
                     </PillBase>
                   );
                 } else {
@@ -251,8 +236,7 @@ const FriendSearchScreen = () => {
                     <PillBase
                       variant="primary"
                       activeOpacity={0.85}
-                      onPress={() => handleSend(row.user.id)}
-                    >
+                      onPress={() => handleSend(row.user.id)}>
                       <PillText variant="primary">Add</PillText>
                     </PillBase>
                   );
@@ -265,9 +249,7 @@ const FriendSearchScreen = () => {
                     onPress={() => {}}
                     leading={<Avatar name={row.user.name} imageUrl={row.user.avatarUrl} />}
                     title={<RowTitle numberOfLines={1}>{row.user.name}</RowTitle>}
-                    subtitle={
-                      <RowSubtitle numberOfLines={1}>{row.user.email}</RowSubtitle>
-                    }
+                    subtitle={<RowSubtitle numberOfLines={1}>{row.user.email}</RowSubtitle>}
                     trailing={action}
                   />
                 );

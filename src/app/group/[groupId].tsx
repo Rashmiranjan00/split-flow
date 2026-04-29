@@ -14,19 +14,8 @@ import { View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
-import {
-  SafeScreen,
-  Content,
-  Row,
-  Spacer,
-  TxnRow,
-} from '@/shared/components/Layout';
-import {
-  BodyMd,
-  RowSubtitle,
-  RowTitle,
-  Timestamp,
-} from '@/shared/components/Typography';
+import { SafeScreen, Content, Row, Spacer, TxnRow } from '@/shared/components/Layout';
+import { BodyMd, RowSubtitle, RowTitle, Timestamp } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { ScreenTabs } from '@/shared/components/ScreenTabs';
@@ -49,6 +38,7 @@ import {
 import { SpendOverTimeChart } from '@/features/analytics/components/SpendOverTimeChart';
 import { TopExpenseCard } from '@/features/analytics/components/TopExpenseCard';
 import { InsightsEmptyState } from '@/features/analytics/components/InsightsEmptyState';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -169,8 +159,8 @@ const truncate = (text: string, max = 10): string =>
 const GroupDetailScreen = () => {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const gid = groupId ?? '';
-  const { group } = useGroup(gid);
-  const { members } = useGroupMembers(gid);
+  const { group, isLoading: groupLoading } = useGroup(gid);
+  const { members, isLoading: membersLoading } = useGroupMembers(gid);
   const { userId } = useUser();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
@@ -185,10 +175,16 @@ const GroupDetailScreen = () => {
     queryFn: () => listExpensesByGroup(gid),
     enabled: !!gid,
     select: (data) =>
-      [...data].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ),
+      [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   });
+
+  if (groupLoading || membersLoading) {
+    return (
+      <SafeScreen>
+        <LoadingView message="Loading group..." />
+      </SafeScreen>
+    );
+  }
 
   if (!group) return null;
 
@@ -220,7 +216,7 @@ const GroupDetailScreen = () => {
       <View>
         {groupExpenses.map((expense, idx) => {
           const paidByLabel =
-            expense.paidBy === userId ? 'You' : memberById.get(expense.paidBy)?.name ?? 'Someone';
+            expense.paidBy === userId ? 'You' : (memberById.get(expense.paidBy)?.name ?? 'Someone');
           return (
             <TxnRow
               key={expense.id}
@@ -232,9 +228,7 @@ const GroupDetailScreen = () => {
               trailing={
                 <>
                   <RowTitle>{formatCurrency(expense.amount, { decimals: 0 })}</RowTitle>
-                  <Timestamp style={{ marginTop: 2 }}>
-                    {formatDate(expense.createdAt)}
-                  </Timestamp>
+                  <Timestamp style={{ marginTop: 2 }}>{formatDate(expense.createdAt)}</Timestamp>
                 </>
               }
             />
@@ -257,8 +251,9 @@ const GroupDetailScreen = () => {
     return (
       <View>
         {simplifiedDebts.map((debt, idx) => {
-          const fromName = debt.from === userId ? 'You' : memberById.get(debt.from)?.name ?? 'Someone';
-          const toName = debt.to === userId ? 'you' : memberById.get(debt.to)?.name ?? 'someone';
+          const fromName =
+            debt.from === userId ? 'You' : (memberById.get(debt.from)?.name ?? 'Someone');
+          const toName = debt.to === userId ? 'you' : (memberById.get(debt.to)?.name ?? 'someone');
           const paidToUser = debt.to === userId;
           return (
             <TxnRow
@@ -266,16 +261,12 @@ const GroupDetailScreen = () => {
               isLast={idx === simplifiedDebts.length - 1}
               onPress={() => {}}
               leading={
-                <Avatar
-                  name={memberById.get(debt.from)?.name ?? 'U'}
-                  size={Spacing.avatarSm}
-                />
+                <Avatar name={memberById.get(debt.from)?.name ?? 'U'} size={Spacing.avatarSm} />
               }
               title={<RowTitle numberOfLines={1}>{`${fromName} owes ${toName}`}</RowTitle>}
               trailing={
                 <RowTitle
-                  style={{ color: paidToUser ? theme.colors.tertiary : theme.colors.danger }}
-                >
+                  style={{ color: paidToUser ? theme.colors.tertiary : theme.colors.danger }}>
                   {formatCurrency(debt.amount, { decimals: 0 })}
                 </RowTitle>
               }
@@ -317,10 +308,7 @@ const GroupDetailScreen = () => {
     if (analytics.isEmpty) {
       return (
         <TabContent>
-          <InsightsEmptyState
-            title="No insights yet"
-            message="Add expenses to see insights"
-          />
+          <InsightsEmptyState title="No insights yet" message="Add expenses to see insights" />
         </TabContent>
       );
     }
@@ -389,8 +377,7 @@ const GroupDetailScreen = () => {
         <IconButton
           onPress={() => router.push(`/group/add-members?groupId=${gid}` as any)}
           accessibilityRole="button"
-          accessibilityLabel="Add members"
-        >
+          accessibilityLabel="Add members">
           <UserPlus size={22} color={theme.colors.onSurface} />
         </IconButton>
       </HeaderBar>
@@ -404,9 +391,7 @@ const GroupDetailScreen = () => {
             })}
           </GroupIconWrap>
           <GroupName>{displayName}</GroupName>
-          {group.description ? (
-            <GroupDescription>{group.description}</GroupDescription>
-          ) : null}
+          {group.description ? <GroupDescription>{group.description}</GroupDescription> : null}
         </HeroSection>
 
         <BalanceRow>
@@ -423,9 +408,7 @@ const GroupDetailScreen = () => {
               <SettleUpPill
                 activeOpacity={0.7}
                 onPress={() => {
-                  const debt = simplifiedDebts.find(
-                    (d) => d.from === userId || d.to === userId
-                  );
+                  const debt = simplifiedDebts.find((d) => d.from === userId || d.to === userId);
                   const targetId = debt?.from === userId ? debt?.to : debt?.from;
                   if (targetId) {
                     router.push(
@@ -434,8 +417,7 @@ const GroupDetailScreen = () => {
                       )}` as any
                     );
                   }
-                }}
-              >
+                }}>
                 <SettleUpText>Settle up</SettleUpText>
               </SettleUpPill>
             </>

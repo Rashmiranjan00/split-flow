@@ -20,6 +20,7 @@ import { useUser } from '@/shared/hooks/useUser';
 import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useActivity } from '@/features/activity/hooks/useActivity';
 import { useDateFormatter } from '@/shared/hooks/useDateFormatter';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const ICON_FOR_ACTIVITY = (type: string) => (type === 'SETTLEMENT' ? CheckCircle2 : Receipt);
 
@@ -53,11 +54,19 @@ const EmptyState = styled.View`
 
 const HomeScreen = () => {
   const { user } = useUser();
-  const { netBalance, totalOwedToYou, totalYouOwe } = useBalances();
-  const { recent: recentActivities } = useActivity();
+  const { netBalance, totalOwedToYou, totalYouOwe, isLoading: balancesLoading } = useBalances();
+  const { recent: recentActivities, isLoading: activityLoading } = useActivity();
   const { formatDate } = useDateFormatter();
   const router = useRouter();
   const theme = useTheme();
+
+  if (balancesLoading || activityLoading) {
+    return (
+      <Screen>
+        <LoadingView message="Loading your balances..." />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

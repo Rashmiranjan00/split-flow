@@ -2,16 +2,17 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bell, ShieldCheck, Download, HelpCircle, ChevronRight, type LucideIcon } from 'lucide-react-native';
+import {
+  Bell,
+  ShieldCheck,
+  Download,
+  HelpCircle,
+  ChevronRight,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
-import {
-  Screen,
-  Content,
-  Row,
-  Spacer,
-  SurfaceCard,
-} from '@/shared/components/Layout';
+import { Screen, Content, Row, Spacer, SurfaceCard } from '@/shared/components/Layout';
 import { SectionLabel } from '@/shared/components/Typography';
 import { Avatar } from '@/shared/components/Avatar';
 import { useUser } from '@/shared/hooks/useUser';
@@ -19,7 +20,7 @@ import { useBalances } from '@/features/balances/hooks/useBalances';
 import { useThemeStore, ThemeMode } from '@/shared/hooks/useThemeStore';
 import { useCurrencyStore, CURRENCIES, CurrencyCode } from '@/shared/hooks/useCurrencyStore';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
-import { signOut } from '@/services/supabase/auth';
+import { resetAppState } from '@/shared/utils/resetAppState';
 
 const HeaderPadding = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.sm}px;
@@ -63,8 +64,8 @@ const StatValue = styled.Text<{ tone?: 'positive' | 'negative' }>`
     tone === 'positive'
       ? theme.colors.tertiary
       : tone === 'negative'
-      ? theme.colors.danger
-      : theme.colors.onSurface};
+        ? theme.colors.danger
+        : theme.colors.onSurface};
 `;
 
 const StatLabel = styled.Text`
@@ -171,7 +172,7 @@ const THEME_OPTIONS: { key: ThemeMode; label: string }[] = [
 ];
 
 const ProfileScreen = () => {
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const { netBalance } = useBalances();
   const router = useRouter();
   const theme = useTheme();
@@ -188,8 +189,7 @@ const ProfileScreen = () => {
         text: 'Sign Out',
         style: 'destructive',
         onPress: () => {
-          signOut().catch(() => {});
-          logout();
+          resetAppState();
           router.replace('/(auth)');
         },
       },
@@ -252,8 +252,7 @@ const ProfileScreen = () => {
                   key={opt.key}
                   active={active}
                   activeOpacity={0.7}
-                  onPress={() => setThemeMode(opt.key)}
-                >
+                  onPress={() => setThemeMode(opt.key)}>
                   <PillText active={active}>{opt.label}</PillText>
                 </PillOption>
               );
@@ -271,8 +270,7 @@ const ProfileScreen = () => {
                   key={code}
                   active={active}
                   activeOpacity={0.7}
-                  onPress={() => setCurrency(code)}
-                >
+                  onPress={() => setCurrency(code)}>
                   <PillText active={active}>
                     {CURRENCIES[code].symbol} {CURRENCIES[code].code}
                   </PillText>
@@ -292,8 +290,7 @@ const ProfileScreen = () => {
                 <React.Fragment key={item.label}>
                   <MenuItem
                     activeOpacity={0.6}
-                    onPress={() => Alert.alert(item.label, 'Settings coming soon!')}
-                  >
+                    onPress={() => Alert.alert(item.label, 'Settings coming soon!')}>
                     <Icon size={18} color={theme.colors.onSurfaceVariant} />
                     <MenuLabel>{item.label}</MenuLabel>
                     {item.value ? <MenuValue>{item.value}</MenuValue> : null}

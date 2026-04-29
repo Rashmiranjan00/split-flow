@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { X, Inbox } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -21,6 +21,7 @@ import {
   useRejectFriendRequestMutation,
 } from '@/features/friends/hooks/useFriendMutations';
 import type { FriendRequestWithProfile } from '@/shared/types';
+import { LoadingView } from '@/shared/components/LoadingView';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -56,7 +57,13 @@ const Pill = styled.TouchableOpacity<{ variant: 'accept' | 'reject' | 'muted' }>
     variant !== 'accept' ? 1 : 0}px;
   border-color: ${({ theme, variant }: { theme: any; variant: 'accept' | 'reject' | 'muted' }) =>
     variant === 'reject' ? theme.colors.dangerLight : theme.colors.outlineVariant};
-  background-color: ${({ theme, variant }: { theme: any; variant: 'accept' | 'reject' | 'muted' }) => {
+  background-color: ${({
+    theme,
+    variant,
+  }: {
+    theme: any;
+    variant: 'accept' | 'reject' | 'muted';
+  }) => {
     if (variant === 'accept') return theme.colors.primary;
     return 'transparent';
   }};
@@ -75,11 +82,6 @@ const PillText = styled.Text<{ variant: 'accept' | 'reject' | 'muted' }>`
 
 const EmptySection = styled.View`
   padding: ${Spacing.xl}px ${Spacing.screenPadding}px;
-  align-items: center;
-`;
-
-const LoadingWrap = styled.View`
-  padding: ${Spacing.xxl}px;
   align-items: center;
 `;
 
@@ -119,16 +121,14 @@ const RequestRow: React.FC<RequestRowProps> = ({
               variant="reject"
               activeOpacity={0.7}
               disabled={isAccepting || isRejecting}
-              onPress={() => onReject?.(request.id)}
-            >
+              onPress={() => onReject?.(request.id)}>
               <PillText variant="reject">{isRejecting ? '…' : 'Reject'}</PillText>
             </Pill>
             <Pill
               variant="accept"
               activeOpacity={0.85}
               disabled={isAccepting || isRejecting}
-              onPress={() => onAccept?.(request.id)}
-            >
+              onPress={() => onAccept?.(request.id)}>
               <PillText variant="accept">{isAccepting ? 'Accepting…' : 'Accept'}</PillText>
             </Pill>
           </ActionRow>
@@ -137,8 +137,7 @@ const RequestRow: React.FC<RequestRowProps> = ({
             variant="muted"
             activeOpacity={0.7}
             disabled={isRejecting}
-            onPress={() => onReject?.(request.id)}
-          >
+            onPress={() => onReject?.(request.id)}>
             <PillText variant="muted">{isRejecting ? 'Cancelling…' : 'Pending · Cancel'}</PillText>
           </Pill>
         )
@@ -189,9 +188,7 @@ const FriendRequestsScreen = () => {
 
       <Content showsVerticalScrollIndicator={false}>
         {isLoading ? (
-          <LoadingWrap>
-            <ActivityIndicator color={theme.colors.primary} />
-          </LoadingWrap>
+          <LoadingView message="Loading requests..." />
         ) : error ? (
           <EmptySection>
             <BodyMd style={{ color: theme.colors.danger, textAlign: 'center' }}>
@@ -200,10 +197,7 @@ const FriendRequestsScreen = () => {
           </EmptySection>
         ) : totalCount === 0 ? (
           <EmptySection>
-            <Inbox
-              size={40}
-              color={theme.colors.onSurfaceVariant}
-            />
+            <Inbox size={40} color={theme.colors.onSurfaceVariant} />
             <Spacer size="sm" />
             <BodyMd style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
               No pending friend requests.

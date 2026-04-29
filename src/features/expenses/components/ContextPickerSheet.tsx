@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Keyboard,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -48,6 +49,7 @@ export const ContextPickerSheet: React.FC<ContextPickerSheetProps> = ({
   const { groups } = useGroups();
   const { friends } = useFriends();
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   const translateY = useSharedValue(SHEET_HEIGHT);
   const backdropOpacity = useSharedValue(0);
@@ -140,28 +142,86 @@ export const ContextPickerSheet: React.FC<ContextPickerSheetProps> = ({
     | { type: 'header'; title: string; key: string }
     | { type: 'group'; data: Group; key: string }
     | { type: 'friend'; data: User; key: string }
-    | { type: 'empty'; message: string; key: string };
+    | { type: 'empty'; message: string; key: string }
+    | {
+        type: 'empty-action';
+        message: string;
+        actionLabel?: string;
+        onAction?: () => void;
+        key: string;
+      };
+
+  const navigateToAddFriends = () => {
+    close();
+    setTimeout(() => router.push('/friend-requests/search' as any), ANIMATION_DURATION + 50);
+  };
+
+  const navigateToCreateGroup = () => {
+    close();
+    setTimeout(() => router.push('/group/create' as any), ANIMATION_DURATION + 50);
+  };
+
+  const isSearching = searchQuery.trim().length > 0;
+  const hasFriends = friends.length > 0;
+  const hasGroups = groups.length > 0;
 
   const listData: ListItem[] = [];
 
-  // Groups section
-  listData.push({ type: 'header', title: 'Groups', key: 'header-groups' });
-  if (filteredGroups.length === 0) {
-    listData.push({ type: 'empty', message: 'No groups found', key: 'empty-groups' });
-  } else {
-    filteredGroups.forEach((g: Group, idx: number) => {
-      listData.push({ type: 'group', data: g, key: `group-${g.id}` });
+  if (!hasFriends) {
+    // No friends at all — show single "Add Friends" CTA, no groups section
+    listData.push({
+      type: 'empty-action',
+      message: 'Add friends to start splitting expenses',
+      actionLabel: 'Add Friends',
+      onAction: navigateToAddFriends,
+      key: 'empty-add-friends',
     });
-  }
+  } else if (!hasGroups) {
+    // Has friends but no groups — show friends list + "Create Group" CTA
+    listData.push({ type: 'header', title: 'Friends', key: 'header-friends' });
+    if (filteredFriends.length === 0) {
+      listData.push({
+        type: 'empty',
+        message: 'No friends match your search',
+        key: 'empty-friends',
+      });
+    } else {
+      filteredFriends.forEach((f: User) => {
+        listData.push({ type: 'friend', data: f, key: `friend-${f.id}` });
+      });
+    }
+    if (!isSearching) {
+      listData.push({
+        type: 'empty-action',
+        message: 'Create a group to split with multiple friends',
+        actionLabel: 'Create Group',
+        onAction: navigateToCreateGroup,
+        key: 'empty-create-group',
+      });
+    }
+  } else {
+    // Has both friends and groups — show both lists normally
+    listData.push({ type: 'header', title: 'Groups', key: 'header-groups' });
+    if (filteredGroups.length === 0) {
+      listData.push({ type: 'empty', message: 'No groups match your search', key: 'empty-groups' });
+    } else {
+      filteredGroups.forEach((g: Group) => {
+        listData.push({ type: 'group', data: g, key: `group-${g.id}` });
+      });
+    }
 
-  // Friends section
-  listData.push({ type: 'header', title: 'Friends', key: 'header-friends' });
-  if (filteredFriends.length === 0) {
-    listData.push({ type: 'empty', message: 'No friends found', key: 'empty-friends' });
-  } else {
-    filteredFriends.forEach((f: User, idx: number) => {
-      listData.push({ type: 'friend', data: f, key: `friend-${f.id}` });
-    });
+    listData.push({ type: 'header', title: 'Friends', key: 'header-friends' });
+    if (filteredFriends.length === 0) {
+      listData.push({
+        type: 'empty',
+        message: 'No friends match your search',
+        key: 'empty-friends',
+      });
+    } else {
+      filteredFriends.forEach((f: User) => {
+        listData.push({ type: 'friend', data: f, key: `friend-${f.id}` });
+      });
+    }
   }
 
   const renderItem = ({ item, index }: { item: ListItem; index: number }) => {
@@ -176,6 +236,21 @@ export const ContextPickerSheet: React.FC<ContextPickerSheetProps> = ({
       return (
         <View style={styles.emptyRow}>
           <EmptyText theme={theme}>{item.message}</EmptyText>
+        </View>
+      );
+    }
+    if (item.type === 'empty-action') {
+      return (
+        <View style={styles.emptyRow}>
+          <EmptyText theme={theme}>{item.message}</EmptyText>
+          {item.actionLabel && item.onAction && (
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
+              onPress={item.onAction}
+              activeOpacity={0.85}>
+              <ActionLabel theme={theme}>{item.actionLabel}</ActionLabel>
+            </TouchableOpacity>
+          )}
         </View>
       );
     }
@@ -326,6 +401,20 @@ const EmptyText = ({ children, theme }: { children: React.ReactNode; theme: any 
     children
   );
 
+const ActionLabel = ({ children, theme }: { children: React.ReactNode; theme: any }) =>
+  React.createElement(
+    require('react-native').Text,
+    {
+      style: {
+        fontFamily: TypographyTokens.fonts.semibold,
+        fontSize: 14,
+        fontWeight: TypographyTokens.weights.semibold,
+        color: theme.colors.onPrimary,
+      },
+    },
+    children
+  );
+
 const styles = StyleSheet.create({
   sheet: {
     position: 'absolute',
@@ -380,5 +469,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.screenPadding,
     alignItems: 'center',
+  },
+  actionButton: {
+    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
   },
 });

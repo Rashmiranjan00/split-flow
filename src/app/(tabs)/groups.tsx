@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Users as UsersIcon } from 'lucide-react-native';
+import { Plus, Users as UsersIcon, UserPlus } from 'lucide-react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Screen, Content, SpaceBetweenRow, Spacer } from '@/shared/components/Layout';
@@ -13,6 +13,7 @@ import { useGroups } from '@/features/groups/hooks/useGroups';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
 import { LoadingView } from '@/shared/components/LoadingView';
+import { ActionButton } from '@/shared/components/ActionButton';
 
 const HeaderRow = styled(SpaceBetweenRow)`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px;
@@ -105,11 +106,35 @@ const GroupsScreen = () => {
             <EmptyIconWrap>
               <UsersIcon size={40} color={theme.colors.onSurfaceVariant} />
             </EmptyIconWrap>
-            <Title>No groups yet</Title>
-            <Spacer size="sm" />
-            <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
-              Create a group to start splitting expenses with friends.
-            </BodyMd>
+            {friends.length === 0 ? (
+              <>
+                <Title>Add friends first</Title>
+                <Spacer size="sm" />
+                <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
+                  You need friends before you can create a group.
+                </BodyMd>
+                <Spacer size="md" />
+                <ActionButton
+                  title="Add Friends"
+                  icon={UserPlus}
+                  onPress={() => router.push('/friend-requests/search' as any)}
+                />
+              </>
+            ) : (
+              <>
+                <Title>No groups yet</Title>
+                <Spacer size="sm" />
+                <BodyMd style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
+                  Create a group to start splitting expenses with friends.
+                </BodyMd>
+                <Spacer size="md" />
+                <ActionButton
+                  title="Create Group"
+                  icon={Plus}
+                  onPress={() => router.push('/group/create' as any)}
+                />
+              </>
+            )}
           </EmptyState>
         ) : (
           groups.map((group, idx) => (

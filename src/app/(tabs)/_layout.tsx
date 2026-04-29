@@ -102,7 +102,7 @@ const TabsLayout = () => {
         />
       </Tabs>
 
-      {!isProfileTab && <GlobalFAB onPress={handleFABPress} />}
+      {!isProfileTab && !sheetVisible && <GlobalFAB onPress={handleFABPress} />}
 
       <ContextPickerSheet
         visible={sheetVisible}

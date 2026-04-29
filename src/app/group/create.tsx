@@ -147,14 +147,13 @@ const CreateGroupScreen = () => {
         <BottomCTA>
           <ActionButton
             title={
-              createMutation.isPending
-                ? 'Creating…'
-                : memberIds.length > 0
-                  ? `Create Group · ${memberIds.length + 1} members`
-                  : 'Create Group'
+              memberIds.length > 0
+                ? `Create Group · ${memberIds.length + 1} members`
+                : 'Create Group'
             }
             onPress={handleCreate}
-            disabled={createMutation.isPending || !name.trim()}
+            isLoading={createMutation.isPending}
+            disabled={!name.trim()}
           />
         </BottomCTA>
       </KeyboardAvoidingView>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Controller } from 'react-hook-form';
@@ -330,7 +330,11 @@ const AddExpenseScreen = () => {
           </HeaderButton>
           <SheetTitle>New expense</SheetTitle>
           <HeaderButton onPress={handleSubmit} disabled={saveDisabled}>
-            <SaveText disabled={saveDisabled}>{isSubmitting ? 'Saving…' : 'Save'}</SaveText>
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            ) : (
+              <SaveText disabled={saveDisabled}>Save</SaveText>
+            )}
           </HeaderButton>
         </SheetHeader>
 

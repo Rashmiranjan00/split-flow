@@ -109,14 +109,13 @@ const AddMembersScreen = () => {
         <BottomCTA>
           <ActionButton
             title={
-              busy
-                ? 'Adding…'
-                : selected.length > 0
+              selected.length > 0
                 ? `Add ${selected.length} member${selected.length === 1 ? '' : 's'}`
                 : 'Add Members'
             }
             onPress={handleAdd}
-            disabled={busy || selected.length === 0}
+            isLoading={busy}
+            disabled={selected.length === 0}
           />
         </BottomCTA>
       </KeyboardAvoidingView>

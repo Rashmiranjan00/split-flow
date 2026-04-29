@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { Alert, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 import { X, Inbox } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -93,6 +93,8 @@ interface RequestRowProps {
   onReject?: (requestId: string) => void;
   pendingAcceptId?: string;
   pendingRejectId?: string;
+  optimisticAcceptedIds?: Set<string>;
+  optimisticRejectedIds?: Set<string>;
 }
 
 const RequestRow: React.FC<RequestRowProps> = ({
@@ -103,9 +105,12 @@ const RequestRow: React.FC<RequestRowProps> = ({
   onReject,
   pendingAcceptId,
   pendingRejectId,
+  optimisticAcceptedIds,
+  optimisticRejectedIds,
 }) => {
-  const isAccepting = pendingAcceptId === request.id;
-  const isRejecting = pendingRejectId === request.id;
+  const theme = useTheme();
+  const isAccepting = pendingAcceptId === request.id || (optimisticAcceptedIds?.has(request.id) ?? false);
+  const isRejecting = pendingRejectId === request.id || (optimisticRejectedIds?.has(request.id) ?? false);
 
   return (
     <TxnRow
@@ -122,14 +127,22 @@ const RequestRow: React.FC<RequestRowProps> = ({
               activeOpacity={0.7}
               disabled={isAccepting || isRejecting}
               onPress={() => onReject?.(request.id)}>
-              <PillText variant="reject">{isRejecting ? '…' : 'Reject'}</PillText>
+              {isRejecting ? (
+                <ActivityIndicator size="small" color={theme.colors.danger} />
+              ) : (
+                <PillText variant="reject">Reject</PillText>
+              )}
             </Pill>
             <Pill
               variant="accept"
               activeOpacity={0.85}
               disabled={isAccepting || isRejecting}
               onPress={() => onAccept?.(request.id)}>
-              <PillText variant="accept">{isAccepting ? 'Accepting…' : 'Accept'}</PillText>
+              {isAccepting ? (
+                <ActivityIndicator size="small" color={theme.colors.onPrimary} />
+              ) : (
+                <PillText variant="accept">Accept</PillText>
+              )}
             </Pill>
           </ActionRow>
         ) : (
@@ -138,7 +151,11 @@ const RequestRow: React.FC<RequestRowProps> = ({
             activeOpacity={0.7}
             disabled={isRejecting}
             onPress={() => onReject?.(request.id)}>
-            <PillText variant="muted">{isRejecting ? 'Cancelling…' : 'Pending · Cancel'}</PillText>
+            {isRejecting ? (
+              <ActivityIndicator size="small" color={theme.colors.onSurfaceVariant} />
+            ) : (
+              <PillText variant="muted">Pending · Cancel</PillText>
+            )}
           </Pill>
         )
       }
@@ -153,10 +170,18 @@ const FriendRequestsScreen = () => {
   const { incoming, outgoing, isLoading, error } = useFriendRequests();
   const acceptMutation = useAcceptFriendRequestMutation();
   const rejectMutation = useRejectFriendRequestMutation();
+  const [optimisticAcceptedIds, setOptimisticAcceptedIds] = useState<Set<string>>(new Set());
+  const [optimisticRejectedIds, setOptimisticRejectedIds] = useState<Set<string>>(new Set());
 
   const handleAccept = (id: string) => {
+    setOptimisticAcceptedIds((prev) => new Set(prev).add(id));
     acceptMutation.mutate(id, {
       onError: (err: unknown) => {
+        setOptimisticAcceptedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         const message = err instanceof Error ? err.message : 'Failed to accept';
         Alert.alert('Could not accept request', message);
       },
@@ -164,8 +189,14 @@ const FriendRequestsScreen = () => {
   };
 
   const handleReject = (id: string) => {
+    setOptimisticRejectedIds((prev) => new Set(prev).add(id));
     rejectMutation.mutate(id, {
       onError: (err: unknown) => {
+        setOptimisticRejectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         const message = err instanceof Error ? err.message : 'Failed to reject';
         Alert.alert('Could not reject request', message);
       },
@@ -222,6 +253,8 @@ const FriendRequestsScreen = () => {
                     pendingRejectId={
                       rejectMutation.isPending ? (rejectMutation.variables as string) : undefined
                     }
+                    optimisticAcceptedIds={optimisticAcceptedIds}
+                    optimisticRejectedIds={optimisticRejectedIds}
                   />
                 ))}
               </>
@@ -240,6 +273,7 @@ const FriendRequestsScreen = () => {
                     pendingRejectId={
                       rejectMutation.isPending ? (rejectMutation.variables as string) : undefined
                     }
+                    optimisticRejectedIds={optimisticRejectedIds}
                   />
                 ))}
               </>

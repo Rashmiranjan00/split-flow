@@ -6,12 +6,14 @@ import { Typography } from '@/shared/constants/typography';
 import { SafeScreen } from '@/shared/components/Layout';
 import { GlobalFAB } from '@/shared/components/GlobalFAB';
 import { ContextPickerSheet } from '@/features/expenses/components/ContextPickerSheet';
+import { useSidebarVisible } from '@/shared/components/Sidebar';
 
 const TabsLayout = () => {
   const theme = useTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [sheetVisible, setSheetVisible] = useState(false);
+  const sidebarVisible = useSidebarVisible();
 
   const isProfileTab = pathname === '/profile';
 
@@ -44,16 +46,18 @@ const TabsLayout = () => {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarStyle: {
-            backgroundColor: theme.colors.surfaceContainerLowest,
-            borderTopWidth: 0.5,
-            borderTopColor: theme.colors.divider,
-            height: 68,
-            paddingTop: 8,
-            paddingBottom: 12,
-            elevation: 0,
-            shadowOpacity: 0,
-          },
+          tabBarStyle: sidebarVisible
+            ? { display: 'none' }
+            : {
+                backgroundColor: theme.colors.surfaceContainerLowest,
+                borderTopWidth: 0.5,
+                borderTopColor: theme.colors.divider,
+                height: 68,
+                paddingTop: 8,
+                paddingBottom: 12,
+                elevation: 0,
+                shadowOpacity: 0,
+              },
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
           tabBarLabelStyle: {

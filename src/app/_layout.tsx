@@ -19,6 +19,7 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ResponsiveLayout } from '@/shared/components/ResponsiveLayout';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -91,23 +92,25 @@ const RootLayout = () => {
         <ThemeProvider theme={theme}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <AuthGate>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: themeColors.background },
-              }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
-              <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="friend/[friendId]" options={{ presentation: 'card' }} />
-              <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="friend-requests/search" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="friend-requests/requests" options={{ presentation: 'modal' }} />
-            </Stack>
+            <ResponsiveLayout>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: themeColors.background },
+                }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
+                <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="friend/[friendId]" options={{ presentation: 'card' }} />
+                <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="friend-requests/search" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="friend-requests/requests" options={{ presentation: 'modal' }} />
+              </Stack>
+            </ResponsiveLayout>
           </AuthGate>
         </ThemeProvider>
       </QueryClientProvider>

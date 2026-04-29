@@ -1,11 +1,43 @@
-import { Tabs } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { Tabs, usePathname, useRouter } from 'expo-router';
 import { useTheme } from 'styled-components/native';
 import { Home, Users, Contact, Bell, User } from 'lucide-react-native';
 import { Typography } from '@/shared/constants/typography';
 import { SafeScreen } from '@/shared/components/Layout';
+import { GlobalFAB } from '@/shared/components/GlobalFAB';
+import { ContextPickerSheet } from '@/features/expenses/components/ContextPickerSheet';
 
 const TabsLayout = () => {
   const theme = useTheme();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [sheetVisible, setSheetVisible] = useState(false);
+
+  const isProfileTab = pathname === '/profile';
+
+  const handleFABPress = useCallback(() => {
+    setSheetVisible(true);
+  }, []);
+
+  const handleSheetClose = useCallback(() => {
+    setSheetVisible(false);
+  }, []);
+
+  const handleSelectGroup = useCallback(
+    (groupId: string) => {
+      setSheetVisible(false);
+      router.push({ pathname: '/expense/add', params: { groupId } });
+    },
+    [router]
+  );
+
+  const handleSelectFriend = useCallback(
+    (friendId: string) => {
+      setSheetVisible(false);
+      router.push({ pathname: '/expense/add', params: { friendId } });
+    },
+    [router]
+  );
 
   return (
     <SafeScreen edges={['top']}>
@@ -32,8 +64,7 @@ const TabsLayout = () => {
           tabBarIconStyle: {
             marginTop: 2,
           },
-        }}
-      >
+        }}>
         <Tabs.Screen
           name="index"
           options={{
@@ -70,6 +101,15 @@ const TabsLayout = () => {
           }}
         />
       </Tabs>
+
+      {!isProfileTab && <GlobalFAB onPress={handleFABPress} />}
+
+      <ContextPickerSheet
+        visible={sheetVisible}
+        onClose={handleSheetClose}
+        onSelectGroup={handleSelectGroup}
+        onSelectFriend={handleSelectFriend}
+      />
     </SafeScreen>
   );
 };

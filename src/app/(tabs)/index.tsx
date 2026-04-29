@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { Plus, CheckCircle2, Receipt } from 'lucide-react-native';
+import { CheckCircle2, Receipt } from 'lucide-react-native';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -49,26 +49,6 @@ const Divider = styled.View`
 const EmptyState = styled.View`
   align-items: center;
   padding: ${Spacing.xxl}px ${Spacing.screenPadding}px;
-`;
-
-const FABWrapper = styled.View`
-  position: absolute;
-  bottom: ${Spacing.fabBottom}px;
-  right: ${Spacing.fabRight}px;
-`;
-
-const FABButton = styled.TouchableOpacity`
-  width: ${Spacing.fabSize}px;
-  height: ${Spacing.fabSize}px;
-  border-radius: ${Spacing.fabSize / 2}px;
-  background-color: ${({ theme }) => theme.colors.brandAccent};
-  align-items: center;
-  justify-content: center;
-  shadow-color: ${({ theme }) => theme.colors.brandAccent};
-  shadow-offset: 0px 2px;
-  shadow-opacity: 0.3;
-  shadow-radius: 8px;
-  elevation: 4;
 `;
 
 const HomeScreen = () => {
@@ -130,12 +110,6 @@ const HomeScreen = () => {
 
         <View style={{ height: Spacing.fabBottom }} />
       </Content>
-
-      <FABWrapper>
-        <FABButton onPress={() => router.push('/expense/add')} activeOpacity={0.85}>
-          <Plus size={26} color={theme.colors.onPrimary} />
-        </FABButton>
-      </FABWrapper>
     </Screen>
   );
 };

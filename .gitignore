@@ -48,4 +48,4 @@ yarn-error.*
 .cursor
 .vscode
 
-docs
+# docs

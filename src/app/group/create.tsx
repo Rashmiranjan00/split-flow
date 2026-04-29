@@ -9,6 +9,7 @@ import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { useCreateGroupMutation } from '@/features/groups/hooks/useGroupMutations';
 import { FriendSelector } from '@/features/friends/components/FriendSelector';
+import { useWebKeyboardShortcuts } from '@/shared/hooks/useWebKeyboardShortcuts';
 
 const HeaderBar = styled(Row)`
   padding: ${Spacing.sm}px ${Spacing.screenPadding}px;
@@ -87,6 +88,17 @@ const CreateGroupScreen = () => {
     }
   };
 
+  useWebKeyboardShortcuts([
+    { key: 'Escape', handler: () => router.back() },
+    {
+      key: 'Enter',
+      meta: true,
+      handler: () => {
+        if (name.trim()) handleCreate();
+      },
+    },
+  ]);
+
   return (
     <SafeScreen>
       <HeaderBar>
@@ -101,12 +113,8 @@ const CreateGroupScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        style={{ flex: 1 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Body>
             <InputLabel>Group Name</InputLabel>
             <StyledInput
@@ -142,8 +150,8 @@ const CreateGroupScreen = () => {
               createMutation.isPending
                 ? 'Creating…'
                 : memberIds.length > 0
-                ? `Create Group · ${memberIds.length + 1} members`
-                : 'Create Group'
+                  ? `Create Group · ${memberIds.length + 1} members`
+                  : 'Create Group'
             }
             onPress={handleCreate}
             disabled={createMutation.isPending || !name.trim()}

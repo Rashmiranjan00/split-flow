@@ -12,6 +12,7 @@ import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useUser } from '@/shared/hooks/useUser';
 import { useCreateSettlementMutation } from '@/features/settlements/hooks/useSettlementMutations';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { useWebKeyboardShortcuts } from '@/shared/hooks/useWebKeyboardShortcuts';
 
 type PaymentMethod = 'UPI' | 'Cash' | 'Bank';
 
@@ -128,6 +129,8 @@ const SettleScreen = () => {
   const [method, setMethod] = React.useState<PaymentMethod>('UPI');
   const owedAmount = parseFloat(amount ?? '0') || 0;
 
+  useWebKeyboardShortcuts([{ key: 'Escape', handler: () => router.back() }]);
+
   const handleSettle = async () => {
     if (!groupId || owedAmount <= 0) {
       Alert.alert('Cannot settle', 'No outstanding balance to settle.');
@@ -175,12 +178,7 @@ const SettleScreen = () => {
           {(['UPI', 'Cash', 'Bank'] as PaymentMethod[]).map((m) => {
             const active = method === m;
             return (
-              <MethodPill
-                key={m}
-                active={active}
-                activeOpacity={0.7}
-                onPress={() => setMethod(m)}
-              >
+              <MethodPill key={m} active={active} activeOpacity={0.7} onPress={() => setMethod(m)}>
                 <MethodText active={active}>{m}</MethodText>
               </MethodPill>
             );

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Search, UserPlus, Inbox, Users as UsersIcon } from 'lucide-react-native';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -155,19 +156,21 @@ const FriendsScreen = () => {
   const totalTone: 'positive' | 'negative' | 'settled' =
     totalNet > 0 ? 'positive' : totalNet < 0 ? 'negative' : 'settled';
 
+  const { show } = useConfirmSheet();
+
   const handleRemove = (friend: User) => {
-    Alert.alert(
-      'Remove friend',
-      `Remove ${friend.name} from your friends list? Any shared group memberships stay intact.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
+    show({
+      title: 'Remove friend',
+      message: `Remove ${friend.name} from your friends list? Any shared group memberships stay intact.`,
+      actions: [
         {
-          text: 'Remove',
+          label: 'Remove',
           style: 'destructive',
           onPress: () => removeFriendMutation.mutate(friend.id),
         },
-      ]
-    );
+        { label: 'Cancel', style: 'cancel', onPress: () => {} },
+      ],
+    });
   };
 
   return (

@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { ActionButton } from '@/shared/components/ActionButton';
 import { Spacing, Radius } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -92,8 +94,7 @@ const ToggleButton = styled.TouchableOpacity<{ active: boolean }>`
   padding: ${Spacing.sm}px 0;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme, active }) =>
-    active ? theme.colors.primary : 'transparent'};
+  background-color: ${({ theme, active }) => (active ? theme.colors.primary : 'transparent')};
   border-radius: ${Radius.buttonRadius}px;
 `;
 
@@ -163,10 +164,17 @@ const RemoteError = styled.Text`
   margin-bottom: ${Spacing.md}px;
 `;
 
+const ForgotLink = styled.Text`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.primary};
+`;
+
 // ---- Screen ----
 
 const AuthScreen = () => {
   const theme = useTheme();
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [remoteError, setRemoteError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -197,6 +205,8 @@ const AuthScreen = () => {
     reset();
   };
 
+  const { show } = useConfirmSheet();
+
   const onSubmit = async (data: SignUpValues) => {
     setRemoteError('');
     setSubmitting(true);
@@ -208,7 +218,11 @@ const AuthScreen = () => {
           name: data.name,
         });
         if (result.user && !result.session) {
-          Alert.alert('Check your email', 'We sent you a confirmation link. Please verify your email to continue.');
+          show({
+            title: 'Check your email',
+            message: 'We sent you a confirmation link. Please verify your email to continue.',
+            actions: [{ label: 'OK', onPress: () => {} }],
+          });
         }
       } else {
         await signIn({ email: data.email, password: data.password });
@@ -225,16 +239,13 @@ const AuthScreen = () => {
     <SafeScreen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+        style={{ flex: 1 }}>
         <HeroSection>
           <LogoCircle>
             <LogoLetter>S</LogoLetter>
           </LogoCircle>
           <Wordmark>SplitFlow</Wordmark>
-          <Tagline>
-            Split bills, share expenses, and manage group finances with ease.
-          </Tagline>
+          <Tagline>Split bills, share expenses, and manage group finances with ease.</Tagline>
         </HeroSection>
 
         <FormWrapper>
@@ -266,11 +277,7 @@ const AuthScreen = () => {
                   />
                 )}
               />
-              {errors.name ? (
-                <FieldError>{errors.name.message}</FieldError>
-              ) : (
-                <FieldSpacer />
-              )}
+              {errors.name ? <FieldError>{errors.name.message}</FieldError> : <FieldSpacer />}
             </>
           )}
 
@@ -291,11 +298,7 @@ const AuthScreen = () => {
               />
             )}
           />
-          {errors.email ? (
-            <FieldError>{errors.email.message}</FieldError>
-          ) : (
-            <FieldSpacer />
-          )}
+          {errors.email ? <FieldError>{errors.email.message}</FieldError> : <FieldSpacer />}
 
           <InputLabel>Password</InputLabel>
           <Controller
@@ -313,10 +316,9 @@ const AuthScreen = () => {
                   value={value}
                 />
                 <TouchableOpacity
-                  onPress={() => setShowPassword(v => !v)}
+                  onPress={() => setShowPassword((v) => !v)}
                   style={{ paddingHorizontal: Spacing.md }}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   {showPassword ? (
                     <EyeOff size={20} color={theme.colors.onSurfaceVariant} />
                   ) : (
@@ -326,10 +328,14 @@ const AuthScreen = () => {
               </PasswordWrapper>
             )}
           />
-          {errors.password ? (
-            <FieldError>{errors.password.message}</FieldError>
-          ) : (
-            <FieldSpacer />
+          {errors.password ? <FieldError>{errors.password.message}</FieldError> : <FieldSpacer />}
+
+          {!isSignUp && (
+            <TouchableOpacity
+              onPress={() => router.push('/forgot-password')}
+              style={{ alignSelf: 'flex-end', marginBottom: Spacing.md }}>
+              <ForgotLink>Forgot Password?</ForgotLink>
+            </TouchableOpacity>
           )}
 
           <ActionButton

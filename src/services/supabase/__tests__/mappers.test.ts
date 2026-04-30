@@ -126,6 +126,7 @@ describe('Supabase DTO mappers', () => {
         from_user: 'u2',
         to_user: 'u1',
         amount_minor: 6025,
+        note: null,
         created_at: '2025-06-03T00:00:00Z',
       };
       expect(toSettlement(row)).toEqual({

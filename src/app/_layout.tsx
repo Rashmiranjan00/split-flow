@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ResponsiveLayout } from '@/shared/components/ResponsiveLayout';
+import { ConfirmSheetProvider } from '@/shared/components/ConfirmSheetProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -90,28 +91,33 @@ const RootLayout = () => {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <AuthGate>
-            <ResponsiveLayout>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: themeColors.background },
-                }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
-                <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="friend/[friendId]" options={{ presentation: 'card' }} />
-                <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="friend-requests/search" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="friend-requests/requests" options={{ presentation: 'modal' }} />
-              </Stack>
-            </ResponsiveLayout>
-          </AuthGate>
+          <ConfirmSheetProvider>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <AuthGate>
+              <ResponsiveLayout>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: themeColors.background },
+                  }}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="group/[groupId]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="group/create" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="group/add-members" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="friend/[friendId]" options={{ presentation: 'card' }} />
+                  <Stack.Screen name="expense/add" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="expense/split" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="settle/[friendId]" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="friend-requests/search" options={{ presentation: 'modal' }} />
+                  <Stack.Screen
+                    name="friend-requests/requests"
+                    options={{ presentation: 'modal' }}
+                  />
+                </Stack>
+              </ResponsiveLayout>
+            </AuthGate>
+          </ConfirmSheetProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

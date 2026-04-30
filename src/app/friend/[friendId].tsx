@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, MoreVertical } from 'lucide-react-native';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Content, Row, Spacer } from '@/shared/components/Layout';
@@ -118,6 +119,7 @@ const FriendDetailScreen = () => {
   const removeFriendMutation = useRemoveFriendMutation();
   const { formatDate } = useDateFormatter();
   const { formatCurrency } = useCurrencyFormatter();
+  const { show } = useConfirmSheet();
 
   if (friendsLoading || analytics.isLoading) {
     return (
@@ -173,18 +175,22 @@ const FriendDetailScreen = () => {
         : friend.name;
 
   const handleRemove = () => {
-    Alert.alert('Remove friend', `Remove ${friend.name} from your friends list?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          removeFriendMutation.mutate(friend.id, {
-            onSuccess: () => router.back(),
-          });
+    show({
+      title: 'Remove friend',
+      message: `Remove ${friend.name} from your friends list?`,
+      actions: [
+        {
+          label: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            removeFriendMutation.mutate(friend.id, {
+              onSuccess: () => router.back(),
+            });
+          },
         },
-      },
-    ]);
+        { label: 'Cancel', style: 'cancel', onPress: () => {} },
+      ],
+    });
   };
 
   const renderTransactionsTab = () => {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { X, Search, XCircle, AtSign, SearchX } from 'lucide-react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer, TxnRow } from '@/shared/components/Layout';
@@ -121,6 +122,8 @@ const FriendSearchScreen = () => {
   const [optimisticPendingIds, setOptimisticPendingIds] = useState<Set<string>>(new Set());
   const [optimisticAcceptedIds, setOptimisticAcceptedIds] = useState<Set<string>>(new Set());
 
+  const { show } = useConfirmSheet();
+
   const handleSend = (userId: string) => {
     setOptimisticPendingIds((prev) => new Set(prev).add(userId));
     sendMutation.mutate(userId, {
@@ -131,7 +134,11 @@ const FriendSearchScreen = () => {
           return next;
         });
         const message = err instanceof Error ? err.message : 'Failed to send request';
-        Alert.alert('Could not send request', message);
+        show({
+          title: 'Could not send request',
+          message,
+          actions: [{ label: 'OK', onPress: () => {} }],
+        });
       },
     });
   };
@@ -146,7 +153,11 @@ const FriendSearchScreen = () => {
           return next;
         });
         const message = err instanceof Error ? err.message : 'Failed to accept request';
-        Alert.alert('Could not accept request', message);
+        show({
+          title: 'Could not accept request',
+          message,
+          actions: [{ label: 'OK', onPress: () => {} }],
+        });
       },
     });
   };
@@ -230,7 +241,11 @@ const FriendSearchScreen = () => {
                   (row.requestId ? optimisticAcceptedIds.has(row.requestId) : false);
 
                 let action: React.ReactNode;
-                if (row.state === 'pending-out' || isSending || optimisticPendingIds.has(row.user.id)) {
+                if (
+                  row.state === 'pending-out' ||
+                  isSending ||
+                  optimisticPendingIds.has(row.user.id)
+                ) {
                   action = (
                     <PillBase variant="muted" disabled activeOpacity={0.7}>
                       {isSending ? (

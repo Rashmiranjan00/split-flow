@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { X, Inbox } from 'lucide-react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import {
@@ -109,8 +110,10 @@ const RequestRow: React.FC<RequestRowProps> = ({
   optimisticRejectedIds,
 }) => {
   const theme = useTheme();
-  const isAccepting = pendingAcceptId === request.id || (optimisticAcceptedIds?.has(request.id) ?? false);
-  const isRejecting = pendingRejectId === request.id || (optimisticRejectedIds?.has(request.id) ?? false);
+  const isAccepting =
+    pendingAcceptId === request.id || (optimisticAcceptedIds?.has(request.id) ?? false);
+  const isRejecting =
+    pendingRejectId === request.id || (optimisticRejectedIds?.has(request.id) ?? false);
 
   return (
     <TxnRow
@@ -173,6 +176,8 @@ const FriendRequestsScreen = () => {
   const [optimisticAcceptedIds, setOptimisticAcceptedIds] = useState<Set<string>>(new Set());
   const [optimisticRejectedIds, setOptimisticRejectedIds] = useState<Set<string>>(new Set());
 
+  const { show } = useConfirmSheet();
+
   const handleAccept = (id: string) => {
     setOptimisticAcceptedIds((prev) => new Set(prev).add(id));
     acceptMutation.mutate(id, {
@@ -183,7 +188,11 @@ const FriendRequestsScreen = () => {
           return next;
         });
         const message = err instanceof Error ? err.message : 'Failed to accept';
-        Alert.alert('Could not accept request', message);
+        show({
+          title: 'Could not accept request',
+          message,
+          actions: [{ label: 'OK', onPress: () => {} }],
+        });
       },
     });
   };
@@ -198,7 +207,11 @@ const FriendRequestsScreen = () => {
           return next;
         });
         const message = err instanceof Error ? err.message : 'Failed to reject';
-        Alert.alert('Could not reject request', message);
+        show({
+          title: 'Could not reject request',
+          message,
+          actions: [{ label: 'OK', onPress: () => {} }],
+        });
       },
     });
   };

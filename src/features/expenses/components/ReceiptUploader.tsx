@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { X, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 
@@ -77,19 +78,18 @@ interface ReceiptUploaderProps {
   onImageSelected: (uri?: string) => void;
 }
 
-export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
-  imageUri,
-  onImageSelected,
-}) => {
+export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({ imageUri, onImageSelected }) => {
   const theme = useTheme();
+  const { show } = useConfirmSheet();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission Denied',
-        'We need camera roll permissions to upload receipts.'
-      );
+      show({
+        title: 'Permission Denied',
+        message: 'We need camera roll permissions to upload receipts.',
+        actions: [{ label: 'OK', onPress: () => {} }],
+      });
       return;
     }
 

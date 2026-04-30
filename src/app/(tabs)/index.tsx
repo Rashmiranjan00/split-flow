@@ -52,6 +52,21 @@ const EmptyState = styled.View`
   padding: ${Spacing.xxl}px ${Spacing.screenPadding}px;
 `;
 
+const SettleUpButton = styled.TouchableOpacity`
+  margin-top: ${Spacing.sm}px;
+  align-self: center;
+  padding: 10px 24px;
+  border-radius: 20px;
+  background-color: ${({ theme }) => theme.colors.primary};
+`;
+
+const SettleUpLabel = styled.Text`
+  font-family: ${TypographyTokens.fonts.semibold};
+  font-size: 14px;
+  font-weight: ${TypographyTokens.weights.semibold};
+  color: ${({ theme }) => theme.colors.onPrimary};
+`;
+
 const HomeScreen = () => {
   const { user } = useUser();
   const { netBalance, totalOwedToYou, totalYouOwe, isLoading: balancesLoading } = useBalances();
@@ -82,6 +97,14 @@ const HomeScreen = () => {
             totalOwedToYou={totalOwedToYou}
             totalYouOwe={totalYouOwe}
           />
+          {totalYouOwe > 0 && (
+            <SettleUpButton
+              onPress={() => router.push('/(tabs)/groups')}
+              accessibilityRole="button"
+              accessibilityLabel="Settle up">
+              <SettleUpLabel>Settle Up</SettleUpLabel>
+            </SettleUpButton>
+          )}
         </BalanceSection>
 
         <Divider />

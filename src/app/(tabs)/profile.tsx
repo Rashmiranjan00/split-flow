@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import {
   Bell,
   ShieldCheck,
@@ -182,18 +182,24 @@ const ProfileScreen = () => {
   const setCurrency = useCurrencyStore((state) => state.setCurrency);
   const { formatCurrency } = useCurrencyFormatter();
 
+  const { show } = useConfirmSheet();
+
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: () => {
-          resetAppState();
-          router.replace('/(auth)');
+    show({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out?',
+      actions: [
+        {
+          label: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            resetAppState();
+            router.replace('/(auth)');
+          },
         },
-      },
-    ]);
+        { label: 'Cancel', style: 'cancel', onPress: () => {} },
+      ],
+    });
   };
 
   const menuItems: { icon: LucideIcon; label: string; value?: string }[] = [
@@ -205,12 +211,22 @@ const ProfileScreen = () => {
     {
       icon: Download,
       label: 'Export data',
-      onPress: () => Alert.alert('Export', 'Data export coming soon!'),
+      onPress: () =>
+        show({
+          title: 'Export',
+          message: 'Data export coming soon!',
+          actions: [{ label: 'OK', onPress: () => {} }],
+        }),
     },
     {
       icon: HelpCircle,
       label: 'Help & support',
-      onPress: () => Alert.alert('Help', 'Help center coming soon!'),
+      onPress: () =>
+        show({
+          title: 'Help',
+          message: 'Help center coming soon!',
+          actions: [{ label: 'OK', onPress: () => {} }],
+        }),
     },
   ];
 
@@ -290,7 +306,13 @@ const ProfileScreen = () => {
                 <React.Fragment key={item.label}>
                   <MenuItem
                     activeOpacity={0.6}
-                    onPress={() => Alert.alert(item.label, 'Settings coming soon!')}>
+                    onPress={() =>
+                      show({
+                        title: item.label,
+                        message: 'Settings coming soon!',
+                        actions: [{ label: 'OK', onPress: () => {} }],
+                      })
+                    }>
                     <Icon size={18} color={theme.colors.onSurfaceVariant} />
                     <MenuLabel>{item.label}</MenuLabel>
                     {item.value ? <MenuValue>{item.value}</MenuValue> : null}

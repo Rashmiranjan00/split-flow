@@ -4,13 +4,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ArrowLeft,
   UserPlus,
+  MoreVertical,
+  Trash2,
   Plane,
   Home as HomeIcon,
   UtensilsCrossed,
   Briefcase,
   type LucideIcon,
 } from 'lucide-react-native';
-import { View } from 'react-native';
+import { View, TouchableOpacity, Pressable } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
@@ -25,6 +27,8 @@ import { useGroup } from '@/features/groups/hooks/useGroups';
 import { useGroupMembers } from '@/features/groups/hooks/useGroupMembers';
 import { useGroupBalances } from '@/features/balances/hooks/useGroupBalances';
 import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
+import { useDeleteGroupMutation } from '@/features/groups/hooks/useGroupMutations';
 import { queryKeys } from '@/services/supabase/queryKeys';
 import { listExpensesByGroup } from '@/services/supabase/expenses';
 import { useGroupAnalytics } from '@/features/analytics/hooks/useGroupAnalytics';
@@ -136,6 +140,45 @@ const InsightsStack = styled.View`
   gap: ${Spacing.md}px;
 `;
 
+const MenuOverlay = styled(Pressable)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+`;
+
+const MenuPopover = styled.View`
+  position: absolute;
+  right: ${Spacing.screenPadding}px;
+  top: 44px;
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: ${Radius.md}px;
+  padding: ${Spacing.xs}px 0;
+  shadow-color: #000;
+  shadow-offset: 0px 4px;
+  shadow-opacity: 0.15;
+  shadow-radius: 12px;
+  elevation: 8;
+  z-index: 11;
+  min-width: 180px;
+`;
+
+const MenuItem = styled(TouchableOpacity)`
+  flex-direction: row;
+  align-items: center;
+  padding: ${Spacing.sm}px ${Spacing.md}px;
+  gap: ${Spacing.sm}px;
+`;
+
+const MenuItemText = styled.Text<{ destructive?: boolean }>`
+  font-family: ${TypographyTokens.fonts.medium};
+  font-size: 15px;
+  color: ${({ destructive, theme }) =>
+    destructive ? theme.colors.danger : theme.colors.onSurface};
+`;
+
 const getGroupIcon = (name: string): LucideIcon => {
   const lower = name.toLowerCase();
   if (lower.includes('trip')) return Plane;
@@ -169,6 +212,31 @@ const GroupDetailScreen = () => {
   const router = useRouter();
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState<GroupTabId>('expenses');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { show } = useConfirmSheet();
+  const deleteGroupMutation = useDeleteGroupMutation();
+
+  const isCreator = group?.createdBy === userId;
+
+  const handleDeleteGroup = () => {
+    setMenuOpen(false);
+    show({
+      title: 'Delete Group',
+      message: `Are you sure you want to delete "${group?.name}"? All expenses and settlements in this group will be permanently removed.`,
+      actions: [
+        {
+          label: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteGroupMutation.mutate(gid, {
+              onSuccess: () => router.replace('/(tabs)/groups'),
+            });
+          },
+        },
+        { label: 'Cancel', style: 'cancel', onPress: () => {} },
+      ],
+    });
+  };
 
   const { data: groupExpenses = [] } = useQuery({
     queryKey: queryKeys.expenses(gid),
@@ -375,12 +443,34 @@ const GroupDetailScreen = () => {
           <HeaderTitle numberOfLines={1}>{displayName}</HeaderTitle>
         </HeaderTitleRow>
         <IconButton
-          onPress={() => router.push(`/group/add-members?groupId=${gid}` as any)}
+          onPress={() => setMenuOpen(true)}
           accessibilityRole="button"
-          accessibilityLabel="Add members">
-          <UserPlus size={22} color={theme.colors.onSurface} />
+          accessibilityLabel="More options">
+          <MoreVertical size={22} color={theme.colors.onSurface} />
         </IconButton>
       </HeaderBar>
+
+      {menuOpen && (
+        <>
+          <MenuOverlay onPress={() => setMenuOpen(false)} />
+          <MenuPopover>
+            <MenuItem
+              onPress={() => {
+                setMenuOpen(false);
+                router.push(`/group/add-members?groupId=${gid}` as any);
+              }}>
+              <UserPlus size={18} color={theme.colors.onSurface} />
+              <MenuItemText>Add Members</MenuItemText>
+            </MenuItem>
+            {isCreator && (
+              <MenuItem onPress={handleDeleteGroup}>
+                <Trash2 size={18} color={theme.colors.danger} />
+                <MenuItemText destructive>Delete Group</MenuItemText>
+              </MenuItem>
+            )}
+          </MenuPopover>
+        </>
+      )}
 
       <Content showsVerticalScrollIndicator={false}>
         <HeroSection>

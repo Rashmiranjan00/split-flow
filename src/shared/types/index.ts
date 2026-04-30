@@ -13,6 +13,7 @@ export interface Group {
   description?: string;
   members: UserId[];
   createdAt: string;
+  createdBy?: UserId;
   coverImage?: string;
 }
 
@@ -40,6 +41,7 @@ export interface Settlement {
   from: UserId;
   to: UserId;
   amount: number;
+  note?: string;
   createdAt: string;
 }
 

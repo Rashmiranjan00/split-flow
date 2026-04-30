@@ -150,6 +150,7 @@ export interface Database {
           from_user: string;
           to_user: string;
           amount_minor: number;
+          note: string | null;
           created_at: string;
         };
         Insert: {
@@ -158,6 +159,7 @@ export interface Database {
           from_user: string;
           to_user: string;
           amount_minor: number;
+          note?: string | null;
           created_at?: string;
         };
         Update: {
@@ -166,6 +168,7 @@ export interface Database {
           from_user?: string;
           to_user?: string;
           amount_minor?: number;
+          note?: string | null;
           created_at?: string;
         };
         Relationships: [];

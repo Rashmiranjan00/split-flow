@@ -8,14 +8,7 @@
 import { fromCents, toCents } from '@/shared/utils/money';
 
 import type { Database } from './database.types';
-import type {
-  Expense,
-  FriendRequest,
-  Group,
-  Settlement,
-  SplitDetail,
-  User,
-} from '@/shared/types';
+import type { Expense, FriendRequest, Group, Settlement, SplitDetail, User } from '@/shared/types';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type GroupRow = Database['public']['Tables']['groups']['Row'];
@@ -42,6 +35,7 @@ export function toGroup(row: GroupRow, memberIds: string[]): Group {
     description: row.description ?? undefined,
     members: memberIds,
     createdAt: row.created_at,
+    createdBy: row.created_by ?? undefined,
     coverImage: row.cover_image ?? undefined,
   };
 }
@@ -82,6 +76,7 @@ export function toSettlement(row: SettlementRow): Settlement {
     from: row.from_user,
     to: row.to_user,
     amount: fromCents(row.amount_minor),
+    note: row.note ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -132,11 +127,13 @@ export function toCreateSettlementPayload(values: {
   fromUser: string;
   toUser: string;
   amount: number;
+  note?: string;
 }) {
   return {
     group_id: values.groupId,
     from_user: values.fromUser,
     to_user: values.toUser,
     amount_minor: toCents(values.amount),
+    ...(values.note ? { note: values.note } : {}),
   };
 }

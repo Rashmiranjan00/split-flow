@@ -39,18 +39,12 @@ export async function listMyGroups(): Promise<Group[]> {
     membersByGroup.set(row.group_id, arr);
   }
 
-  return (groupRows ?? []).map((row) =>
-    toGroup(row, membersByGroup.get(row.id) ?? [])
-  );
+  return (groupRows ?? []).map((row) => toGroup(row, membersByGroup.get(row.id) ?? []));
 }
 
 /** Fetch a single group by ID. */
 export async function getGroup(groupId: string): Promise<Group> {
-  const { data: row, error } = await supabase
-    .from('groups')
-    .select('*')
-    .eq('id', groupId)
-    .single();
+  const { data: row, error } = await supabase.from('groups').select('*').eq('id', groupId).single();
 
   if (error) throw error;
 
@@ -61,7 +55,10 @@ export async function getGroup(groupId: string): Promise<Group> {
 
   if (memErr) throw memErr;
 
-  return toGroup(row, (members ?? []).map((m) => m.user_id));
+  return toGroup(
+    row,
+    (members ?? []).map((m) => m.user_id)
+  );
 }
 
 /**
@@ -101,10 +98,7 @@ export async function createGroup(params: {
 }
 
 /** Add a user to a group. */
-export async function addGroupMember(
-  groupId: string,
-  userId: string
-): Promise<void> {
+export async function addGroupMember(groupId: string, userId: string): Promise<void> {
   const { error } = await supabase.from('group_members').insert({
     group_id: groupId,
     user_id: userId,
@@ -113,14 +107,16 @@ export async function addGroupMember(
 }
 
 /** Fetch profile data for a list of user IDs. */
-export async function getGroupMemberProfiles(
-  memberIds: string[]
-): Promise<User[]> {
+export async function getGroupMemberProfiles(memberIds: string[]): Promise<User[]> {
   if (memberIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .in('id', memberIds);
+  const { data, error } = await supabase.from('profiles').select('*').in('id', memberIds);
   if (error) throw error;
   return (data ?? []).map(toUser);
+}
+
+/** Delete a group. RLS enforces that only the creator can delete.
+ *  Cascade rules automatically remove group_members, expenses, and settlements. */
+export async function deleteGroup(groupId: string): Promise<void> {
+  const { error } = await supabase.from('groups').delete().eq('id', groupId);
+  if (error) throw error;
 }

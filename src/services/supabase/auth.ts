@@ -55,7 +55,9 @@ export async function getSession() {
 
 /** Fetch the current user's profile row and return a canonical `User`. */
 export async function getProfile(): Promise<User | null> {
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
   if (!authUser) return null;
 
   const { data, error } = await supabase
@@ -66,4 +68,18 @@ export async function getProfile(): Promise<User | null> {
 
   if (error) throw error;
   return toUser(data);
+}
+
+/** Send a password-reset email. The link redirects to the app's reset-password screen. */
+export async function resetPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'split-flow://reset-password',
+  });
+  if (error) throw error;
+}
+
+/** Update the current user's password (requires an active session from the reset link). */
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
 }

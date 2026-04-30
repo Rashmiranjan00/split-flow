@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
@@ -55,6 +56,8 @@ const AddMembersScreen = () => {
 
   const existingMemberIds = group?.members ?? [];
 
+  const { show } = useConfirmSheet();
+
   const handleAdd = async () => {
     if (selected.length === 0) return;
     setBusy(true);
@@ -65,7 +68,7 @@ const AddMembersScreen = () => {
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to add members';
-      Alert.alert('Error', message);
+      show({ title: 'Error', message, actions: [{ label: 'OK', onPress: () => {} }] });
     } finally {
       setBusy(false);
     }
@@ -85,13 +88,12 @@ const AddMembersScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+        style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Body>
             <BodyMd style={{ color: theme.colors.onSurfaceVariant }}>
-              Only your friends can be added to a group. Invite someone from the Friends tab
-              first if they&apos;re not here.
+              Only your friends can be added to a group. Invite someone from the Friends tab first
+              if they&apos;re not here.
             </BodyMd>
 
             <Spacer size="md" />

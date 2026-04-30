@@ -2,7 +2,8 @@ import React from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { X, ArrowRight } from 'lucide-react-native';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
@@ -11,7 +12,6 @@ import { ActionButton } from '@/shared/components/ActionButton';
 import { useFriends } from '@/features/friends/hooks/useFriends';
 import { useUser } from '@/shared/hooks/useUser';
 import { useCreateSettlementMutation } from '@/features/settlements/hooks/useSettlementMutations';
-import { useCurrencyFormatter } from '@/shared/hooks/useCurrencyFormatter';
 import { useWebKeyboardShortcuts } from '@/shared/hooks/useWebKeyboardShortcuts';
 
 type PaymentMethod = 'UPI' | 'Cash' | 'Bank';
@@ -75,13 +75,15 @@ const OweLine = styled.Text`
   color: ${({ theme }) => theme.colors.onSurfaceVariant};
 `;
 
-const Amount = styled.Text`
+const Amount = styled.TextInput`
   margin-top: ${Spacing.lg}px;
   font-family: ${TypographyTokens.fonts.bold};
   font-size: 40px;
   font-weight: ${TypographyTokens.weights.bold};
   color: ${({ theme }) => theme.colors.danger};
   letter-spacing: -1px;
+  text-align: center;
+  min-width: 120px;
 `;
 
 const PaymentMethods = styled.View`
@@ -112,6 +114,18 @@ const BottomCTA = styled.View`
   padding: ${Spacing.md}px ${Spacing.screenPadding}px ${Spacing.xl}px;
 `;
 
+const NoteInput = styled.TextInput`
+  margin-top: ${Spacing.lg}px;
+  width: 100%;
+  padding: ${Spacing.sm}px ${Spacing.md}px;
+  border-radius: ${Radius.md}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.divider};
+  font-family: ${TypographyTokens.fonts.regular};
+  font-size: 15px;
+  color: ${({ theme }) => theme.colors.onSurface};
+`;
+
 const SettleScreen = () => {
   const { friendId, groupId, amount } = useLocalSearchParams<{
     friendId: string;
@@ -122,18 +136,26 @@ const SettleScreen = () => {
   const { user, userId } = useUser();
   const router = useRouter();
   const theme = useTheme();
-  const { formatCurrency } = useCurrencyFormatter();
   const settleMutation = useCreateSettlementMutation();
 
   const friend = friends.find((m) => m.id === friendId);
   const [method, setMethod] = React.useState<PaymentMethod>('UPI');
+  const [note, setNote] = React.useState('');
   const owedAmount = parseFloat(amount ?? '0') || 0;
+  const [settleAmount, setSettleAmount] = React.useState(owedAmount.toString());
+
+  const { show } = useConfirmSheet();
 
   useWebKeyboardShortcuts([{ key: 'Escape', handler: () => router.back() }]);
 
   const handleSettle = async () => {
-    if (!groupId || owedAmount <= 0) {
-      Alert.alert('Cannot settle', 'No outstanding balance to settle.');
+    const parsedAmount = parseFloat(settleAmount) || 0;
+    if (!groupId || parsedAmount <= 0) {
+      show({
+        title: 'Cannot settle',
+        message: 'No outstanding balance to settle.',
+        actions: [{ label: 'OK', onPress: () => {} }],
+      });
       return;
     }
 
@@ -142,12 +164,13 @@ const SettleScreen = () => {
         groupId,
         fromUser: userId,
         toUser: friendId ?? '',
-        amount: owedAmount,
+        amount: parsedAmount,
+        ...(note.trim() ? { note: note.trim() } : {}),
       });
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Settlement failed';
-      Alert.alert('Error', message);
+      show({ title: 'Error', message, actions: [{ label: 'OK', onPress: () => {} }] });
     }
   };
 
@@ -172,7 +195,13 @@ const SettleScreen = () => {
 
         <FriendName>{friend?.name ?? 'Friend'}</FriendName>
         <OweLine>You owe {friend?.name ?? 'them'}</OweLine>
-        <Amount>{formatCurrency(owedAmount)}</Amount>
+        <Amount
+          value={settleAmount}
+          onChangeText={setSettleAmount}
+          keyboardType="decimal-pad"
+          selectTextOnFocus
+          accessibilityLabel="Settlement amount"
+        />
 
         <PaymentMethods>
           {(['UPI', 'Cash', 'Bank'] as PaymentMethod[]).map((m) => {
@@ -185,6 +214,14 @@ const SettleScreen = () => {
           })}
         </PaymentMethods>
 
+        <NoteInput
+          value={note}
+          onChangeText={setNote}
+          placeholder="Add a note (optional)"
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          maxLength={200}
+        />
+
         <Spacer size="xxl" />
       </Body>
 
@@ -193,7 +230,7 @@ const SettleScreen = () => {
           title="Mark as Settled"
           onPress={handleSettle}
           isLoading={settleMutation.isPending}
-          disabled={owedAmount <= 0}
+          disabled={(parseFloat(settleAmount) || 0) <= 0}
         />
       </BottomCTA>
     </SafeScreen>

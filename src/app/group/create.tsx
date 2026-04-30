@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import styled, { useTheme } from 'styled-components/native';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useConfirmSheet } from '@/shared/hooks/useConfirmSheet';
 import { Radius, Spacing } from '@/shared/constants/spacing';
 import { Typography as TypographyTokens } from '@/shared/constants/typography';
 import { SafeScreen, Row, Spacer } from '@/shared/components/Layout';
@@ -69,9 +70,15 @@ const CreateGroupScreen = () => {
   const [description, setDescription] = useState('');
   const [memberIds, setMemberIds] = useState<string[]>([]);
 
+  const { show } = useConfirmSheet();
+
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert('Validation', 'Group name is required.');
+      show({
+        title: 'Validation',
+        message: 'Group name is required.',
+        actions: [{ label: 'OK', onPress: () => {} }],
+      });
       return;
     }
 
@@ -84,7 +91,7 @@ const CreateGroupScreen = () => {
       router.back();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create group';
-      Alert.alert('Error', message);
+      show({ title: 'Error', message, actions: [{ label: 'OK', onPress: () => {} }] });
     }
   };
 
